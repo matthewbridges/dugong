@@ -2,10 +2,10 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   20:00:58 08/01/2012
+-- Create Date:   12:35:01 08/03/2012
 -- Design Name:   
--- Module Name:   /home/mbridges/Projects/project_Dugong_v0a/inst_mem_tb.vhd
--- Project Name:  project_Dugong_v0a
+-- Module Name:   /home/mbridges/Projects/project_Dugong_v0c/inst_mem_tb.vhd
+-- Project Name:  project_Dugong_v0c
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
@@ -27,84 +27,127 @@
 --------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
-
+ 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
-
+ 
 ENTITY inst_mem_tb IS
 END inst_mem_tb;
+ 
+ARCHITECTURE behavior OF inst_mem_tb IS 
+ 
+    -- Component Declaration for the Unit Under Test (UUT)
+ 
+    COMPONENT inst_mem
+    PORT(
+         RSTA : IN  std_logic;
+         CLKA : IN  std_logic;
+         RSTB : IN  std_logic;
+         CLKB : IN  std_logic;
+         ADDRA : IN  std_logic_vector(13 downto 0);
+         ADDRB : IN  std_logic_vector(13 downto 0);
+         DIA : IN  std_logic_vector(31 downto 0);
+         DIB : IN  std_logic_vector(31 downto 0);
+         DOA : OUT  std_logic_vector(31 downto 0);
+         DOB : OUT  std_logic_vector(31 downto 0);
+         DIPA : IN  std_logic_vector(3 downto 0);
+         DIPB : IN  std_logic_vector(3 downto 0);
+         DOPA : OUT  std_logic_vector(3 downto 0);
+         DOPB : OUT  std_logic_vector(3 downto 0);
+         WEA : IN  std_logic_vector(3 downto 0);
+         ENA : IN  std_logic;
+         REGCEA : IN  std_logic;
+         WEB : IN  std_logic_vector(3 downto 0);
+         ENB : IN  std_logic;
+         REGCEB : IN  std_logic
+        );
+    END COMPONENT;
+    
 
-ARCHITECTURE behavior OF inst_mem_tb IS
+   --Inputs
+   signal RSTA : std_logic := '0';
+   signal CLKA : std_logic := '0';
+   signal RSTB : std_logic := '0';
+   signal CLKB : std_logic := '0';
+   signal ADDRA : std_logic_vector(13 downto 0) := (others => '0');
+   signal ADDRB : std_logic_vector(13 downto 0) := (others => '0');
+   signal DIA : std_logic_vector(31 downto 0) := (others => '0');
+   signal DIB : std_logic_vector(31 downto 0) := (others => '0');
+   signal DIPA : std_logic_vector(3 downto 0) := (others => '0');
+   signal DIPB : std_logic_vector(3 downto 0) := (others => '0');
+   signal WEA : std_logic_vector(3 downto 0) := (others => '0');
+   signal ENA : std_logic := '0';
+   signal REGCEA : std_logic := '0';
+   signal WEB : std_logic_vector(3 downto 0) := (others => '0');
+   signal ENB : std_logic := '0';
+   signal REGCEB : std_logic := '0';
 
-	-- Component Declaration for the Unit Under Test (UUT)
+ 	--Outputs
+   signal DOA : std_logic_vector(31 downto 0);
+   signal DOB : std_logic_vector(31 downto 0);
+   signal DOPA : std_logic_vector(3 downto 0);
+   signal DOPB : std_logic_vector(3 downto 0);
 
-	COMPONENT inst_mem
-		PORT(
-			RST_I : IN  std_logic;
-			CLK_I : IN  std_logic;
-			ADR_I : IN  std_logic_vector(8 downto 0);
-			DAT_I : IN  std_logic_vector(31 downto 0);
-			DAT_O : OUT std_logic_vector(31 downto 0);
-			WE_I  : IN  std_logic_vector(3 downto 0);
-			EN_I  : IN  std_logic
-		);
-	END COMPONENT;
-
-	--Inputs
-	signal RST_I : std_logic                     := '0';
-	signal CLK_I : std_logic                     := '0';
-	signal ADR_I : std_logic_vector(8 downto 0)  := (others => '0');
-	signal DAT_I : std_logic_vector(31 downto 0) := (others => '0');
-	signal WE_I  : std_logic_vector(3 downto 0)  := (others => '0');
-	signal EN_I  : std_logic                     := '0';
-
-	--Outputs
-	signal DAT_O : std_logic_vector(31 downto 0);
-
-	-- Clock period definitions
-	constant CLK_I_period : time := 10 ns;
-
+   -- Clock period definitions
+   constant CLKA_period : time := 10 ns;
+   constant CLKB_period : time := 10 ns;
+ 
 BEGIN
-
+ 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : inst_mem PORT MAP(
-			RST_I => RST_I,
-			CLK_I => CLK_I,
-			ADR_I => ADR_I,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			WE_I  => WE_I,
-			EN_I  => EN_I
-		);
+   uut: inst_mem PORT MAP (
+          RSTA => RSTA,
+          CLKA => CLKA,
+          RSTB => RSTB,
+          CLKB => CLKB,
+          ADDRA => ADDRA,
+          ADDRB => ADDRB,
+          DIA => DIA,
+          DIB => DIB,
+          DOA => DOA,
+          DOB => DOB,
+          DIPA => DIPA,
+          DIPB => DIPB,
+          DOPA => DOPA,
+          DOPB => DOPB,
+          WEA => WEA,
+          ENA => ENA,
+          REGCEA => REGCEA,
+          WEB => WEB,
+          ENB => ENB,
+          REGCEB => REGCEB
+        );
 
-	-- Clock process definitions
-	CLK_I_process : process
-	begin
-		CLK_I <= '0';
-		wait for CLK_I_period / 2;
-		CLK_I <= '1';
-		wait for CLK_I_period / 2;
-	end process;
+   -- Clock process definitions
+   CLKA_process :process
+   begin
+		CLKA <= '0';
+		wait for CLKA_period/2;
+		CLKA <= '1';
+		wait for CLKA_period/2;
+   end process;
+ 
+   CLKB_process :process
+   begin
+		CLKB <= '0';
+		wait for CLKB_period/2;
+		CLKB <= '1';
+		wait for CLKB_period/2;
+   end process;
+ 
 
-	-- Stimulus process
-	stim_proc : process
-	begin
-		-- hold reset state for 100 ns.
-		wait for 100 ns;
+   -- Stimulus process
+   stim_proc: process
+   begin		
+      -- hold reset state for 100 ns.
+      wait for 100 ns;	
 
-		wait for CLK_I_period * 10;
+      wait for CLKA_period*10;
 
-		-- insert stimulus here 
-		ADR_I <= "000111111";
-		wait for 50 ns;
-		DAT_I <= "10101010101010101010101010101010";
-		wait for 50 ns;
-		WE_I <= "1111";
-		wait for 50 ns;
-		EN_I <= '1';
+      -- insert stimulus here 
 
-		wait;
-	end process;
+      wait;
+   end process;
 
 END;
