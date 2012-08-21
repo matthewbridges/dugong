@@ -36,20 +36,25 @@ entity inst_mem is
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 		WE_I  : in  STD_LOGIC;
-		STB_I  : in  STD_LOGIC
+		STB_I : in  STD_LOGIC
 	--		CYC_I : in   STD_LOGIC;
+
 	);
 end inst_mem;
 
 architecture Behavioral of inst_mem is
+	signal adr : std_logic_vector(13 downto 0);
+	signal we  : std_logic_vector(3 downto 0);
+
 begin
+
 	-- RAMB16BWER: 16k-bit Data and 2k-bit Parity Configurable Synchronous Dual Port Block RAM with Optional Output Registers
 	--             Spartan-6
 	-- Xilinx HDL Libraries Guide, version 14.1
 
 	RAMB16BWER_inst : RAMB16BWER
 		generic map(
-			DATA_WIDTH_A        => 36,   -- Valid values are 0, 1, 2, 4, 9, 18, or 36
+			DATA_WIDTH_A        => 36,  -- Valid values are 0, 1, 2, 4, 9, 18, or 36
 			DATA_WIDTH_B        => 0,   -- Valid values are 0, 1, 2, 4, 9, 18, or 36
 			DOA_REG             => 0,   -- Specifies to enable=1/disable=0 port A output registers
 			DOB_REG             => 0,   -- Specifies to enable=1/disable=0 port B output registers
@@ -154,28 +159,31 @@ begin
 			--DOB    => DOB,              -- 32-bit output: B port data output
 			--DOPB   => DOPB,             -- 4-bit output: B port parity output
 			-- Port A Address/Control Signals: 14-bit (each) input: Port A address and control signals
-			ADDRA  => ADR_I & "11111",            -- 14-bit input: A port address input
+			ADDRA  => adr,              -- 14-bit input: A port address input
 			CLKA   => CLK_I,            -- 1-bit input: A port clock input
-			ENA    => STB_I,             -- 1-bit input: A port enable input
+			ENA    => STB_I,            -- 1-bit input: A port enable input
 			REGCEA => '0',              -- 1-bit input: A port register clock enable input
 			RSTA   => RST_I,            -- 1-bit input: A port register set/reset input
-			WEA    => WE_I & WE_I & WE_I & WE_I,             -- 4-bit input: Port A byte-wide write enable input
+			WEA    => we,               -- 4-bit input: Port A byte-wide write enable input
 			-- Port A Data: 32-bit (each) input: Port A data
 			DIA    => DAT_I,            -- 32-bit input: A port data input
-			DIPA   => (others => '0'),             -- 4-bit input: A port parity input
+			DIPA   => (others => '0'),  -- 4-bit input: A port parity input
 			-- Port B Address/Control Signals: 14-bit (each) input: Port B address and control signals
-			ADDRB  => (others => '0'),            -- 14-bit input: B port address input
-			CLKB   => '0',             -- 1-bit input: B port clock input
+			ADDRB  => (others => '0'),  -- 14-bit input: B port address input
+			CLKB   => '0',              -- 1-bit input: B port clock input
 			ENB    => '0',              -- 1-bit input: B port enable input
-			REGCEB => '0',           -- 1-bit input: B port register clock enable input
-			RSTB   => '0',             -- 1-bit input: B port register set/reset input
-			WEB    => (others => '0'),              -- 4-bit input: Port B byte-wide write enable input
+			REGCEB => '0',              -- 1-bit input: B port register clock enable input
+			RSTB   => '0',              -- 1-bit input: B port register set/reset input
+			WEB    => (others => '0'),  -- 4-bit input: Port B byte-wide write enable input
 			-- Port B Data: 32-bit (each) input: Port B data
-			DIB    => (others => '0'),              -- 32-bit input: B port data input
-			DIPB   => (others => '0')              -- 4-bit input: B port parity input
+			DIB    => (others => '0'),  -- 32-bit input: B port data input
+			DIPB   => (others => '0')   -- 4-bit input: B port parity input
 		);
 
--- End of RAMB16BWER_inst instantiation
+	-- End of RAMB16BWER_inst instantiation
 
+	adr <= ADR_I & "11111";
+	we  <= WE_I & WE_I & WE_I & WE_I;
+	
 end Behavioral;
 

@@ -1,0 +1,7 @@
+MODULE prototype0
+	SUBMODULE dugong
+		INSTANCE XLXI_1
+	SUBMODULE gpio_controller_ip
+		INSTANCE XLXI_2
+	SUBMODULE clk_generator
+		INSTANCE XLXI_3
