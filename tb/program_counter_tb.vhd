@@ -33,6 +33,10 @@ USE ieee.std_logic_1164.ALL;
 --USE ieee.numeric_std.ALL;
 
 ENTITY program_counter_tb IS
+	generic(
+		DATA_WIDTH : natural := 9;
+		PROG_SIZE  : natural := 15
+	);
 END program_counter_tb;
 
 ARCHITECTURE behavior OF program_counter_tb IS
@@ -40,25 +44,29 @@ ARCHITECTURE behavior OF program_counter_tb IS
 	-- Component Declaration for the Unit Under Test (UUT)
 
 	COMPONENT program_counter
+		generic(
+			DATA_WIDTH : natural := 9;
+			PROG_SIZE  : natural := 4
+		);
 		PORT(
 			EN_I  : IN  std_logic;
 			LD_I  : IN  std_logic;
 			CLK_I : IN  std_logic;
 			RST_I : IN  std_logic;
-			DAT_O : OUT std_logic_vector(15 downto 0);
-			DAT_I : IN  std_logic_vector(15 downto 0)
+			DAT_O : OUT std_logic_vector(DATA_WIDTH - 1 downto 0);
+			DAT_I : IN  std_logic_vector(DATA_WIDTH - 1 downto 0)
 		);
 	END COMPONENT;
 
 	--Inputs
-	signal EN_I  : std_logic                     := '0';
-	signal LD_I  : std_logic                     := '0';
-	signal CLK_I : std_logic                     := '0';
-	signal RST_I : std_logic                     := '0';
-	signal DAT_I : std_logic_vector(15 downto 0) := (others => '0');
+	signal EN_I  : std_logic                                 := '0';
+	signal LD_I  : std_logic                                 := '0';
+	signal CLK_I : std_logic                                 := '0';
+	signal RST_I : std_logic                                 := '0';
+	signal DAT_I : std_logic_vector(DATA_WIDTH - 1 downto 0) := (others => '0');
 
 	--Outputs
-	signal DAT_O : std_logic_vector(15 downto 0);
+	signal DAT_O : std_logic_vector(DATA_WIDTH - 1 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
@@ -66,7 +74,12 @@ ARCHITECTURE behavior OF program_counter_tb IS
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : program_counter PORT MAP(
+	uut : program_counter
+		GENERIC MAP(
+			DATA_WIDTH => DATA_WIDTH,
+			PROG_SIZE  => PROG_SIZE
+		)
+		PORT MAP(
 			EN_I  => EN_I,
 			LD_I  => LD_I,
 			CLK_I => CLK_I,

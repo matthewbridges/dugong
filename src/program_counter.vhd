@@ -31,19 +31,17 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity program_counter is
 	generic(
-		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 3;
-		INST_WIDTH : natural := 20;
+		DATA_WIDTH : natural := 9;
 		PROG_SIZE  : natural := 4
 	);
 	port(
-		EN_I  : in  STD_LOGIC;
-		LD_I  : in  STD_LOGIC;
-		-- Lines
+		-- Wishbone Master Lines
 		CLK_I : in  STD_LOGIC;
 		RST_I : in  STD_LOGIC;
+		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+		WE_I  : in  STD_LOGIC;
+		STB_I : in  STD_LOGIC
 	);
 end program_counter;
 
@@ -56,14 +54,15 @@ begin
 
 		--Perform Clock Rising Edge operations
 		if (rising_edge(CLK_I)) then
-
 			--Check for reset
 			if (RST_I = '1') then
 				pc <= (others => '0');
-			elsif (LD_I = '1') then
-				pc <= unsigned(DAT_I);
-			elsif (EN_I = '1') then
-				pc <= pc + 1;
+			elsif (STB_I = '1') then
+				if (WE_I = '1') then
+					pc <= unsigned(DAT_I);
+				elsif (pc < PROG_SIZE) then
+					pc <= pc + 1;
+				end if;
 			else
 				pc <= pc;
 			end if;
