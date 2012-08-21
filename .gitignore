@@ -22,6 +22,8 @@
 *.cmd_log
 *_beh.prj
 *.ncd
+*.projectmgr
+*.gise
 isim
 db
 incremental_db
