@@ -2,15 +2,15 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   18:00:22 07/31/2012
+-- Create Date:   16:31:07 08/07/2012
 -- Design Name:   
--- Module Name:   /home/mbridges/Projects/project_Dugong_v0a/program_counter_tb.vhd
--- Project Name:  project_Dugong_v0a
+-- Module Name:   /home/mbridges/Projects/project_Dugong_v0f/dugong_tb.vhd
+-- Project Name:  project_Dugong_v0f
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
 -- 
--- VHDL Test Bench Created by ISE for module: program_counter
+-- VHDL Test Bench Created by ISE for module: dugong
 -- 
 -- Dependencies:
 -- 
@@ -32,60 +32,56 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
 
-ENTITY program_counter_tb IS
-	generic(
-		DATA_WIDTH : natural := 9;
-		PROG_SIZE  : natural := 15
-	);
-END program_counter_tb;
+ENTITY dugong_tb IS
+END dugong_tb;
 
-ARCHITECTURE behavior OF program_counter_tb IS
+ARCHITECTURE behavior OF dugong_tb IS
 
 	-- Component Declaration for the Unit Under Test (UUT)
 
-	COMPONENT program_counter
-		generic(
-			DATA_WIDTH : natural := 9;
-			PROG_SIZE  : natural := 4
-		);
+	COMPONENT dugong
 		PORT(
-			STB_I  : IN  std_logic;
-			WE_I  : IN  std_logic;
 			CLK_I : IN  std_logic;
 			RST_I : IN  std_logic;
-			DAT_O : OUT std_logic_vector(DATA_WIDTH - 1 downto 0);
-			DAT_I : IN  std_logic_vector(DATA_WIDTH - 1 downto 0)
+			DAT_I : IN  std_logic_vector(15 downto 0);
+			DAT_O : OUT std_logic_vector(15 downto 0);
+			ADR_O : OUT std_logic_vector(11 downto 0);
+			WE_O  : OUT std_logic;
+			STB_O : OUT std_logic;
+			ACK_I : IN  std_logic;
+			CYC_O : OUT std_logic
 		);
 	END COMPONENT;
 
 	--Inputs
-	signal STB_I  : std_logic                                 := '0';
-	signal WE_I  : std_logic                                 := '0';
-	signal CLK_I : std_logic                                 := '0';
-	signal RST_I : std_logic                                 := '0';
-	signal DAT_I : std_logic_vector(DATA_WIDTH - 1 downto 0) := (others => '0');
+	signal CLK_I : std_logic                     := '0';
+	signal RST_I : std_logic                     := '1';
+	signal DAT_I : std_logic_vector(15 downto 0) := (others => '0');
+	signal ACK_I : std_logic                     := '0';
 
 	--Outputs
-	signal DAT_O : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal DAT_O : std_logic_vector(15 downto 0);
+	signal ADR_O : std_logic_vector(11 downto 0);
+	signal WE_O  : std_logic;
+	signal STB_O : std_logic;
+	signal CYC_O : std_logic;
 
 	-- Clock period definitions
-	constant CLK_I_period : time := 10 ns;
+	constant CLK_I_period : time := 5 ns;
 
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : program_counter
-		GENERIC MAP(
-			DATA_WIDTH => DATA_WIDTH,
-			PROG_SIZE  => PROG_SIZE
-		)
-		PORT MAP(
-			STB_I  => STB_I,
-			WE_I  => WE_I,
+	uut : dugong PORT MAP(
 			CLK_I => CLK_I,
 			RST_I => RST_I,
+			DAT_I => DAT_I,
 			DAT_O => DAT_O,
-			DAT_I => DAT_I
+			ADR_O => ADR_O,
+			WE_O  => WE_O,
+			STB_O => STB_O,
+			ACK_I => ACK_I,
+			CYC_O => CYC_O
 		);
 
 	-- Clock process definitions
@@ -98,7 +94,7 @@ BEGIN
 	end process;
 
 	-- Stimulus process
-	stim_proc : process
+	start_proc : process
 	begin
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
@@ -106,9 +102,16 @@ BEGIN
 		wait for CLK_I_period * 10;
 
 		-- insert stimulus here 
-		STB_I <= '1';
+		RST_I <= '0';
 
-		wait;
 	end process;
-
+	
+	ACK_proc : process
+	begin
+		wait until (rising_edge(STB_O)); 
+		wait until (rising_edge(CLK_I));
+		ACK_I <= STB_O;
+		wait until (falling_edge(STB_O));
+		ACK_I <= STB_O;
+	end process;
 END;

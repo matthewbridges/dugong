@@ -32,7 +32,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity program_counter is
 	generic(
 		DATA_WIDTH : natural := 9;
-		PROG_SIZE  : natural := 4
+		PROG_SIZE  : natural := 20
 	);
 	port(
 		-- Wishbone Master Lines
@@ -41,12 +41,14 @@ entity program_counter is
 		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		WE_I  : in  STD_LOGIC;
-		STB_I : in  STD_LOGIC
+		STB_I : in  STD_LOGIC;
+		ACK_O : out STD_LOGIC
 	);
 end program_counter;
 
 architecture Behavioral of program_counter is
-	signal pc : unsigned(DATA_WIDTH - 1 downto 0) := (others => '0');
+	signal pc : unsigned(DATA_WIDTH - 1 downto 0);
+	signal pc_valid : std_logic;
 
 begin
 	process(CLK_I)
@@ -57,14 +59,17 @@ begin
 			--Check for reset
 			if (RST_I = '1') then
 				pc <= (others => '0');
-			elsif (STB_I = '1') then
+				pc_valid <= '0';
+			elsif ((STB_I and not pc_valid) = '1' ) then
 				if (WE_I = '1') then
 					pc <= unsigned(DAT_I);
 				elsif (pc < PROG_SIZE) then
 					pc <= pc + 1;
 				end if;
+				pc_valid <= '1';
 			else
 				pc <= pc;
+				pc_valid <= '0';
 			end if;
 
 		end if;
@@ -72,6 +77,6 @@ begin
 	end process;
 
 	DAT_O <= std_logic_vector(pc);
+	ACK_O <= STB_I and pc_valid;
 
 end Behavioral;
-
