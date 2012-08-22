@@ -22,12 +22,12 @@
         <signal name="XLXN_11" />
         <signal name="XLXN_13" />
         <signal name="GPIO(7:0)" />
-        <signal name="Debug(15:0)" />
+        <signal name="Debug(21:0)" />
         <port polarity="Input" name="RST_I" />
         <port polarity="Input" name="sys_clk_n" />
         <port polarity="Input" name="sys_clk_p" />
         <port polarity="Output" name="GPIO(7:0)" />
-        <port polarity="Output" name="Debug(15:0)" />
+        <port polarity="Output" name="Debug(21:0)" />
         <blockdef name="dugong">
             <timestamp>2012-8-10T15:43:41</timestamp>
             <rect width="288" x="64" y="-320" height="320" />
@@ -45,7 +45,7 @@
             <line x2="416" y1="-32" y2="-32" x1="352" />
         </blockdef>
         <blockdef name="gpio_controller_ip">
-            <timestamp>2012-8-10T15:48:18</timestamp>
+            <timestamp>2012-8-22T11:46:7</timestamp>
             <rect width="256" x="64" y="-384" height="384" />
             <line x2="0" y1="-352" y2="-352" x1="64" />
             <line x2="0" y1="-288" y2="-288" x1="64" />
@@ -129,7 +129,7 @@
             <blockpin signalname="XLXN_5" name="ACK_O" />
             <blockpin signalname="XLXN_6(15:0)" name="DAT_O(15:0)" />
             <blockpin signalname="GPIO(7:0)" name="GPIO(7:0)" />
-            <blockpin signalname="Debug(15:0)" name="Debug(15:0)" />
+            <blockpin signalname="Debug(21:0)" name="Debug(21:0)" />
         </block>
         <block symbolname="gnd" name="XLXI_4">
             <blockpin signalname="XLXN_8" name="G" />
@@ -150,27 +150,32 @@
         <instance x="2096" y="1792" name="XLXI_2" orien="R0">
         </instance>
         <branch name="XLXN_1">
-            <wire x2="2096" y1="1568" y2="1568" x1="1840" />
+            <wire x2="1856" y1="1568" y2="1568" x1="1840" />
+            <wire x2="2096" y1="1568" y2="1568" x1="1856" />
         </branch>
         <branch name="XLXN_2">
-            <wire x2="2096" y1="1632" y2="1632" x1="1840" />
+            <wire x2="1856" y1="1632" y2="1632" x1="1840" />
+            <wire x2="2096" y1="1632" y2="1632" x1="1856" />
         </branch>
         <branch name="XLXN_3(15:0)">
-            <wire x2="1968" y1="1760" y2="1760" x1="1840" />
+            <wire x2="1856" y1="1760" y2="1760" x1="1840" />
+            <wire x2="1968" y1="1760" y2="1760" x1="1856" />
             <wire x2="1968" y1="1696" y2="1760" x1="1968" />
             <wire x2="2096" y1="1696" y2="1696" x1="1968" />
         </branch>
         <branch name="XLXN_5">
             <wire x2="1376" y1="1344" y2="1728" x1="1376" />
-            <wire x2="1424" y1="1728" y2="1728" x1="1376" />
+            <wire x2="1408" y1="1728" y2="1728" x1="1376" />
+            <wire x2="1424" y1="1728" y2="1728" x1="1408" />
             <wire x2="2544" y1="1344" y2="1344" x1="1376" />
             <wire x2="2544" y1="1344" y2="1440" x1="2544" />
             <wire x2="2544" y1="1440" y2="1440" x1="2480" />
         </branch>
         <branch name="XLXN_6(15:0)">
-            <wire x2="1424" y1="1808" y2="1808" x1="1360" />
             <wire x2="1360" y1="1808" y2="1936" x1="1360" />
             <wire x2="2560" y1="1936" y2="1936" x1="1360" />
+            <wire x2="1408" y1="1808" y2="1808" x1="1360" />
+            <wire x2="1424" y1="1808" y2="1808" x1="1408" />
             <wire x2="2560" y1="1536" y2="1536" x1="2480" />
             <wire x2="2560" y1="1536" y2="1936" x1="2560" />
         </branch>
@@ -228,13 +233,14 @@
         </branch>
         <branch name="GPIO(7:0)">
             <wire x2="2496" y1="1632" y2="1632" x1="2480" />
-            <wire x2="2800" y1="1632" y2="1632" x1="2496" />
+            <wire x2="2784" y1="1632" y2="1632" x1="2496" />
+            <wire x2="2800" y1="1632" y2="1632" x1="2784" />
         </branch>
-        <branch name="Debug(15:0)">
+        <iomarker fontsize="28" x="2800" y="1632" name="GPIO(7:0)" orien="R0" />
+        <branch name="Debug(21:0)">
             <wire x2="2496" y1="1728" y2="1728" x1="2480" />
             <wire x2="2800" y1="1728" y2="1728" x1="2496" />
         </branch>
-        <iomarker fontsize="28" x="2800" y="1728" name="Debug(15:0)" orien="R0" />
-        <iomarker fontsize="28" x="2800" y="1632" name="GPIO(7:0)" orien="R0" />
+        <iomarker fontsize="28" x="2800" y="1728" name="Debug(21:0)" orien="R0" />
     </sheet>
 </drawing>

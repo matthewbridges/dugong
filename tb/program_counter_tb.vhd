@@ -2,10 +2,10 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   18:00:22 07/31/2012
+-- Create Date:   13:10:50 08/22/2012
 -- Design Name:   
--- Module Name:   /home/mbridges/Projects/project_Dugong_v0a/program_counter_tb.vhd
--- Project Name:  project_Dugong_v0a
+-- Module Name:   /home/mbridges/Dugong/tb/program_counter_tb.vhd
+-- Project Name:  Dugong
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
@@ -33,10 +33,6 @@ USE ieee.std_logic_1164.ALL;
 --USE ieee.numeric_std.ALL;
 
 ENTITY program_counter_tb IS
-	generic(
-		DATA_WIDTH : natural := 9;
-		PROG_SIZE  : natural := 15
-	);
 END program_counter_tb;
 
 ARCHITECTURE behavior OF program_counter_tb IS
@@ -44,29 +40,27 @@ ARCHITECTURE behavior OF program_counter_tb IS
 	-- Component Declaration for the Unit Under Test (UUT)
 
 	COMPONENT program_counter
-		generic(
-			DATA_WIDTH : natural := 9;
-			PROG_SIZE  : natural := 4
-		);
 		PORT(
-			STB_I  : IN  std_logic;
-			WE_I  : IN  std_logic;
 			CLK_I : IN  std_logic;
 			RST_I : IN  std_logic;
-			DAT_O : OUT std_logic_vector(DATA_WIDTH - 1 downto 0);
-			DAT_I : IN  std_logic_vector(DATA_WIDTH - 1 downto 0)
+			DAT_I : IN  std_logic_vector(8 downto 0);
+			DAT_O : OUT std_logic_vector(8 downto 0);
+			WE_I  : IN  std_logic;
+			STB_I : IN  std_logic;
+			ACK_O : OUT std_logic
 		);
 	END COMPONENT;
 
 	--Inputs
-	signal STB_I  : std_logic                                 := '0';
-	signal WE_I  : std_logic                                 := '0';
-	signal CLK_I : std_logic                                 := '0';
-	signal RST_I : std_logic                                 := '0';
-	signal DAT_I : std_logic_vector(DATA_WIDTH - 1 downto 0) := (others => '0');
+	signal CLK_I : std_logic                    := '0';
+	signal RST_I : std_logic                    := '1';
+	signal DAT_I : std_logic_vector(8 downto 0) := (others => '0');
+	signal WE_I  : std_logic                    := '0';
+	signal STB_I : std_logic                    := '0';
 
 	--Outputs
-	signal DAT_O : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal DAT_O : std_logic_vector(8 downto 0);
+	signal ACK_O : std_logic;
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
@@ -74,18 +68,14 @@ ARCHITECTURE behavior OF program_counter_tb IS
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : program_counter
-		GENERIC MAP(
-			DATA_WIDTH => DATA_WIDTH,
-			PROG_SIZE  => PROG_SIZE
-		)
-		PORT MAP(
-			STB_I  => STB_I,
-			WE_I  => WE_I,
+	uut : program_counter PORT MAP(
 			CLK_I => CLK_I,
 			RST_I => RST_I,
+			DAT_I => DAT_I,
 			DAT_O => DAT_O,
-			DAT_I => DAT_I
+			WE_I  => WE_I,
+			STB_I => STB_I,
+			ACK_O => ACK_O
 		);
 
 	-- Clock process definitions
@@ -102,12 +92,24 @@ BEGIN
 	begin
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
-
+		RST_I <= '0';
 		wait for CLK_I_period * 10;
 
 		-- insert stimulus here 
 		STB_I <= '1';
-
+		wait until (rising_edge(ACK_O)); 
+		wait until (rising_edge(CLK_I));
+		STB_I <= '0';
+		wait until (rising_edge(CLK_I));
+		STB_I <= '1';
+		wait until (rising_edge(ACK_O)); 
+		wait until (rising_edge(CLK_I));
+		STB_I <= '0';
+		wait until (rising_edge(CLK_I));
+		STB_I <= '1';
+		wait until (rising_edge(ACK_O)); 
+		wait until (rising_edge(CLK_I));
+		STB_I <= '0';
 		wait;
 	end process;
 

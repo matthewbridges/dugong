@@ -50,7 +50,7 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 			STB_I : IN    std_logic;
 			ACK_O : OUT   std_logic;
 			GPIO  : INOUT std_logic_vector(7 downto 0);
-			Debug : OUT   std_logic_vector(15 downto 0)
+			Debug : OUT   std_logic_vector(21 downto 0)
 		);
 	END COMPONENT;
 
@@ -68,7 +68,7 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 	--Outputs
 	signal DAT_O : std_logic_vector(15 downto 0);
 	signal ACK_O : std_logic;
-	signal Debug : std_logic_vector(15 downto 0);
+	signal Debug : std_logic_vector(21 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;

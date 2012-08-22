@@ -41,7 +41,7 @@ entity gpio_controller_ip is
 		--GPIO Interface
 		GPIO  : out STD_LOGIC_VECTOR(GPIO_WIDTH - 1 downto 0);
 		--Debug
-		Debug : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+		Debug : out STD_LOGIC_VECTOR(ADDR_WIDTH + DATA_WIDTH +1 downto 0)
 	);
 end gpio_controller_ip;
 
@@ -139,6 +139,6 @@ begin
 		c_ack_o;
 	u_stb_i <= STB_I and ram_sel;
 	c_stb_i <= STB_I and not ram_sel;
-	Debug   <= DAT_I;
+	Debug   <= DAT_I & ADR_I & STB_I  & WE_I;
 end Behavioral;
 

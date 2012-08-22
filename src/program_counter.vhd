@@ -47,8 +47,9 @@ entity program_counter is
 end program_counter;
 
 architecture Behavioral of program_counter is
-	signal pc : unsigned(DATA_WIDTH - 1 downto 0);
+	signal pc       : unsigned(DATA_WIDTH - 1 downto 0);
 	signal pc_valid : std_logic;
+	signal zero     : boolean;
 
 begin
 	process(CLK_I)
@@ -58,22 +59,28 @@ begin
 		if (rising_edge(CLK_I)) then
 			--Check for reset
 			if (RST_I = '1') then
-				pc <= (others => '0');
+				pc       <= (others => '0');
 				pc_valid <= '0';
-			elsif ((STB_I and not pc_valid) = '1' ) then
+				zero     <= true;
+			elsif ((STB_I and not pc_valid) = '1') then
 				if (WE_I = '1') then
 					pc <= unsigned(DAT_I);
-				elsif (pc < PROG_SIZE) then
-					pc <= pc + 1;
+				else
+					if (zero) then
+						pc   <= (others => '0');
+						zero <= false;
+					elsif (pc >= (PROG_SIZE - 1)) then
+						pc <= pc;
+					else
+						pc <= pc + 1;
+					end if;
 				end if;
 				pc_valid <= '1';
 			else
-				pc <= pc;
+				pc       <= pc;
 				pc_valid <= '0';
 			end if;
-
 		end if;
-
 	end process;
 
 	DAT_O <= std_logic_vector(pc);

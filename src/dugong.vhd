@@ -63,7 +63,7 @@ architecture Behavioral of dugong is
 	component program_counter is
 		generic(
 			DATA_WIDTH : natural := 9;
-			PROG_SIZE  : natural := 511
+			PROG_SIZE  : natural := 5
 		);
 		port(
 			-- Wishbone Master Lines
@@ -108,7 +108,7 @@ begin
 		);
 
 	instruction_mem : inst_mem PORT MAP(
-			CLK_I => CLK_I,
+			CLK_I => not CLK_I,
 			RST_I => RST_I,
 			DAT_I => (others => '0'),
 			DAT_O => mem_dat_o,
@@ -159,7 +159,10 @@ begin
 	STB_O <= bus_en;
 	WE_O  <= write_en;
 
-	CYC_O <= branch_en;
+	CYC_O <= branch_en; -- Debug
+
+--	DAT_O <= mem_dat_o(15 downto 0);
+--	ADR_O <= "000" & pc;
 
 end Behavioral;
 
