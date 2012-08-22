@@ -14,6 +14,7 @@
 *.ini
 *.html
 *.vhi
+*.vhf
 *.wdb
 *.stx
 *.xmsgs
@@ -24,6 +25,7 @@
 *.ncd
 *.projectmgr
 *.gise
+*.jhd
 isim
 db
 incremental_db
@@ -36,7 +38,7 @@ webtalk_impact.xml
 pepExtractor.prj
 impact.xsl
 impact_impact.xwbt
-
+sch2HdlBatchFile
 #ignore OS noise
 
 Thumbs.db
