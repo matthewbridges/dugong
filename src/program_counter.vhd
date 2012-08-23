@@ -65,17 +65,21 @@ begin
 			elsif ((STB_I and not pc_valid) = '1') then
 				if (WE_I = '1') then
 					pc <= unsigned(DAT_I);
+					pc_valid <= '1';
 				else
 					if (zero) then
 						pc   <= (others => '0');
 						zero <= false;
-					elsif (pc >= (PROG_SIZE - 1)) then
+						pc_valid <= '1';
+					elsif (pc > (PROG_SIZE)) then
 						pc <= pc;
+						pc_valid <= '0';
 					else
 						pc <= pc + 1;
+						pc_valid <= '1';
 					end if;
 				end if;
-				pc_valid <= '1';
+				
 			else
 				pc       <= pc;
 				pc_valid <= '0';

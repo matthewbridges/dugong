@@ -52,7 +52,7 @@ architecture Behavioral of dugong is
 	signal mem_dat_o   : std_logic_vector(31 downto 0);
 	signal instruction : std_logic_vector(31 downto 0);
 	signal pc          : std_logic_vector(8 downto 0);
-	signal wait_cntr   : unsigned(DATA_WIDTH - 1 downto 0);
+	signal wait_cntr   : unsigned(ADDR_WIDTH + DATA_WIDTH - 1 downto 0);
 
 	signal pc_ack_i : std_logic;
 
@@ -65,7 +65,7 @@ architecture Behavioral of dugong is
 	component program_counter is
 		generic(
 			DATA_WIDTH : natural := 9;
-			PROG_SIZE  : natural := 15
+			PROG_SIZE  : natural := 511
 		);
 		port(
 			-- Wishbone Master Lines
@@ -124,23 +124,23 @@ begin
 		--Perform Rising Edge operations
 		if (rising_edge(CLK_I)) then
 			if (RST_I = '1') then
-				DAT_O     <= (others => '0');
-				ADR_O     <= (others => '0');
-				bus_en    <= '0';
-				write_en  <= '0';
-				branch_en <= '0';
-				pc_en     <= '0';
+				DAT_O       <= (others => '0');
+				ADR_O       <= (others => '0');
+				bus_en      <= '0';
+				write_en    <= '0';
+				branch_en   <= '0';
+				pc_en       <= '0';
 				instruction <= (others => '0');
 
 			else
 				-- Check if bus is idle
 				if (bus_en = '0') then
 					if (wait_en = '1') then
-						if(wait_cntr = "000000000000000") then
+						if (wait_cntr = "000000000000000") then
 							wait_en <= '0';
 						else
 							wait_cntr <= wait_cntr - 1;
-						end if;					
+						end if;
 					-- Perform Instruction if valid
 					elsif (pc_en = '0') then
 						DAT_O     <= instruction(15 downto 0);
@@ -149,7 +149,7 @@ begin
 						write_en  <= instruction(29);
 						branch_en <= instruction(30);
 						wait_en   <= instruction(31);
-						wait_cntr <= unsigned(instruction(15 downto 0));
+						wait_cntr <= unsigned(instruction(27 downto 0));
 						pc_en     <= '1'; -- Request new instruction
 					end if;
 				elsif (ACK_I = '1') then
@@ -160,7 +160,6 @@ begin
 					instruction <= mem_dat_o; -- Store new instruction
 					pc_en       <= '0';
 				end if;
-				
 
 			end if;
 		end if;
@@ -169,7 +168,7 @@ begin
 	STB_O <= bus_en;
 	WE_O  <= write_en;
 
-	CYC_O <= branch_en; -- Debug
+	CYC_O <= branch_en;                 -- Debug
 
 --	DAT_O <= mem_dat_o(15 downto 0);
 --	ADR_O <= "000" & pc;
