@@ -22,7 +22,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx primitives in this code.
@@ -52,18 +52,20 @@ architecture Behavioral of dugong is
 	signal mem_dat_o   : std_logic_vector(31 downto 0);
 	signal instruction : std_logic_vector(31 downto 0);
 	signal pc          : std_logic_vector(8 downto 0);
+	signal wait_cntr   : unsigned(DATA_WIDTH - 1 downto 0);
 
 	signal pc_ack_i : std_logic;
 
 	signal bus_en    : std_logic;
 	signal write_en  : std_logic;
 	signal branch_en : std_logic;
+	signal wait_en   : std_logic;
 	signal pc_en     : std_logic;
 
 	component program_counter is
 		generic(
 			DATA_WIDTH : natural := 9;
-			PROG_SIZE  : natural := 5
+			PROG_SIZE  : natural := 15
 		);
 		port(
 			-- Wishbone Master Lines
@@ -133,16 +135,23 @@ begin
 			else
 				-- Check if bus is idle
 				if (bus_en = '0') then
+					if (wait_en = '1') then
+						if(wait_cntr = "000000000000000") then
+							wait_en <= '0';
+						else
+							wait_cntr <= wait_cntr - 1;
+						end if;					
 					-- Perform Instruction if valid
-					if (pc_en = '0') then
+					elsif (pc_en = '0') then
 						DAT_O     <= instruction(15 downto 0);
 						ADR_O     <= instruction(27 downto 16);
 						bus_en    <= instruction(28);
 						write_en  <= instruction(29);
-						branch_en <= instruction(31);
+						branch_en <= instruction(30);
+						wait_en   <= instruction(31);
+						wait_cntr <= unsigned(instruction(15 downto 0));
 						pc_en     <= '1'; -- Request new instruction
 					end if;
-
 				elsif (ACK_I = '1') then
 					bus_en <= '0';      -- Conclude bus transfer
 				end if;
@@ -151,6 +160,7 @@ begin
 					instruction <= mem_dat_o; -- Store new instruction
 					pc_en       <= '0';
 				end if;
+				
 
 			end if;
 		end if;
