@@ -21,7 +21,7 @@
 *.xreport
 *.exe
 *.cmd_log
-*_beh.prj
+*.prj
 *.ncd
 *.projectmgr
 *.gise

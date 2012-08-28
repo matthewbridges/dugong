@@ -32,7 +32,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity wb_m is
 	generic(
 		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 32
+		ADDR_WIDTH : natural := 12
 	);
 	port(
 		--Wishbone Master Lines (inverted)
@@ -53,8 +53,10 @@ end wb_m;
 
 architecture Behavioral of wb_m is
 begin
+	--WB Input Ports
 	ACK_I <= WB_I(DATA_WIDTH);
 	DAT_I <= WB_I(DATA_WIDTH - 1 downto 0);
+	--WB Output Ports
 	WB_O  <= (CYC_O & STB_O & WE_O & ADR_O & DAT_O);
 end Behavioral;
 
