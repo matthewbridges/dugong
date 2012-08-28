@@ -26,6 +26,10 @@
 *.projectmgr
 *.gise
 *.jhd
+*.project
+*.xml
+*.xwbt
+.settings/org.eclipse.core.resources.prefs
 isim
 db
 incremental_db
