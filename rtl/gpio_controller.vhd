@@ -63,10 +63,10 @@ begin
 
 			--Check for strobe
 			elsif (STB_I = '1') then
-				q <= user_mem(to_integer(unsigned(ADR_I)));
+				q <= user_mem(to_integer(unsigned(ADR_I))-8);
 				--Check for write
-				if (WE_I <= '1') then
-					user_mem(to_integer(unsigned(ADR_I))) <= DAT_I;
+				if (WE_I = '1') then
+					user_mem(to_integer(unsigned(ADR_I))-8) <= DAT_I;
 				end if;
 			end if;
 

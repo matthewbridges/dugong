@@ -36,8 +36,8 @@ entity wb_m is
 	);
 	port(
 		--Wishbone Master Lines (inverted)
-		CLK_I : out STD_LOGIC;
-		RST_I : out STD_LOGIC;
+		CLK_I : in STD_LOGIC;
+		RST_I : in STD_LOGIC;
 		DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		ADR_O : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
