@@ -2,10 +2,10 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   16:07:14 07/26/2012
+-- Create Date:   17:49:26 08/29/2012
 -- Design Name:   
--- Module Name:   /home/mbridges/Projects/project_GPIO_v0a/gpio_controller_ip_tb.vhd
--- Project Name:  project_GPIO_v0a
+-- Module Name:   /home/mbridges/Projects/Dugong/sim/gpio_controller_ip_tb.vhd
+-- Project Name:  Dugong
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
@@ -30,7 +30,7 @@ USE ieee.std_logic_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---USE ieee.numeric_std.ALL;
+USE ieee.numeric_std.ALL;
 
 ENTITY gpio_controller_ip_tb IS
 END gpio_controller_ip_tb;
@@ -40,35 +40,33 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 	-- Component Declaration for the Unit Under Test (UUT)
 
 	COMPONENT gpio_controller_ip
-		PORT(
-			RST_I : IN    std_logic;
-			CLK_I : IN    std_logic;
-			ADR_I : IN    std_logic_vector(3 downto 0);
-			DAT_I : IN    std_logic_vector(15 downto 0);
-			DAT_O : OUT   std_logic_vector(15 downto 0);
-			WE_I  : IN    std_logic;
-			STB_I : IN    std_logic;
-			ACK_O : OUT   std_logic;
-			GPIO  : INOUT std_logic_vector(7 downto 0);
-			Debug : OUT   std_logic_vector(21 downto 0)
+		generic(
+			DATA_WIDTH      : NATURAL               := 16;
+			ADDR_WIDTH      : NATURAL               := 12;
+			BASE_ADDR       : UNSIGNED(11 downto 0) := x"F00";
+			CORE_ADDR_WIDTH : NATURAL               := 4;
+			GPIO_WIDTH      : natural               := 8
+		);
+		port(
+			--System Control Inputs
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			--Slave to WB
+			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			--GPIO Interface
+			GPIO  : out STD_LOGIC_VECTOR(GPIO_WIDTH - 1 downto 0)
 		);
 	END COMPONENT;
 
 	--Inputs
-	signal RST_I : std_logic                     := '1';
 	signal CLK_I : std_logic                     := '0';
-	signal ADR_I : std_logic_vector(3 downto 0)  := (others => '0');
-	signal DAT_I : std_logic_vector(15 downto 0) := (others => '0');
-	signal WE_I  : std_logic                     := '0';
-	signal STB_I : std_logic                     := '0';
-
-	--BiDirs
-	signal GPIO : std_logic_vector(7 downto 0);
+	signal RST_I : std_logic                     := '1';
+	signal WB_I  : std_logic_vector(30 downto 0) := (others => '0');
 
 	--Outputs
-	signal DAT_O : std_logic_vector(15 downto 0);
-	signal ACK_O : std_logic;
-	signal Debug : std_logic_vector(21 downto 0);
+	signal WB_O : std_logic_vector(16 downto 0);
+	signal GPIO : std_logic_vector(7 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
@@ -77,16 +75,11 @@ BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
 	uut : gpio_controller_ip PORT MAP(
-			RST_I => RST_I,
 			CLK_I => CLK_I,
-			ADR_I => ADR_I,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			WE_I  => WE_I,
-			STB_I => STB_I,
-			ACK_O => ACK_O,
-			GPIO  => GPIO,
-			Debug => Debug
+			RST_I => RST_I,
+			WB_I  => WB_I,
+			WB_O  => WB_O,
+			GPIO  => GPIO
 		);
 
 	-- Clock process definitions
@@ -103,15 +96,25 @@ BEGIN
 	begin
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
-
-		wait for CLK_I_period * 10;
 		RST_I <= '0';
+		wait for CLK_I_period * 10;
 
 		-- insert stimulus here 
-		DAT_I <= "1010101010101010";
-		ADR_I <= "1000";
-		WE_I <= '1';
-		STB_I <= '1';
+		wait until rising_edge(CLK_I);
+		WB_I <= "111" & x"F08" & x"00F0";
+		wait until rising_edge(WB_O(16));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"0000";
+		wait until rising_edge(CLK_I);
+		WB_I <= "111" & x"F08" & x"000F";
+		wait until rising_edge(WB_O(16));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"0000";
+		wait until rising_edge(CLK_I);
+		WB_I <= "111" & x"E08" & x"000F";
+		wait until rising_edge(WB_O(16));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"0000";		
 		wait;
 	end process;
 

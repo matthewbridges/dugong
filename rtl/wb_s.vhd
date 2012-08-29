@@ -37,19 +37,20 @@ entity wb_s is
 		CORE_ADDR_WIDTH : NATURAL               := 4
 	);
 	port(
-		--Wishbone Slave Lines (inverted)
+		--System Control Inputs
 		CLK_I : in  STD_LOGIC;
-		RST_I : in  STD_LOGIC;
+		RST_I : in  STD_LOGIC;				
+		--Slave to WB
+		WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+		WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		--Wishbone Slave Lines (inverted)
 		DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		ADR_I : out STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+		ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 		WE_I  : out STD_LOGIC;
 		STB_I : out STD_LOGIC;
 		ACK_O : in  STD_LOGIC;
-		CYC_I : out STD_LOGIC;
-		--Master to WB
-		WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-		WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0)
+		CYC_I : out STD_LOGIC
 	);
 end wb_s;
 
@@ -86,11 +87,11 @@ begin
 			if(core_sel and core_mem_sel) then
 				--Check for strobe
 				elsif (stb_ms = '1') then
-					dat_sm <= core_mem(to_integer(unsigned(adr_ms(3 downto 0))));
+					dat_sm <= core_mem(to_integer(unsigned(adr_ms(2 downto 0))));
 					ack_sm <= '1';
 					--Check for write
 					if (we_ms = '1') then
-						core_mem(to_integer(unsigned(adr_ms(3 downto 0)))) <= dat_ms;
+						core_mem(to_integer(unsigned(adr_ms(2 downto 0)))) <= dat_ms;
 					end if;
 				else
 					ack_sm <= '0';
@@ -131,7 +132,7 @@ begin
 
 	--WB Input Ports
 	DAT_I <= dat_ms;
-	ADR_I <= adr_ms;
+	ADR_I <= adr_ms(CORE_ADDR_WIDTH - 1 downto 0);
 	WE_I  <= we_ms;
 end Behavioral;
 
