@@ -36,10 +36,10 @@ entity gpio_controller is
 		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+		STB_I : in  STD_LOGIC;		
 		WE_I  : in  STD_LOGIC;
-		STB_I : in  STD_LOGIC;
-		ACK_O : out STD_LOGIC;
 		--		CYC_I : in   STD_LOGIC;
+		ACK_O : out STD_LOGIC;
 		--GPIO Interface
 		GPIO  : out STD_LOGIC_VECTOR(GPIO_WIDTH - 1 downto 0)
 	);

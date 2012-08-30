@@ -39,7 +39,7 @@ entity wb_s is
 	port(
 		--System Control Inputs
 		CLK_I : in  STD_LOGIC;
-		RST_I : in  STD_LOGIC;				
+		RST_I : in  STD_LOGIC;
 		--Slave to WB
 		WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 		WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
@@ -47,7 +47,7 @@ entity wb_s is
 		DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-		STB_I : out STD_LOGIC;		
+		STB_I : out STD_LOGIC;
 		WE_I  : out STD_LOGIC;
 		CYC_I : out STD_LOGIC;
 		ACK_O : in  STD_LOGIC
@@ -55,12 +55,13 @@ entity wb_s is
 end wb_s;
 
 architecture Behavioral of wb_s is
+	--WB Inputs
 	alias dat_ms : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_I(DATA_WIDTH - 1 downto 0);
 	alias adr_ms : std_logic_vector(ADDR_WIDTH - 1 downto 0) is WB_I(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
-	alias stb_ms : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH);	
+	alias stb_ms : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH);
 	alias we_ms  : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 1);
 	alias cyc_ms : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 2);
-
+	--WB Outputs
 	signal dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal ack_sm : std_logic;
 
@@ -68,7 +69,7 @@ architecture Behavioral of wb_s is
 	signal core_mem_sel : boolean;
 
 	type ram_type is array (0 to 7) of std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal core_mem : ram_type;	
+	signal core_mem : ram_type;
 
 begin
 	process(CLK_I)
@@ -78,13 +79,13 @@ begin
 		if (rising_edge(CLK_I)) then
 			--Check for reset
 			if (RST_I = '1') then
-				dat_sm <= (others=>'0');
-				ack_sm <= '0';
+				dat_sm      <= (others => '0');
+				ack_sm      <= '0';
 				core_mem(0) <= x"0000"; --For 32 bit addressing
 				core_mem(1) <= x"0" & std_logic_vector(BASE_ADDR);
 				core_mem(2) <= x"0000"; --For 32 bit addressing
 				core_mem(3) <= x"0" & std_logic_vector(BASE_ADDR + (2 ** CORE_ADDR_WIDTH) - 1);
-			if(core_sel and core_mem_sel) then
+				if (core_sel and core_mem_sel) then
 				--Check for strobe
 				elsif (stb_ms = '1') then
 					dat_sm <= core_mem(to_integer(unsigned(adr_ms(2 downto 0))));
@@ -110,13 +111,13 @@ begin
 				--WB Output Ports
 				WB_O <= (ack_sm & dat_sm);
 				--WB Input Ports
-				STB_I <= '0';				
+				STB_I <= '0';
 				CYC_I <= '0';
 			else
 				--WB Output Ports
 				WB_O <= (ACK_O & DAT_O);
 				--WB Input Ports
-				STB_I <= stb_ms;				
+				STB_I <= stb_ms;
 				CYC_I <= cyc_ms;
 			end if;
 		else

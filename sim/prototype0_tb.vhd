@@ -24,15 +24,13 @@ ARCHITECTURE behavioral OF prototype0_prototype0_sch_tb IS
 		PORT(sys_clk_p : IN  STD_LOGIC;
 			 sys_clk_n : IN  STD_LOGIC;
 			 RST_I     : IN  STD_LOGIC;
-			 GPIO      : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-			 Debug     : OUT STD_LOGIC_VECTOR(21 DOWNTO 0));
+			 GPIO      : OUT STD_LOGIC_VECTOR(7 DOWNTO 0));
 	END COMPONENT;
 
 	SIGNAL sys_clk_p : STD_LOGIC := '0';
 	SIGNAL sys_clk_n : STD_LOGIC := '0';
 	SIGNAL RST_I : STD_LOGIC := '1';
 	SIGNAL GPIO  : STD_LOGIC_VECTOR(7 DOWNTO 0);
-	SIGNAL Debug : STD_LOGIC_VECTOR(21 DOWNTO 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
@@ -42,8 +40,7 @@ BEGIN
 			SYS_CLK_P => SYS_CLK_P,
 			SYS_CLK_N => SYS_CLK_N,
 			RST_I => RST_I,
-			GPIO  => GPIO,
-			Debug => Debug
+			GPIO  => GPIO
 		);
 
 	-- Clock process definitions

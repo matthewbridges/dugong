@@ -45,8 +45,8 @@ architecture Behavioral of gpio_controller_ip is
 	signal DAT_I : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 	signal DAT_O : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 	signal ADR_I : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+	signal STB_I : STD_LOGIC;	
 	signal WE_I  : STD_LOGIC;
-	signal STB_I : STD_LOGIC;
 	signal ACK_O : STD_LOGIC;
 
 	component wb_s is
@@ -64,10 +64,10 @@ architecture Behavioral of gpio_controller_ip is
 			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+			STB_I : out STD_LOGIC;			
 			WE_I  : out STD_LOGIC;
-			STB_I : out STD_LOGIC;
-			ACK_O : in  STD_LOGIC;
 			CYC_I : out STD_LOGIC;
+			ACK_O : in  STD_LOGIC;
 			--Slave to WB
 			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0)
@@ -88,17 +88,17 @@ architecture Behavioral of gpio_controller_ip is
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_I : in  STD_LOGIC;			
 			WE_I  : in  STD_LOGIC;
-			STB_I : in  STD_LOGIC;
+			--CYC_I : in   STD_LOGIC;
 			ACK_O : out STD_LOGIC;
-			--		CYC_I : in   STD_LOGIC;
 			--GPIO Interface
 			GPIO  : out STD_LOGIC_VECTOR(GPIO_WIDTH - 1 downto 0)
 		);
 	end component;
 
 begin
-	core_logic : wb_s
+	bus_logic : wb_s
 		generic map(
 			DATA_WIDTH      => DATA_WIDTH,
 			ADDR_WIDTH      => ADDR_WIDTH,
@@ -116,10 +116,10 @@ begin
 			DAT_I => dat_i,
 			DAT_O => dat_o,
 			ADR_I => adr_i,
+			STB_I => stb_i,			
 			WE_I  => we_i,
-			STB_I => stb_i,
-			ACK_O => ack_o,
-			CYC_I => open
+			CYC_I => open,
+			ACK_O => ack_o
 		);
 
 	user_logic : gpio_controller
@@ -136,10 +136,10 @@ begin
 			DAT_I => dat_i,
 			DAT_O => dat_o,
 			ADR_I => adr_i,
+			STB_I => stb_i,			
 			WE_I  => we_i,
-			STB_I => stb_i,
-			ACK_O => ack_o,
 			--	CYC_I =>
+			ACK_O => ack_o,
 			--GPIO Interface
 			GPIO  => GPIO
 		);

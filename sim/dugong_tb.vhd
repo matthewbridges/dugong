@@ -2,10 +2,10 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   16:31:07 08/07/2012
+-- Create Date:   12:11:21 08/30/2012
 -- Design Name:   
--- Module Name:   /home/mbridges/Projects/project_Dugong_v0f/dugong_tb.vhd
--- Project Name:  project_Dugong_v0f
+-- Module Name:   /home/mbridges/Projects/Dugong/sim/dugong_tb.vhd
+-- Project Name:  Dugong
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
@@ -43,31 +43,21 @@ ARCHITECTURE behavior OF dugong_tb IS
 		PORT(
 			CLK_I : IN  std_logic;
 			RST_I : IN  std_logic;
-			DAT_I : IN  std_logic_vector(15 downto 0);
-			DAT_O : OUT std_logic_vector(15 downto 0);
-			ADR_O : OUT std_logic_vector(11 downto 0);
-			WE_O  : OUT std_logic;
-			STB_O : OUT std_logic;
-			ACK_I : IN  std_logic;
-			CYC_O : OUT std_logic
+			WB_I  : IN  std_logic_vector(16 downto 0);
+			WB_O  : OUT std_logic_vector(30 downto 0)
 		);
 	END COMPONENT;
 
 	--Inputs
 	signal CLK_I : std_logic                     := '0';
 	signal RST_I : std_logic                     := '1';
-	signal DAT_I : std_logic_vector(15 downto 0) := (others => '0');
-	signal ACK_I : std_logic                     := '0';
+	signal WB_I  : std_logic_vector(16 downto 0) := (others => '0');
 
 	--Outputs
-	signal DAT_O : std_logic_vector(15 downto 0);
-	signal ADR_O : std_logic_vector(11 downto 0);
-	signal WE_O  : std_logic;
-	signal STB_O : std_logic;
-	signal CYC_O : std_logic;
+	signal WB_O : std_logic_vector(30 downto 0);
 
 	-- Clock period definitions
-	constant CLK_I_period : time := 5 ns;
+	constant CLK_I_period : time := 10 ns;
 
 BEGIN
 
@@ -75,13 +65,8 @@ BEGIN
 	uut : dugong PORT MAP(
 			CLK_I => CLK_I,
 			RST_I => RST_I,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			ADR_O => ADR_O,
-			WE_O  => WE_O,
-			STB_O => STB_O,
-			ACK_I => ACK_I,
-			CYC_O => CYC_O
+			WB_I  => WB_I,
+			WB_O  => WB_O
 		);
 
 	-- Clock process definitions
@@ -94,24 +79,26 @@ BEGIN
 	end process;
 
 	-- Stimulus process
-	start_proc : process
+	stim_proc : process
 	begin
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
 
 		wait for CLK_I_period * 10;
-
 		-- insert stimulus here 
 		RST_I <= '0';
 
+		wait;
 	end process;
-	
+
 	ACK_proc : process
 	begin
-		wait until (rising_edge(STB_O)); 
+		wait until (rising_edge(WB_O(28)));
 		wait until (rising_edge(CLK_I));
-		ACK_I <= STB_O;
-		wait until (falling_edge(STB_O));
-		ACK_I <= STB_O;
+		WB_I(16) <= '1';
+		wait until (rising_edge(CLK_I));
+		--wait until (falling_edge(WB_O(28)));
+		WB_I(16) <= '0';
 	end process;
+
 END;

@@ -35,24 +35,30 @@ entity dugong is
 		ADDR_WIDTH : natural := 12
 	);
 	port(
-		--Wishbone Master Lines
+		--System Control Inputs
 		CLK_I : in  STD_LOGIC;
 		RST_I : in  STD_LOGIC;
-		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		ADR_O : out STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-		WE_O  : out STD_LOGIC;
-		STB_O : out STD_LOGIC;
-		ACK_I : in  STD_LOGIC;
-		CYC_O : out STD_LOGIC
+		--Master to WB
+		WB_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		WB_O  : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0)
 	);
 end dugong;
 
 architecture Behavioral of dugong is
+	--WB Master Lines
+	signal dat_i : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal dat_o : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+	signal adr_o : STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+	signal stb_o : STD_LOGIC;
+	signal we_o  : STD_LOGIC;
+	signal cyc_o : STD_LOGIC;
+	signal ack_i : std_logic;
+
 	signal mem_dat_o   : std_logic_vector(31 downto 0);
 	signal instruction : std_logic_vector(31 downto 0);
 	signal pc          : std_logic_vector(8 downto 0);
 	signal wait_cntr   : unsigned(ADDR_WIDTH + DATA_WIDTH - 1 downto 0);
+	--	signal acc         : std_logic_vector(DATA_WIDTH - 1 downto 0);
 
 	signal pc_ack_i : std_logic;
 
@@ -62,19 +68,43 @@ architecture Behavioral of dugong is
 	signal wait_en   : std_logic;
 	signal pc_en     : std_logic;
 
+	component wb_m is
+		generic(
+			DATA_WIDTH : natural := 16;
+			ADDR_WIDTH : natural := 12
+		);
+		port(
+			--System Control Inputs
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			--Master to WB
+			WB_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			WB_O  : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			--Wishbone Master Lines (inverted)
+			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_O : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_O : in  STD_LOGIC;
+			WE_O  : in  STD_LOGIC;
+			CYC_O : in  STD_LOGIC;
+			ACK_I : out STD_LOGIC
+		);
+	end component;
+
 	component program_counter is
 		generic(
 			DATA_WIDTH : natural := 9;
-			PROG_SIZE  : natural := 511
+			PROG_SIZE  : natural := 20
 		);
 		port(
-			-- Wishbone Master Lines
+			--System Control Inputs
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
+			--Wishbone Slave Lines (inverted)
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			WE_I  : in  STD_LOGIC;
 			STB_I : in  STD_LOGIC;
+			WE_I  : in  STD_LOGIC;
 			ACK_O : out STD_LOGIC
 		);
 	end component;
@@ -99,10 +129,39 @@ architecture Behavioral of dugong is
 	end component;
 
 begin
-	prog_counter : program_counter PORT MAP(
+	bus_logic : wb_m
+		generic map(
+			DATA_WIDTH => DATA_WIDTH,
+			ADDR_WIDTH => ADDR_WIDTH
+		)
+		port map(
+			--System Control Inputs
 			CLK_I => CLK_I,
 			RST_I => RST_I,
-			DAT_I => instruction(8 downto 0),
+			--Master to WB
+			WB_I  => WB_I,
+			WB_O  => WB_O,
+			--Wishbone Master Lines (inverted)
+			DAT_I => dat_i,
+			DAT_O => dat_o,
+			ADR_O => adr_o,
+			STB_O => stb_o,
+			WE_O  => we_o,
+			CYC_O => cyc_o,
+			ACK_I => ack_i
+		);
+
+	prog_counter : program_counter
+		generic map(
+			DATA_WIDTH => 9,
+			PROG_SIZE  => 200
+		)
+		port map(
+			--System Control Inputs
+			CLK_I => CLK_I,
+			RST_I => RST_I,
+			--Wishbone Slave Lines
+			DAT_I => dat_o(8 downto 0),
 			DAT_O => pc,
 			WE_I  => branch_en,
 			STB_I => pc_en,
@@ -152,7 +211,10 @@ begin
 						wait_cntr <= unsigned(instruction(27 downto 0));
 						pc_en     <= '1'; -- Request new instruction
 					end if;
-				elsif (ACK_I = '1') then
+				elsif (ack_i = '1') then
+					--					if (write_en = '0') then
+					--						acc <= dat_i;
+					--					end if;
 					bus_en <= '0';      -- Conclude bus transfer
 				end if;
 
@@ -165,13 +227,10 @@ begin
 		end if;
 	end process;
 
-	STB_O <= bus_en;
-	WE_O  <= write_en;
+	stb_o <= bus_en;
+	we_o  <= write_en;
 
-	CYC_O <= branch_en;                 -- Debug
-
---	DAT_O <= mem_dat_o(15 downto 0);
---	ADR_O <= "000" & pc;
+	cyc_o <= branch_en;                 -- Debug
 
 end Behavioral;
 
