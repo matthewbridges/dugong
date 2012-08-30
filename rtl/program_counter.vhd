@@ -35,13 +35,14 @@ entity program_counter is
 		PROG_SIZE  : natural := 20
 	);
 	port(
-		-- Wishbone Master Lines
+		--System Control Inputs
 		CLK_I : in  STD_LOGIC;
 		RST_I : in  STD_LOGIC;
+		--Wishbone Slave Lines (inverted)
 		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		WE_I  : in  STD_LOGIC;
 		STB_I : in  STD_LOGIC;
+		WE_I  : in  STD_LOGIC;
 		ACK_O : out STD_LOGIC
 	);
 end program_counter;
@@ -64,22 +65,22 @@ begin
 				zero     <= true;
 			elsif ((STB_I and not pc_valid) = '1') then
 				if (WE_I = '1') then
-					pc <= unsigned(DAT_I);
+					pc       <= unsigned(DAT_I);
 					pc_valid <= '1';
 				else
 					if (zero) then
-						pc   <= (others => '0');
-						zero <= false;
+						pc       <= (others => '0');
+						zero     <= false;
 						pc_valid <= '1';
 					elsif (pc > (PROG_SIZE)) then
-						pc <= pc;
+						pc       <= pc;
 						pc_valid <= '0';
 					else
-						pc <= pc + 1;
+						pc       <= pc + 1;
 						pc_valid <= '1';
 					end if;
 				end if;
-				
+
 			else
 				pc       <= pc;
 				pc_valid <= '0';
