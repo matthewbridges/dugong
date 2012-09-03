@@ -110,13 +110,12 @@ BEGIN
 		wait until (rising_edge(WB_O(28)));
 		wait until (rising_edge(CLK_I));
 		WB_I(15 downto 0) <= temp;		
-		temp <= x"0A0A";--WB_O(15 downto 0);
+		temp <= WB_O(15 downto 0);
 		WB_I(16) <= '1';
-
 		wait until (rising_edge(CLK_I));
 		--wait until (falling_edge(WB_O(28)));
 		WB_I(16) <= '0';
---		WB_I(15 downto 0) <= x"0000";
+		WB_I(15 downto 0) <= x"0000";
 	end process;
 
 END;

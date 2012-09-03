@@ -211,6 +211,7 @@ begin
 						end if;
 						adr_o <= adr;
 						stb_o <= bus_en;
+						cyc_o <= bus_en;
 						we_o  <= write_en;
 						pc_en <= '1';   -- Request new instruction
 					end if;
@@ -220,6 +221,7 @@ begin
 						accum <= dat_i;
 					end if;
 					stb_o <= '0';       -- Conclude bus transfer
+					cyc_o <= '0';
 				end if;
 
 				if (pc_ack_i = '1') then
