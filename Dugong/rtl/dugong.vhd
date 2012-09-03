@@ -47,26 +47,29 @@ end dugong;
 architecture Behavioral of dugong is
 	--WB Master Lines
 	signal dat_i : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal dat_o : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-	signal adr_o : STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-	signal stb_o : STD_LOGIC;
-	signal we_o  : STD_LOGIC;
-	signal cyc_o : STD_LOGIC;
+	signal dat_o : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal adr_o : std_logic_vector(ADDR_WIDTH - 1 downto 0);
+	signal stb_o : std_logic;
+	signal we_o  : std_logic;
+	signal cyc_o : std_logic;
 	signal ack_i : std_logic;
 
-	signal mem_dat_o   : std_logic_vector(31 downto 0);
-	signal instruction : std_logic_vector(31 downto 0);
-	signal pc          : std_logic_vector(8 downto 0);
-	signal wait_cntr   : unsigned(ADDR_WIDTH + DATA_WIDTH - 1 downto 0);
-	--	signal acc         : std_logic_vector(DATA_WIDTH - 1 downto 0);
-
-	signal pc_ack_i : std_logic;
+	signal dat : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal adr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
 
 	signal bus_en    : std_logic;
 	signal write_en  : std_logic;
+	signal accum_en  : std_logic;
 	signal branch_en : std_logic;
 	signal wait_en   : std_logic;
 	signal pc_en     : std_logic;
+
+	signal instruction : std_logic_vector(31 downto 0);
+	signal pc          : std_logic_vector(8 downto 0);
+	signal wait_cntr   : integer;
+	signal accum       : std_logic_vector(DATA_WIDTH - 1 downto 0);
+
+	signal pc_ack_i : std_logic;
 
 	component wb_m is
 		generic(
@@ -124,7 +127,6 @@ architecture Behavioral of dugong is
 			WE_I  : in  STD_LOGIC;
 			STB_I : in  STD_LOGIC
 		--	CYC_I : in   STD_LOGIC;
-
 		);
 	end component;
 
@@ -161,7 +163,7 @@ begin
 			CLK_I => CLK_I,
 			RST_I => RST_I,
 			--Wishbone Slave Lines
-			DAT_I => dat_o(8 downto 0),
+			DAT_I => dat(8 downto 0),
 			DAT_O => pc,
 			WE_I  => branch_en,
 			STB_I => pc_en,
@@ -172,7 +174,7 @@ begin
 			CLK_I => not CLK_I,
 			RST_I => RST_I,
 			DAT_I => (others => '0'),
-			DAT_O => mem_dat_o,
+			DAT_O => instruction,
 			ADR_I => pc,
 			WE_I  => '0',
 			STB_I => '1'
@@ -183,54 +185,58 @@ begin
 		--Perform Rising Edge operations
 		if (rising_edge(CLK_I)) then
 			if (RST_I = '1') then
-				DAT_O       <= (others => '0');
-				ADR_O       <= (others => '0');
-				bus_en      <= '0';
-				write_en    <= '0';
-				branch_en   <= '0';
-				pc_en       <= '0';
-				instruction <= (others => '0');
+				dat_o <= (others => '0');
+				adr_o <= (others => '0');
+				stb_o <= '0';
+				we_o  <= '0';
+				cyc_o <= '0';
+				accum <= (others => '0');
+				pc_en <= '1';
 
 			else
 				-- Check if bus is idle
-				if (bus_en = '0') then
+				if (stb_o = '0') then
 					if (wait_en = '1') then
-						if (wait_cntr = "000000000000000") then
+						if (wait_cntr = 0) then
 							wait_en <= '0';
 						else
 							wait_cntr <= wait_cntr - 1;
 						end if;
 					-- Perform Instruction if valid
 					elsif (pc_en = '0') then
-						DAT_O     <= instruction(15 downto 0);
-						ADR_O     <= instruction(27 downto 16);
-						bus_en    <= instruction(28);
-						write_en  <= instruction(29);
-						branch_en <= instruction(30);
-						wait_en   <= instruction(31);
-						wait_cntr <= unsigned(instruction(27 downto 0));
-						pc_en     <= '1'; -- Request new instruction
+						if (accum_en = '1') then
+							dat_o <= accum;
+						else
+							dat_o <= dat;
+						end if;
+						adr_o <= adr;
+						stb_o <= bus_en;
+						we_o  <= write_en;
+						pc_en <= '1';   -- Request new instruction
 					end if;
+
 				elsif (ack_i = '1') then
-					--					if (write_en = '0') then
-					--						acc <= dat_i;
-					--					end if;
-					bus_en <= '0';      -- Conclude bus transfer
+					if (we_o = '0') then
+						accum <= dat_i;
+					end if;
+					stb_o <= '0';       -- Conclude bus transfer
 				end if;
 
 				if (pc_ack_i = '1') then
-					instruction <= mem_dat_o; -- Store new instruction
-					pc_en       <= '0';
+					dat       <= instruction(DATA_WIDTH - 1 downto 0);
+					adr       <= instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
+					wait_cntr <= to_integer(unsigned(instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto 0)));
+					bus_en    <= instruction(28) or instruction(29);
+					write_en  <= instruction(28);
+					accum_en  <= instruction(29);
+					branch_en <= instruction(30);
+					wait_en   <= instruction(31);
+					pc_en     <= '0';
 				end if;
 
 			end if;
 		end if;
 	end process;
-
-	stb_o <= bus_en;
-	we_o  <= write_en;
-
-	cyc_o <= branch_en;                 -- Debug
 
 end Behavioral;
 

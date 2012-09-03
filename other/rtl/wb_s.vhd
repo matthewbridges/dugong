@@ -85,9 +85,10 @@ begin
 				core_mem(1) <= x"0" & std_logic_vector(BASE_ADDR);
 				core_mem(2) <= x"0000"; --For 32 bit addressing
 				core_mem(3) <= x"0" & std_logic_vector(BASE_ADDR + (2 ** CORE_ADDR_WIDTH) - 1);
-				if (core_sel and core_mem_sel) then
+				
+			elsif (core_sel and core_mem_sel) then
 				--Check for strobe
-				elsif (stb_ms = '1') then
+				if (stb_ms = '1') then
 					dat_sm <= core_mem(to_integer(unsigned(adr_ms(2 downto 0))));
 					ack_sm <= '1';
 					--Check for write

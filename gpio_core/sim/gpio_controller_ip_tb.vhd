@@ -101,12 +101,17 @@ BEGIN
 
 		-- insert stimulus here 
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"F08" & x"00F0";
+		WB_I <= "111" & x"F08" & x"000F";
 		wait until rising_edge(WB_O(16));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"0000";
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"F08" & x"000F";
+		WB_I <= "101" & x"F08" & x"00FF";
+		wait until rising_edge(WB_O(16));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"0000";
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"F03" & x"000F";
 		wait until rising_edge(WB_O(16));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"0000";
@@ -114,7 +119,7 @@ BEGIN
 		WB_I <= "111" & x"E08" & x"000F";
 		wait until rising_edge(WB_O(16));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"0000";		
+		WB_I <= "000" & x"000" & x"0000";
 		wait;
 	end process;
 

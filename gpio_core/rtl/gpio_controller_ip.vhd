@@ -25,7 +25,7 @@ entity gpio_controller_ip is
 	generic(
 		DATA_WIDTH      : NATURAL               := 16;
 		ADDR_WIDTH      : NATURAL               := 12;
-		BASE_ADDR       : UNSIGNED(11 downto 0) := x"F00";
+		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 		CORE_ADDR_WIDTH : NATURAL               := 4;
 		GPIO_WIDTH      : natural               := 8
 	);

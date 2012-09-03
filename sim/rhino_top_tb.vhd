@@ -2,15 +2,15 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   12:11:21 08/30/2012
+-- Create Date:   18:39:34 08/31/2012
 -- Design Name:   
--- Module Name:   /home/mbridges/Projects/Dugong/sim/dugong_tb.vhd
+-- Module Name:   /home/mbridges/Projects/Dugong/rhino_top_tb.vhd
 -- Project Name:  Dugong
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
 -- 
--- VHDL Test Bench Created by ISE for module: dugong
+-- VHDL Test Bench Created by ISE for module: rhino_top
 -- 
 -- Dependencies:
 -- 
@@ -32,50 +32,53 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
 
-ENTITY dugong_tb IS
-END dugong_tb;
+ENTITY rhino_top_tb IS
+END rhino_top_tb;
 
-ARCHITECTURE behavior OF dugong_tb IS
+ARCHITECTURE behavior OF rhino_top_tb IS
 
 	-- Component Declaration for the Unit Under Test (UUT)
 
-	COMPONENT dugong
+	COMPONENT rhino_top
 		PORT(
-			CLK_I : IN  std_logic;
-			RST_I : IN  std_logic;
-			WB_I  : IN  std_logic_vector(16 downto 0);
-			WB_O  : OUT std_logic_vector(30 downto 0)
+			SYS_CLK_P : IN  std_logic;
+			SYS_CLK_N : IN  std_logic;
+			SYS_RST   : IN  std_logic;
+			GPIO      : OUT std_logic_vector(7 downto 0)
 		);
 	END COMPONENT;
 
 	--Inputs
-	signal CLK_I : std_logic                     := '0';
-	signal RST_I : std_logic                     := '1';
-	signal WB_I  : std_logic_vector(16 downto 0) := (others => '0');
+	signal SYS_CLK_P : std_logic := '0';
+	signal SYS_CLK_N : std_logic := '1';
+	signal SYS_RST   : std_logic := '1';
 
 	--Outputs
-	signal WB_O : std_logic_vector(30 downto 0);
+	signal GPIO : std_logic_vector(7 downto 0);
+	-- No clocks detected in port list. Replace <clock> below with 
+	-- appropriate port name 
 
-	-- Clock period definitions
-	constant CLK_I_period : time := 10 ns;
+	constant SYS_CLK_P_period : time := 10 ns;
 
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : dugong PORT MAP(
-			CLK_I => CLK_I,
-			RST_I => RST_I,
-			WB_I  => WB_I,
-			WB_O  => WB_O
+	uut : rhino_top PORT MAP(
+			SYS_CLK_P => SYS_CLK_P,
+			SYS_CLK_N => SYS_CLK_N,
+			SYS_RST   => SYS_RST,
+			GPIO      => GPIO
 		);
 
 	-- Clock process definitions
-	CLK_I_process : process
+	SYS_CLK_P_process : process
 	begin
-		CLK_I <= '0';
-		wait for CLK_I_period / 2;
-		CLK_I <= '1';
-		wait for CLK_I_period / 2;
+		SYS_CLK_P <= '0';
+		SYS_CLK_N <= '1';
+		wait for SYS_CLK_P_period / 2;
+		SYS_CLK_P <= '1';
+		SYS_CLK_N <= '0';
+		wait for SYS_CLK_P_period / 2;
 	end process;
 
 	-- Stimulus process
@@ -84,21 +87,13 @@ BEGIN
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
 
-		wait for CLK_I_period * 10;
+		wait for SYS_CLK_P_period * 10;
+
 		-- insert stimulus here 
-		RST_I <= '0';
+		SYS_RST <= '0';
+
 
 		wait;
-	end process;
-
-	ACK_proc : process
-	begin
-		wait until (rising_edge(WB_O(28)));
-		wait until (rising_edge(CLK_I));
-		WB_I(16) <= '1';
-		wait until (rising_edge(CLK_I));
-		--wait until (falling_edge(WB_O(28)));
-		WB_I(16) <= '0';
 	end process;
 
 END;

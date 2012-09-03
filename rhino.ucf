@@ -1,8 +1,8 @@
 
 # PlanAhead Generated physical constraints 
 
-NET "sys_clk_p" LOC = B14;
-NET "sys_clk_n" LOC = A14;
+NET "SYS_CLK_P" LOC = B14;
+NET "SYS_CLK_N" LOC = A14;
 
 # PlanAhead Generated IO constraints 
 
@@ -25,4 +25,4 @@ NET "GPIO[4]" LOC = V3;
 NET "GPIO[5]" LOC = V1;
 NET "GPIO[6]" LOC = U2;
 NET "GPIO[7]" LOC = U1;
-NET "RST_I" LOC = R8;
+NET "SYS_RST" LOC = R8;
