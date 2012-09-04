@@ -24,7 +24,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity da2_controller is
 	generic(
-		DATA_WIDTH : natural := 16;
+		DATA_WIDTH : natural := 12;
 		ADDR_WIDTH : natural := 4
 	);
 	port(
@@ -86,8 +86,8 @@ begin
 			CLK_OUT => CLK_OUT,
 			nSYNC   => nSYNC,
 			--User interface signals
-			DATA1   => user_mem(0)(11 downto 0),
-			DATA2   => user_mem(1)(11 downto 0),
+			DATA1   => user_mem(0),
+			DATA2   => user_mem(1),
 			START   => dac_start,
 			DONE    => dac_done
 		);
@@ -101,7 +101,7 @@ begin
 				DAT_O       <= (others => '0');
 				ACK_O       <= '0';
 				user_mem(0) <= (others => '0');
-				user_mem(1) <= x"07FF";
+				user_mem(1) <= x"7FF";
 				data_valid  <= false;
 				dac_start   <= '0';
 			elsif (data_valid) then

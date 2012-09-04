@@ -84,7 +84,7 @@ architecture DA2 of DA2RefComp is
           signal temp1         : std_logic_vector(15 downto 0);
           signal temp2         : std_logic_vector(15 downto 0);           
           signal clk_div       : std_logic;      
-          signal clk_counter   : std_logic_vector(27 downto 0);    
+          signal clk_counter   : std_logic_vector(2 downto 0); -- Changed by M Bridges    
           signal shiftCounter  : std_logic_vector(3 downto 0); 
           signal enShiftCounter: std_logic;
           signal enParalelLoad : std_logic;
@@ -109,14 +109,14 @@ begin
         clock_divide : process(rst,clk)
         begin
             if rst = '1' then
-                clk_counter <= "0000000000000000000000000000";
+                clk_counter <= (others => '0'); -- Changed by M Bridges
             elsif (clk = '1' and clk'event) then
                 clk_counter <= clk_counter + '1';
             end if;
         end process;
 
-        clk_div <= clk_counter(0);
-        clk_out <= clk_counter(0);
+        clk_div <= clk_counter(2); -- Changed by M Bridges
+        clk_out <= clk_counter(2); -- Changed by M Bridges
 
 
 -----------------------------------------------------------------------------------

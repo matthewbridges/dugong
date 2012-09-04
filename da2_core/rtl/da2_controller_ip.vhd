@@ -26,6 +26,7 @@ entity da2_controller_ip is
 		DATA_WIDTH      : NATURAL               := 16;
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+		CORE_DATA_WIDTH : NATURAL               := 12;
 		CORE_ADDR_WIDTH : NATURAL               := 4
 	);
 	port(
@@ -44,18 +45,19 @@ entity da2_controller_ip is
 end da2_controller_ip;
 
 architecture Behavioral of da2_controller_ip is
-	signal DAT_I : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-	signal DAT_O : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-	signal ADR_I : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-	signal STB_I : STD_LOGIC;
-	signal WE_I  : STD_LOGIC;
-	signal ACK_O : STD_LOGIC;
+	signal dat_i : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+	signal dat_o : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+	signal adr_i : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+	signal stb_i : STD_LOGIC;
+	signal we_i  : STD_LOGIC;
+	signal ack_o : STD_LOGIC;
 
 	component wb_s is
 		generic(
 			DATA_WIDTH      : NATURAL               := 16;
 			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+			CORE_DATA_WIDTH : NATURAL               := 16;
 			CORE_ADDR_WIDTH : NATURAL               := 4
 		);
 		port(
@@ -63,8 +65,8 @@ architecture Behavioral of da2_controller_ip is
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
 			--Wishbone Slave Lines (inverted)
-			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 			STB_I : out STD_LOGIC;
 			WE_I  : out STD_LOGIC;
@@ -78,7 +80,7 @@ architecture Behavioral of da2_controller_ip is
 
 	component da2_controller is
 		generic(
-			DATA_WIDTH : natural := 16;
+			DATA_WIDTH : natural := 12;
 			ADDR_WIDTH : natural := 4
 		);
 		port(
@@ -108,6 +110,7 @@ begin
 			DATA_WIDTH      => DATA_WIDTH,
 			ADDR_WIDTH      => ADDR_WIDTH,
 			BASE_ADDR       => BASE_ADDR,
+			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
@@ -129,7 +132,7 @@ begin
 
 	user_logic : da2_controller
 		generic map(
-			DATA_WIDTH => DATA_WIDTH,
+			DATA_WIDTH => CORE_DATA_WIDTH,
 			ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(

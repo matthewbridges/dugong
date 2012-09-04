@@ -70,6 +70,8 @@ architecture Behavioral of dugong is
 	signal accum       : std_logic_vector(DATA_WIDTH - 1 downto 0);
 
 	signal pc_ack_i : std_logic;
+	
+	signal clk_i_180 : std_logic;
 
 	component wb_m is
 		generic(
@@ -78,8 +80,8 @@ architecture Behavioral of dugong is
 		);
 		port(
 			--System Control Inputs
-			CLK_I : in  STD_LOGIC;
-			RST_I : in  STD_LOGIC;
+--			CLK_I : in  STD_LOGIC;
+--			RST_I : in  STD_LOGIC;
 			--Master to WB
 			WB_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			WB_O  : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
@@ -138,8 +140,8 @@ begin
 		)
 		port map(
 			--System Control Inputs
-			CLK_I => CLK_I,
-			RST_I => RST_I,
+--			CLK_I => CLK_I,
+--			RST_I => RST_I,
 			--Master to WB
 			WB_I  => WB_I,
 			WB_O  => WB_O,
@@ -171,7 +173,7 @@ begin
 		);
 
 	instruction_mem : inst_mem PORT MAP(
-			CLK_I => not CLK_I,
+			CLK_I => clk_i_180,
 			RST_I => RST_I,
 			DAT_I => (others => '0'),
 			DAT_O => instruction,
@@ -239,6 +241,8 @@ begin
 			end if;
 		end if;
 	end process;
+	
+	clk_i_180 <= not CLK_I;
 
 end Behavioral;
 

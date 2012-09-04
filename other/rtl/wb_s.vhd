@@ -34,6 +34,7 @@ entity wb_s is
 		DATA_WIDTH      : NATURAL               := 16;
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+		CORE_DATA_WIDTH : NATURAL               := 16;
 		CORE_ADDR_WIDTH : NATURAL               := 4
 	);
 	port(
@@ -44,8 +45,8 @@ entity wb_s is
 		WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 		WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--Wishbone Slave Lines (inverted)
-		DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 		ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 		STB_I : out STD_LOGIC;
 		WE_I  : out STD_LOGIC;
@@ -85,7 +86,8 @@ begin
 				core_mem(1) <= x"0" & std_logic_vector(BASE_ADDR);
 				core_mem(2) <= x"0000"; --For 32 bit addressing
 				core_mem(3) <= x"0" & std_logic_vector(BASE_ADDR + (2 ** CORE_ADDR_WIDTH) - 1);
-				
+				core_mem(4) <= "1010101010101010"; --Test Signal
+
 			elsif (core_sel and core_mem_sel) then
 				--Check for strobe
 				if (stb_ms = '1') then
@@ -116,7 +118,8 @@ begin
 				CYC_I <= '0';
 			else
 				--WB Output Ports
-				WB_O <= (ACK_O & DAT_O);
+				WB_O(DATA_WIDTH downto CORE_DATA_WIDTH) <= (DATA_WIDTH => ACK_O, others => '0');
+				WB_O(CORE_DATA_WIDTH - 1 downto 0)      <= DAT_O;
 				--WB Input Ports
 				STB_I <= stb_ms;
 				CYC_I <= cyc_ms;
@@ -131,7 +134,7 @@ begin
 	end process;
 
 	--WB Input Ports
-	DAT_I <= dat_ms;
+	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);
 	ADR_I <= adr_ms(CORE_ADDR_WIDTH - 1 downto 0);
 	WE_I  <= we_ms;
 end Behavioral;

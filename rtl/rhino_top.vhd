@@ -32,12 +32,18 @@ use IEEE.NUMERIC_STD.ALL;
 entity rhino_top is
 	port(
 		--System Control Inputs
-		SYS_CLK_P : in  STD_LOGIC;
-		SYS_CLK_N : in  STD_LOGIC;
-		SYS_RST   : in  STD_LOGIC;
+		SYS_CLK_P   : in  STD_LOGIC;
+		SYS_CLK_N   : in  STD_LOGIC;
+		SYS_RST     : in  STD_LOGIC;
 		--GPIO Interface
-		GPIO      : out STD_LOGIC_VECTOR(15 downto 0);
-		LED       : out STD_LOGIC_VECTOR(7 downto 0)
+		GPIO        : out STD_LOGIC_VECTOR(15 downto 0);
+		--LED Interface
+		LED         : out STD_LOGIC_VECTOR(7 downto 0);
+		--DA2 Interface
+		DA2_D1      : out STD_LOGIC;
+		DA2_D2      : out STD_LOGIC;
+		DA2_CLK_OUT : out STD_LOGIC;
+		DA2_nSYNC   : out STD_LOGIC
 	);
 end rhino_top;
 
@@ -77,8 +83,8 @@ architecture Behavioral of rhino_top is
 			DATA_WIDTH      : NATURAL               := 16;
 			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_ADDR_WIDTH : NATURAL               := 4;
-			GPIO_WIDTH      : natural               := 8
+			CORE_DATA_WIDTH : NATURAL               := 16;
+			CORE_ADDR_WIDTH : NATURAL               := 4
 		);
 		PORT(
 			--System Control Inputs
@@ -88,7 +94,30 @@ architecture Behavioral of rhino_top is
 			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			--GPIO Interface
-			GPIO  : out STD_LOGIC_VECTOR(GPIO_WIDTH - 1 downto 0)
+			GPIO  : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+		);
+	END COMPONENT;
+
+	COMPONENT da2_controller_ip
+		GENERIC(
+			DATA_WIDTH      : NATURAL               := 16;
+			ADDR_WIDTH      : NATURAL               := 12;
+			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+			CORE_DATA_WIDTH : NATURAL               := 16;
+			CORE_ADDR_WIDTH : NATURAL               := 4
+		);
+		PORT(
+			--System Control Inputs
+			CLK_I   : in  STD_LOGIC;
+			RST_I   : in  STD_LOGIC;
+			--Slave to WB
+			WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			--DA2 Pmod interface signals
+			D1      : out std_logic;
+			D2      : out std_logic;
+			CLK_OUT : out std_logic;
+			nSYNC   : out std_logic
 		);
 	END COMPONENT;
 
@@ -110,8 +139,8 @@ begin
 		);
 	GPIOs_16 : gpio_controller_ip
 		GENERIC MAP(
-			BASE_ADDR  => x"E00",
-			GPIO_WIDTH => 16
+			BASE_ADDR       => x"E00",
+			CORE_DATA_WIDTH => 16
 		)
 		PORT MAP(
 			CLK_I => sys_con_clk,
@@ -122,7 +151,8 @@ begin
 		);
 	LEDs_8 : gpio_controller_ip
 		GENERIC MAP(
-			BASE_ADDR => x"F00"
+			BASE_ADDR       => x"F00",
+			CORE_DATA_WIDTH => 8
 		)
 		PORT MAP(
 			CLK_I => sys_con_clk,
@@ -130,6 +160,22 @@ begin
 			WB_I  => wb_ms,
 			WB_O  => wb_sm,
 			GPIO  => LED
+		);
+
+	DAC : da2_controller_ip
+		GENERIC MAP(
+			BASE_ADDR       => x"800",
+			CORE_DATA_WIDTH => 12
+		)
+		PORT MAP(
+			CLK_I   => sys_con_clk,
+			RST_I   => sys_con_rst,
+			WB_I    => wb_ms,
+			WB_O    => wb_sm,
+			D1      => DA2_D1,
+			D2      => DA2_D2,
+			CLK_OUT => DA2_CLK_OUT,
+			nSYNC   => DA2_nSYNC
 		);
 
 	sys_con_rst <= SYS_RST or not clk_valid;

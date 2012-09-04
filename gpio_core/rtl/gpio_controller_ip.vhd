@@ -26,8 +26,8 @@ entity gpio_controller_ip is
 		DATA_WIDTH      : NATURAL               := 16;
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-		CORE_ADDR_WIDTH : NATURAL               := 4;
-		GPIO_WIDTH      : natural               := 8
+		CORE_DATA_WIDTH : NATURAL               := 16;
+		CORE_ADDR_WIDTH : NATURAL               := 4
 	);
 	port(
 		--System Control Inputs
@@ -37,23 +37,24 @@ entity gpio_controller_ip is
 		WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 		WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--GPIO Interface
-		GPIO  : out STD_LOGIC_VECTOR(GPIO_WIDTH - 1 downto 0)
+		GPIO  : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 	);
 end gpio_controller_ip;
 
 architecture Behavioral of gpio_controller_ip is
-	signal DAT_I : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-	signal DAT_O : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-	signal ADR_I : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-	signal STB_I : STD_LOGIC;	
-	signal WE_I  : STD_LOGIC;
-	signal ACK_O : STD_LOGIC;
+	signal dat_i : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+	signal dat_o : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+	signal adr_i : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+	signal stb_i : STD_LOGIC;
+	signal we_i  : STD_LOGIC;
+	signal ack_o : STD_LOGIC;
 
 	component wb_s is
 		generic(
 			DATA_WIDTH      : NATURAL               := 16;
 			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+			CORE_DATA_WIDTH : NATURAL               := 16;
 			CORE_ADDR_WIDTH : NATURAL               := 4
 		);
 		port(
@@ -61,10 +62,10 @@ architecture Behavioral of gpio_controller_ip is
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
 			--Wishbone Slave Lines (inverted)
-			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-			STB_I : out STD_LOGIC;			
+			STB_I : out STD_LOGIC;
 			WE_I  : out STD_LOGIC;
 			CYC_I : out STD_LOGIC;
 			ACK_O : in  STD_LOGIC;
@@ -88,9 +89,10 @@ architecture Behavioral of gpio_controller_ip is
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			STB_I : in  STD_LOGIC;			
+			STB_I : in  STD_LOGIC;
 			WE_I  : in  STD_LOGIC;
 			--CYC_I : in   STD_LOGIC;
+
 			ACK_O : out STD_LOGIC;
 			--GPIO Interface
 			GPIO  : out STD_LOGIC_VECTOR(GPIO_WIDTH - 1 downto 0)
@@ -103,6 +105,7 @@ begin
 			DATA_WIDTH      => DATA_WIDTH,
 			ADDR_WIDTH      => ADDR_WIDTH,
 			BASE_ADDR       => BASE_ADDR,
+			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
@@ -116,7 +119,7 @@ begin
 			DAT_I => dat_i,
 			DAT_O => dat_o,
 			ADR_I => adr_i,
-			STB_I => stb_i,			
+			STB_I => stb_i,
 			WE_I  => we_i,
 			CYC_I => open,
 			ACK_O => ack_o
@@ -124,19 +127,19 @@ begin
 
 	user_logic : gpio_controller
 		generic map(
-			DATA_WIDTH => DATA_WIDTH,
+			DATA_WIDTH => CORE_DATA_WIDTH,
 			ADDR_WIDTH => CORE_ADDR_WIDTH,
-			GPIO_WIDTH => GPIO_WIDTH
+			GPIO_WIDTH => CORE_DATA_WIDTH
 		)
 		port map(
 			--System Control Inputs
 			CLK_I => CLK_I,
 			RST_I => RST_I,
 			--Wishbone Slave Lines
-			DAT_I => dat_i,
-			DAT_O => dat_o,
+			DAT_I => dat_i(CORE_DATA_WIDTH - 1 downto 0),
+			DAT_O => dat_o(CORE_DATA_WIDTH - 1 downto 0),
 			ADR_I => adr_i,
-			STB_I => stb_i,			
+			STB_I => stb_i,
 			WE_I  => we_i,
 			--	CYC_I =>
 			ACK_O => ack_o,
