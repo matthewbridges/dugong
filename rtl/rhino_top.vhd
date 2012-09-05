@@ -98,6 +98,24 @@ architecture Behavioral of rhino_top is
 		);
 	END COMPONENT;
 
+	COMPONENT dds_core_ip
+		GENERIC(
+			DATA_WIDTH      : NATURAL               := 16;
+			ADDR_WIDTH      : NATURAL               := 12;
+			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+			CORE_DATA_WIDTH : NATURAL               := 16;
+			CORE_ADDR_WIDTH : NATURAL               := 4
+		);
+		PORT(
+			--System Control Inputs
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			--Slave to WB
+			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0)
+		);
+	END COMPONENT;
+
 	COMPONENT da2_controller_ip
 		GENERIC(
 			DATA_WIDTH      : NATURAL               := 16;
@@ -130,6 +148,7 @@ begin
 			RESET     => '0',
 			CLK_VALID => clk_valid
 		);
+		
 	Central_Control_Unit : dugong
 		PORT MAP(
 			CLK_I => sys_con_clk,
@@ -137,6 +156,7 @@ begin
 			WB_I  => wb_sm,
 			WB_O  => wb_ms
 		);
+		
 	GPIOs_16 : gpio_controller_ip
 		GENERIC MAP(
 			BASE_ADDR       => x"E00",
@@ -149,6 +169,7 @@ begin
 			WB_O  => wb_sm,
 			GPIO  => GPIO
 		);
+		
 	LEDs_8 : gpio_controller_ip
 		GENERIC MAP(
 			BASE_ADDR       => x"F00",
@@ -160,6 +181,18 @@ begin
 			WB_I  => wb_ms,
 			WB_O  => wb_sm,
 			GPIO  => LED
+		);
+		
+	DDS : dds_core_ip
+		GENERIC MAP(
+			BASE_ADDR       => x"700",
+			CORE_DATA_WIDTH => 12
+		)
+		PORT MAP(
+			CLK_I => sys_con_clk,
+			RST_I => sys_con_rst,
+			WB_I  => wb_ms,
+			WB_O  => wb_sm
 		);
 
 	DAC : da2_controller_ip

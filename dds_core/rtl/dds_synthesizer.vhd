@@ -14,33 +14,6 @@
 -- You should have received a copy of the GNU General Public License along with this program; 
 -- if not, see <http://www.gnu.org/licenses/>.
 
--- Package Definition
-
-library ieee;
-use ieee.std_logic_1164.all;
-use IEEE.STD_LOGIC_arith.all;
-use IEEE.STD_LOGIC_unsigned.all;
-use work.sine_lut_pkg.all;
-
-package dds_synthesizer_pkg is
-  component dds_synthesizer
-    generic(
-      ftw_width : integer
-      );
-    port(
-      clk_i   : in  std_logic;
-      rst_i   : in  std_logic;
-      ftw_i   : in  std_logic_vector(ftw_width-1 downto 0);
-      phase_i : in  std_logic_vector(PHASE_WIDTH-1 downto 0);
-      phase_o : out std_logic_vector(PHASE_WIDTH-1 downto 0);
-      ampl_o  : out std_logic_vector(AMPL_WIDTH-1 downto 0)
-      );
-  end component;
-end dds_synthesizer_pkg;
-
-package body dds_synthesizer_pkg is
-end dds_synthesizer_pkg;
-
 -- Entity Definition
 
 library ieee;
