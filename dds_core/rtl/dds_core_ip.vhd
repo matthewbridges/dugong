@@ -26,7 +26,7 @@ entity dds_core_ip is
 		DATA_WIDTH      : NATURAL               := 16;
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-		CORE_DATA_WIDTH : NATURAL               := 16;
+		CORE_DATA_WIDTH : NATURAL               := 12;
 		CORE_ADDR_WIDTH : NATURAL               := 4
 	);
 	port(

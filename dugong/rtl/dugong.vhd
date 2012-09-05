@@ -158,7 +158,7 @@ begin
 	prog_counter : program_counter
 		generic map(
 			DATA_WIDTH => 9,
-			PROG_SIZE  => 200
+			PROG_SIZE  => 512
 		)
 		port map(
 			--System Control Inputs

@@ -70,9 +70,9 @@ begin
 
 process(GPMC_N_ADV_ALE)
 begin
- if(rising_edge(GPMC_N_ADV_ALE))
- 	adr <= GPMC_ADR_I & GPMC_DAT_B
- end if;
+-- if(rising_edge(GPMC_N_ADV_ALE))
+ --	adr <= GPMC_ADR_I & GPMC_DAT_B
+-- end if;
 
 end process;
 

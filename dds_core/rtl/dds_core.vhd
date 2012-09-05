@@ -74,7 +74,7 @@ begin
 			ftw_i   => user_mem(0),
 			phase_i => user_mem(1),
 			phase_o => user_mem(2),
-			ampl_o  => user_mem(5)
+			ampl_o  => user_mem(4)
 		);
 
 	process(CLK_I)
@@ -85,6 +85,7 @@ begin
 			--Check for reset
 			if (RST_I = '1') then
 				q <= (others => '0');
+				user_mem(1) <= (others => '0');
 			--Check for strobe
 			elsif (STB_I = '1') then
 				q <= user_mem(adr);
@@ -106,7 +107,7 @@ begin
 	DAT_O <= q;
 
 	adr <= to_integer(unsigned(ADR_I)) - 8;
-	user_mem(6) <= not (user_mem(5)(DATA_WIDTH - 1)) & user_mem(5)(DATA_WIDTH - 2 downto 0);
+	user_mem(5) <= not (user_mem(4)(DATA_WIDTH - 1)) & user_mem(4)(DATA_WIDTH - 2 downto 0);
 
 end Behavioral;
 
