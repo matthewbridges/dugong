@@ -53,16 +53,21 @@ architecture Behavioral of rhino_top is
 	signal sys_con_clk : std_logic;
 	signal sys_con_rst : std_logic;
 
-	signal ch_a      : std_logic_vector(11 downto 0);
-	signal ch_b      : std_logic_vector(11 downto 0);
-	signal clk_valid : std_logic;
+--	signal ch_a      : std_logic_vector(11 downto 0);
+--	signal ch_b      : std_logic_vector(11 downto 0);
 
-	COMPONENT clk_generator
-		PORT(CLK_IN1_P : IN  std_logic;
-			 CLK_IN1_N : IN  std_logic;
-			 RESET     : IN  std_logic;
-			 CLK_OUT1  : OUT std_logic;
-			 CLK_VALID : OUT std_logic);
+	COMPONENT system_controller
+		PORT(
+			--System Clock Differential Inputs 100MHz
+			SYS_CLK_P  : in  STD_LOGIC;
+			SYS_CLK_N  : in  STD_LOGIC;
+			--System Reset
+			SYS_RST    : in  STD_LOGIC;
+			--System Control Inputs
+			CLK_100MHz : out STD_LOGIC;
+			CLK_200Mhz : out STD_LOGIC;
+			RST_O      : out STD_LOGIC
+		);
 	END COMPONENT;
 
 	COMPONENT dugong
@@ -100,60 +105,61 @@ architecture Behavioral of rhino_top is
 		);
 	END COMPONENT;
 
-	COMPONENT dds_core_ip
-		GENERIC(
-			DATA_WIDTH      : NATURAL               := 16;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 4
-		);
-		PORT(
-			--System Control Inputs
-			CLK_I  : in  STD_LOGIC;
-			RST_I  : in  STD_LOGIC;
-			--Slave to WB
-			WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			CH_A_O : out STD_LOGIC_VECTOR(11 downto 0);
-			CH_B_O : out STD_LOGIC_VECTOR(11 downto 0)
-		);
-	END COMPONENT;
+--	COMPONENT dds_core_ip
+--		GENERIC(
+--			DATA_WIDTH      : NATURAL               := 16;
+--			ADDR_WIDTH      : NATURAL               := 12;
+--			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+--			CORE_DATA_WIDTH : NATURAL               := 16;
+--			CORE_ADDR_WIDTH : NATURAL               := 4
+--		);
+--		PORT(
+--			--System Control Inputs
+--			CLK_I  : in  STD_LOGIC;
+--			RST_I  : in  STD_LOGIC;
+--			--Slave to WB
+--			WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+--			WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+--			CH_A_O : out STD_LOGIC_VECTOR(11 downto 0);
+--			CH_B_O : out STD_LOGIC_VECTOR(11 downto 0)
+--		);
+--	END COMPONENT;
 
-	COMPONENT da2_controller_ip
-		GENERIC(
-			DATA_WIDTH      : NATURAL               := 16;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 4
-		);
-		PORT(
-			--System Control Inputs
-			CLK_I   : in  STD_LOGIC;
-			RST_I   : in  STD_LOGIC;
-			--Slave to WB
-			WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
-			CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
-			--DA2 Pmod interface signals
-			D1      : out std_logic;
-			D2      : out std_logic;
-			CLK_OUT : out std_logic;
-			nSYNC   : out std_logic
-		);
-	END COMPONENT;
+--	COMPONENT da2_controller_ip
+--		GENERIC(
+--			DATA_WIDTH      : NATURAL               := 16;
+--			ADDR_WIDTH      : NATURAL               := 12;
+--			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+--			CORE_DATA_WIDTH : NATURAL               := 16;
+--			CORE_ADDR_WIDTH : NATURAL               := 4
+--		);
+--		PORT(
+--			--System Control Inputs
+--			CLK_I   : in  STD_LOGIC;
+--			RST_I   : in  STD_LOGIC;
+--			--Slave to WB
+--			WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+--			WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+--			CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+--			CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+--			--DA2 Pmod interface signals
+--			D1      : out std_logic;
+--			D2      : out std_logic;
+--			CLK_OUT : out std_logic;
+--			nSYNC   : out std_logic
+--		);
+--	END COMPONENT;
 
 begin
-	Sys_Clk_Gen : clk_generator
-		PORT MAP(
-			CLK_IN1_P => SYS_CLK_P,
-			CLK_IN1_N => SYS_CLK_N,
-			CLK_OUT1  => sys_con_clk,
-			RESET     => '0',
-			CLK_VALID => clk_valid
-		);
+	Sys_Con : system_controller
+	PORT MAP(
+		SYS_CLK_P  => SYS_CLK_P,
+		SYS_CLK_N  => SYS_CLK_N,
+		SYS_RST    => SYS_RST,
+		CLK_100MHz => sys_con_clk,
+		CLK_200Mhz => open,
+		RST_O     => sys_con_rst
+	);
 
 	Central_Control_Unit : dugong
 		PORT MAP(
@@ -189,38 +195,37 @@ begin
 			GPIO  => LED
 		);
 
-	DDS : dds_core_ip
-		GENERIC MAP(
-			BASE_ADDR       => x"700",
-			CORE_DATA_WIDTH => 12
-		)
-		PORT MAP(
-			CLK_I  => sys_con_clk,
-			RST_I  => sys_con_rst,
-			WB_I   => wb_ms,
-			WB_O   => wb_sm,
-			CH_A_O => ch_a,
-			CH_B_O => ch_b
-		);
+--	DDS : dds_core_ip
+--		GENERIC MAP(
+--			BASE_ADDR       => x"700",
+--			CORE_DATA_WIDTH => 12
+--		)
+--		PORT MAP(
+--			CLK_I  => sys_con_clk,
+--			RST_I  => sys_con_rst,
+--			WB_I   => wb_ms,
+--			WB_O   => wb_sm,
+--			CH_A_O => ch_a,
+--			CH_B_O => ch_b
+--		);
 
-	DAC : da2_controller_ip
-		GENERIC MAP(
-			BASE_ADDR       => x"800",
-			CORE_DATA_WIDTH => 12
-		)
-		PORT MAP(
-			CLK_I   => sys_con_clk,
-			RST_I   => sys_con_rst,
-			WB_I    => wb_ms,
-			WB_O    => wb_sm,
-			CH_A_I  => ch_a,
-			CH_B_I  => ch_b,
-			D1      => DA2_D1,
-			D2      => DA2_D2,
-			CLK_OUT => DA2_CLK_OUT,
-			nSYNC   => DA2_nSYNC
-		);
+--	DAC : da2_controller_ip
+--		GENERIC MAP(
+--			BASE_ADDR       => x"800",
+--			CORE_DATA_WIDTH => 12
+--		)
+--		PORT MAP(
+--			CLK_I   => sys_con_clk,
+--			RST_I   => sys_con_rst,
+--			WB_I    => wb_ms,
+--			WB_O    => wb_sm,
+--			CH_A_I  => ch_a,
+--			CH_B_I  => ch_b,
+--			D1      => DA2_D1,
+--			D2      => DA2_D2,
+--			CLK_OUT => DA2_CLK_OUT,
+--			nSYNC   => DA2_nSYNC
+--		);
 
-	sys_con_rst <= SYS_RST or not clk_valid;
 end Behavioral;
 
