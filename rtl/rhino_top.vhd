@@ -53,6 +53,8 @@ architecture Behavioral of rhino_top is
 	signal sys_con_clk : std_logic;
 	signal sys_con_rst : std_logic;
 
+	signal ch_a      : std_logic_vector(11 downto 0);
+	signal ch_b      : std_logic_vector(11 downto 0);
 	signal clk_valid : std_logic;
 
 	COMPONENT clk_generator
@@ -108,11 +110,13 @@ architecture Behavioral of rhino_top is
 		);
 		PORT(
 			--System Control Inputs
-			CLK_I : in  STD_LOGIC;
-			RST_I : in  STD_LOGIC;
+			CLK_I  : in  STD_LOGIC;
+			RST_I  : in  STD_LOGIC;
 			--Slave to WB
-			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0)
+			WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			CH_A_O : out STD_LOGIC_VECTOR(11 downto 0);
+			CH_B_O : out STD_LOGIC_VECTOR(11 downto 0)
 		);
 	END COMPONENT;
 
@@ -131,6 +135,8 @@ architecture Behavioral of rhino_top is
 			--Slave to WB
 			WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+			CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
 			--DA2 Pmod interface signals
 			D1      : out std_logic;
 			D2      : out std_logic;
@@ -148,7 +154,7 @@ begin
 			RESET     => '0',
 			CLK_VALID => clk_valid
 		);
-		
+
 	Central_Control_Unit : dugong
 		PORT MAP(
 			CLK_I => sys_con_clk,
@@ -156,7 +162,7 @@ begin
 			WB_I  => wb_sm,
 			WB_O  => wb_ms
 		);
-		
+
 	GPIOs_16 : gpio_controller_ip
 		GENERIC MAP(
 			BASE_ADDR       => x"E00",
@@ -169,7 +175,7 @@ begin
 			WB_O  => wb_sm,
 			GPIO  => GPIO
 		);
-		
+
 	LEDs_8 : gpio_controller_ip
 		GENERIC MAP(
 			BASE_ADDR       => x"F00",
@@ -182,17 +188,19 @@ begin
 			WB_O  => wb_sm,
 			GPIO  => LED
 		);
-		
+
 	DDS : dds_core_ip
 		GENERIC MAP(
 			BASE_ADDR       => x"700",
 			CORE_DATA_WIDTH => 12
 		)
 		PORT MAP(
-			CLK_I => sys_con_clk,
-			RST_I => sys_con_rst,
-			WB_I  => wb_ms,
-			WB_O  => wb_sm
+			CLK_I  => sys_con_clk,
+			RST_I  => sys_con_rst,
+			WB_I   => wb_ms,
+			WB_O   => wb_sm,
+			CH_A_O => ch_a,
+			CH_B_O => ch_b
 		);
 
 	DAC : da2_controller_ip
@@ -205,6 +213,8 @@ begin
 			RST_I   => sys_con_rst,
 			WB_I    => wb_ms,
 			WB_O    => wb_sm,
+			CH_A_I  => ch_a,
+			CH_B_I  => ch_b,
 			D1      => DA2_D1,
 			D2      => DA2_D2,
 			CLK_OUT => DA2_CLK_OUT,

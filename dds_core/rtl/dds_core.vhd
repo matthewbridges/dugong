@@ -39,7 +39,9 @@ entity dds_core is
 		WE_I  : in  STD_LOGIC;
 		--		CYC_I : in   STD_LOGIC;
 
-		ACK_O : out STD_LOGIC
+		ACK_O : out STD_LOGIC;
+		CH_A_O : out STD_LOGIC_VECTOR(11 downto 0);
+		CH_B_O : out STD_LOGIC_VECTOR(11 downto 0)
 	);
 end dds_core;
 
@@ -108,6 +110,9 @@ begin
 
 	adr <= to_integer(unsigned(ADR_I)) - 8;
 	user_mem(5) <= not (user_mem(4)(DATA_WIDTH - 1)) & user_mem(4)(DATA_WIDTH - 2 downto 0);
+	
+	CH_A_O <= user_mem(5);
+	CH_B_O <= user_mem(2);
 
 end Behavioral;
 

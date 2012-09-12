@@ -40,6 +40,9 @@ entity da2_controller is
 		--		CYC_I : in   STD_LOGIC;
 
 		ACK_O   : out STD_LOGIC;
+		
+		CH_A_I : in STD_LOGIC_VECTOR(11 downto 0);
+		CH_B_I : in STD_LOGIC_VECTOR(11 downto 0);
 		--DA2 Pmod interface signals
 		D1      : out std_logic;
 		D2      : out std_logic;
@@ -86,8 +89,8 @@ begin
 			CLK_OUT => CLK_OUT,
 			nSYNC   => nSYNC,
 			--User interface signals
-			DATA1   => user_mem(0),
-			DATA2   => user_mem(1),
+			DATA1   => CH_A_I,--user_mem(0),
+			DATA2   => CH_B_I,--user_mem(1),
 			START   => dac_start,
 			DONE    => dac_done
 		);
@@ -114,14 +117,16 @@ begin
 				end if;
 				ACK_O <= '0';
 			else
+				data_valid <= true;
+				dac_start <= '1';
 				--Check for strobe	
 				if (STB_I = '1') then
 					DAT_O <= user_mem(to_integer(unsigned(ADR_I)) - 8);
 					--Check for write
 					if (WE_I = '1') then
 						user_mem(to_integer(unsigned(ADR_I)) - 8) <= DAT_I;
-						data_valid                                <= true;
-						dac_start                                 <= '1';
+--						data_valid                                <= true;
+--						dac_start                                 <= '1';
 					end if;
 					ACK_O <= '1';
 				end if;

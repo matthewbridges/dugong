@@ -36,6 +36,8 @@ entity da2_controller_ip is
 		--Slave to WB
 		WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 		WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+		CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
 		--DA2 Pmod interface signals
 		D1      : out std_logic;
 		D2      : out std_logic;
@@ -96,6 +98,8 @@ architecture Behavioral of da2_controller_ip is
 			--CYC_I : in   STD_LOGIC;
 
 			ACK_O   : out STD_LOGIC;
+			CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+			CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
 			--DA2 Pmod interface signals
 			D1      : out std_logic;
 			D2      : out std_logic;
@@ -147,6 +151,8 @@ begin
 			WE_I    => we_i,
 			--	CYC_I =>
 			ACK_O   => ack_o,
+			CH_A_I  => CH_A_I,
+			CH_B_I  => CH_B_I,
 			--DA2 Pmod interface signals
 			D1      => D1,
 			D2      => D2,
