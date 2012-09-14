@@ -229,7 +229,7 @@ begin
 				if (pc_ack_i = '1') then
 					dat       <= instruction(DATA_WIDTH - 1 downto 0);
 					adr       <= instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
-					wait_cntr <= to_integer(unsigned(instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto 0)));
+					wait_cntr <= to_integer(unsigned(instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto 0) & x"0"));
 					bus_en    <= instruction(28) or instruction(29);
 					write_en  <= instruction(28);
 					accum_en  <= instruction(29);

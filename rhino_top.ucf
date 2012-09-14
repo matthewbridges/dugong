@@ -1,5 +1,4 @@
 
-
 NET "LED[0]" LOC = Y3;
 NET "LED[1]" LOC = Y1;
 NET "LED[2]" LOC = W2;
@@ -36,7 +35,6 @@ NET "LED[5]" DRIVE = 24;
 NET "LED[6]" DRIVE = 24;
 NET "LED[7]" DRIVE = 24;
 
-# PlanAhead Generated physical constraints 
 
 NET "DA2_CLK_OUT" LOC = R3;
 NET "DA2_D2" LOC = N7;
@@ -44,17 +42,44 @@ NET "DA2_D1" LOC = R5;
 NET "DA2_nSYNC" LOC = P6;
 NET "SYS_RST" LOC = R4;
 
-# PlanAhead Generated IO constraints 
 
 NET "DA2_CLK_OUT" DRIVE = 24;
 NET "DA2_D1" DRIVE = 24;
 NET "DA2_D2" DRIVE = 24;
 NET "DA2_nSYNC" DRIVE = 24;
-NET "GPIO[8]" DRIVE = 24;
-NET "GPIO[9]" DRIVE = 24;
-NET "GPIO[10]" DRIVE = 24;
-NET "GPIO[11]" DRIVE = 24;
-NET "GPIO[12]" DRIVE = 24;
-NET "GPIO[13]" DRIVE = 24;
-NET "GPIO[14]" DRIVE = 24;
-NET "GPIO[15]" DRIVE = 24;
+
+NET "DAC_DATA_P[0]" LOC = AA10;
+NET "DAC_DATA_P[1]" LOC = AA9;
+NET "DAC_DATA_P[2]" LOC = V11;
+NET "DAC_DATA_P[3]" LOC = Y11;
+NET "DAC_DATA_P[4]" LOC = W14;
+NET "DAC_DATA_P[5]" LOC = Y12;
+NET "DAC_DATA_P[6]" LOC = AD14;
+NET "DAC_DATA_P[7]" LOC = AE13;
+NET "ref_en" LOC = W8;
+NET "mon_sdo" LOC = AC5;
+NET "cdce_n_reset" LOC = AB7;
+NET "cdce_n_en" LOC = Y9;
+NET "spi_sclk" LOC = AE5;
+NET "dac_n_en" LOC = W10;
+NET "mon_n_en" LOC = AD6;
+NET "FRAME_P" LOC = AB13;
+NET "DAC_DCLK_P" LOC = V12;
+NET "pll_status" LOC = W7;
+NET "mon_n_int" LOC = AD5;
+NET "mon_n_reset" LOC = AF6;
+NET "spi_sdata" LOC = AF5;
+NET "dac_sdo" LOC = W9;
+NET "cdce_sdo" LOC = AA8;
+NET "cdce_n_pd" LOC = AC6;
+NET "adc_reset" LOC = V13;
+NET "adc_sdo" LOC = U13;
+NET "adc_n_en" LOC = AA15;
+NET "TXENABLE" LOC = AB15;
+
+
+NET "CLK_AB_P" LOC = AE15;
+
+# PlanAhead Generated physical constraints 
+
+NET "CLK_TO_FPGA" LOC = W24;

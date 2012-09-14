@@ -40,8 +40,8 @@ entity dds_core is
 		--		CYC_I : in   STD_LOGIC;
 
 		ACK_O : out STD_LOGIC;
-		CH_A_O : out STD_LOGIC_VECTOR(11 downto 0);
-		CH_B_O : out STD_LOGIC_VECTOR(11 downto 0)
+		CH_A_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		CH_B_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
 	);
 end dds_core;
 
@@ -74,9 +74,9 @@ begin
 			clk_i   => CLK_I,
 			rst_i   => RST_I,
 			ftw_i   => user_mem(0),
-			phase_i => user_mem(1),
-			phase_o => user_mem(2),
-			ampl_o  => user_mem(4)
+			phase_i => user_mem(1)(15 downto 4),
+			phase_o => user_mem(2)(15 downto 4),
+			ampl_o  => user_mem(4)(15 downto 4)
 		);
 
 	process(CLK_I)
@@ -96,8 +96,9 @@ begin
 					case (adr) is
 						when 0      => user_mem(0) <= dat_i;
 						when 1      => user_mem(1) <= dat_i;
-						when 2      => null;
-						when 3      => null;
+						when 3      => user_mem(3) <= dat_i;
+						when 6      => user_mem(6) <= dat_i;
+						when 7      => user_mem(7) <= dat_i;
 						when others => null;
 					end case;
 				end if;
@@ -107,12 +108,15 @@ begin
 
 	ACK_O <= STB_I;
 	DAT_O <= q;
+	
+	user_mem(2)(3 downto 0) <= x"0";
+	user_mem(4)(3 downto 0) <= x"0";
 
 	adr <= to_integer(unsigned(ADR_I)) - 8;
 	user_mem(5) <= not (user_mem(4)(DATA_WIDTH - 1)) & user_mem(4)(DATA_WIDTH - 2 downto 0);
 	
-	CH_A_O <= user_mem(5);
-	CH_B_O <= user_mem(2);
+	CH_A_O <= user_mem(4);
+	CH_B_O <= user_mem(5);
 
 end Behavioral;
 
