@@ -35,29 +35,35 @@ entity rhino_top is
 		SYS_CLK_P    : in  STD_LOGIC;
 		SYS_CLK_N    : in  STD_LOGIC;
 		SYS_RST      : in  STD_LOGIC;
+		
 		--GPIO Interface
 		GPIO         : out STD_LOGIC_VECTOR(7 downto 0);
+		
 		--LED Interface
 		LED          : out STD_LOGIC_VECTOR(7 downto 0);
-		--DA2 Interface
-		DA2_D1       : out STD_LOGIC;
-		DA2_D2       : out STD_LOGIC;
-		DA2_CLK_OUT  : out STD_LOGIC;
-		DA2_nSYNC    : out STD_LOGIC;
+		
+--		--DA2 Interface
+--		DA2_D1       : out STD_LOGIC;
+--		DA2_D2       : out STD_LOGIC;
+--		DA2_CLK_OUT  : out STD_LOGIC;
+--		DA2_nSYNC    : out STD_LOGIC;
+		
 		-- FMC150  interface
 		CLK_TO_FPGA  : in  STD_LOGIC;
+		
 		-- FMC150 ADC interface
 		CLK_AB_P     : in  STD_LOGIC;
 		CLK_AB_N     : in  STD_LOGIC;
 
-		-- FMC150 DAC interface		
-		DAC_DCLK_P   : out STD_LOGIC;
-		DAC_DCLK_N   : out STD_LOGIC;
-		DAC_DATA_P   : out STD_LOGIC_VECTOR(7 downto 0);
-		DAC_DATA_N   : out STD_LOGIC_VECTOR(7 downto 0);
-		FRAME_P      : out STD_LOGIC;
-		FRAME_N      : out STD_LOGIC;
-		TXENABLE     : out STD_LOGIC;
+--		-- FMC150 DAC interface		
+--		DAC_DCLK_P   : out STD_LOGIC;
+--		DAC_DCLK_N   : out STD_LOGIC;
+--		DAC_DATA_P   : out STD_LOGIC_VECTOR(7 downto 0);
+--		DAC_DATA_N   : out STD_LOGIC_VECTOR(7 downto 0);
+--		FRAME_P      : out STD_LOGIC;
+--		FRAME_N      : out STD_LOGIC;
+--		TXENABLE     : out STD_LOGIC;
+		
 		--FMC150 CTRL interface
 		spi_sclk     : out std_logic;
 		spi_sdata    : out std_logic;
@@ -85,10 +91,12 @@ architecture Behavioral of rhino_top is
 	signal sys_con_clk : std_logic;
 	signal sys_con_rst : std_logic;
 
+	signal clk_to_fpga_b : std_logic;
+
 	signal test_clocks : std_logic_vector(3 downto 0);
 
-	signal ch_a : std_logic_vector(15 downto 0);
-	signal ch_b : std_logic_vector(15 downto 0);
+--	signal ch_a : std_logic_vector(15 downto 0);
+--	signal ch_b : std_logic_vector(15 downto 0);
 
 	COMPONENT system_controller
 		PORT(
@@ -159,70 +167,70 @@ architecture Behavioral of rhino_top is
 		);
 	END COMPONENT;
 
-	COMPONENT dds_core_ip
-		GENERIC(
-			DATA_WIDTH      : NATURAL               := 16;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 4
-		);
-		PORT(
-			--System Control Inputs
-			CLK_I  : in  STD_LOGIC;
-			RST_I  : in  STD_LOGIC;
-			--Slave to WB
-			WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			CH_A_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			CH_B_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
-		);
-	END COMPONENT;
+--	COMPONENT dds_core_ip
+--		GENERIC(
+--			DATA_WIDTH      : NATURAL               := 16;
+--			ADDR_WIDTH      : NATURAL               := 12;
+--			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+--			CORE_DATA_WIDTH : NATURAL               := 16;
+--			CORE_ADDR_WIDTH : NATURAL               := 4
+--		);
+--		PORT(
+--			--System Control Inputs
+--			CLK_I  : in  STD_LOGIC;
+--			RST_I  : in  STD_LOGIC;
+--			--Slave to WB
+--			WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+--			WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+--			CH_A_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+--			CH_B_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+--		);
+--	END COMPONENT;
 
-	COMPONENT da2_controller_ip
-		GENERIC(
-			DATA_WIDTH      : NATURAL               := 16;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 4
-		);
-		PORT(
-			--System Control Inputs
-			CLK_I   : in  STD_LOGIC;
-			RST_I   : in  STD_LOGIC;
-			--Slave to WB
-			WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
-			CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
-			--DA2 Pmod interface signals
-			D1      : out std_logic;
-			D2      : out std_logic;
-			CLK_OUT : out std_logic;
-			nSYNC   : out std_logic
-		);
-	END COMPONENT;
-
-	COMPONENT dac3283_serializer
-		PORT(
-			--System Control Inputs
-			CLK_I      : in  STD_LOGIC;
-			RST_I      : in  STD_LOGIC;
-
-			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
-			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
-
-			-- DAC interface
-			DAC_DCLK_P : out STD_LOGIC;
-			DAC_DCLK_N : out STD_LOGIC;
-			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
-			DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
-			FRAME_P    : out STD_LOGIC;
-			FRAME_N    : out STD_LOGIC;
-			TXENABLE   : out STD_LOGIC
-		);
-	END COMPONENT;
+--	COMPONENT da2_controller_ip
+--		GENERIC(
+--			DATA_WIDTH      : NATURAL               := 16;
+--			ADDR_WIDTH      : NATURAL               := 12;
+--			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+--			CORE_DATA_WIDTH : NATURAL               := 16;
+--			CORE_ADDR_WIDTH : NATURAL               := 4
+--		);
+--		PORT(
+--			--System Control Inputs
+--			CLK_I   : in  STD_LOGIC;
+--			RST_I   : in  STD_LOGIC;
+--			--Slave to WB
+--			WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+--			WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+--			CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+--			CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+--			--DA2 Pmod interface signals
+--			D1      : out std_logic;
+--			D2      : out std_logic;
+--			CLK_OUT : out std_logic;
+--			nSYNC   : out std_logic
+--		);
+--	END COMPONENT;
+--
+--	COMPONENT dac3283_serializer
+--		PORT(
+--			--System Control Inputs
+--			CLK_I      : in  STD_LOGIC;
+--			RST_I      : in  STD_LOGIC;
+--
+--			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+--			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+--
+--			-- DAC interface
+--			DAC_DCLK_P : out STD_LOGIC;
+--			DAC_DCLK_N : out STD_LOGIC;
+--			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
+--			DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
+--			FRAME_P    : out STD_LOGIC;
+--			FRAME_N    : out STD_LOGIC;
+--			TXENABLE   : out STD_LOGIC
+--		);
+--	END COMPONENT;
 
 	COMPONENT fmc150_if
 		generic(
@@ -272,6 +280,7 @@ begin
 			WB_I  => wb_sm,
 			WB_O  => wb_ms
 		);
+		
 	CLK_COUNTER : clk_counter_ip
 		GENERIC MAP(
 			BASE_ADDR       => x"100",
@@ -311,55 +320,55 @@ begin
 			GPIO  => LED
 		);
 
-	DDS : dds_core_ip
-		GENERIC MAP(
-			BASE_ADDR       => x"700",
-			CORE_DATA_WIDTH => 16
-		)
-		PORT MAP(
-			CLK_I  => sys_con_clk,
-			RST_I  => sys_con_rst,
-			WB_I   => wb_ms,
-			WB_O   => wb_sm,
-			CH_A_O => ch_a,
-			CH_B_O => ch_b
-		);
+--	DDS : dds_core_ip
+--		GENERIC MAP(
+--			BASE_ADDR       => x"700",
+--			CORE_DATA_WIDTH => 16
+--		)
+--		PORT MAP(
+--			CLK_I  => sys_con_clk,
+--			RST_I  => sys_con_rst,
+--			WB_I   => wb_ms,
+--			WB_O   => wb_sm,
+--			CH_A_O => ch_a,
+--			CH_B_O => ch_b
+--		);
+--
+--	DAC : da2_controller_ip
+--		GENERIC MAP(
+--			BASE_ADDR       => x"800",
+--			CORE_DATA_WIDTH => 12
+--		)
+--		PORT MAP(
+--			CLK_I   => sys_con_clk,
+--			RST_I   => sys_con_rst,
+--			WB_I    => wb_ms,
+--			WB_O    => wb_sm,
+--			CH_A_I  => ch_a(15 downto 4),
+--			CH_B_I  => ch_b(15 downto 4),
+--			D1      => DA2_D1,
+--			D2      => DA2_D2,
+--			CLK_OUT => DA2_CLK_OUT,
+--			nSYNC   => DA2_nSYNC
+--		);
 
-	DAC : da2_controller_ip
-		GENERIC MAP(
-			BASE_ADDR       => x"800",
-			CORE_DATA_WIDTH => 12
-		)
-		PORT MAP(
-			CLK_I   => sys_con_clk,
-			RST_I   => sys_con_rst,
-			WB_I    => wb_ms,
-			WB_O    => wb_sm,
-			CH_A_I  => ch_a(15 downto 4),
-			CH_B_I  => ch_b(15 downto 4),
-			D1      => DA2_D1,
-			D2      => DA2_D2,
-			CLK_OUT => DA2_CLK_OUT,
-			nSYNC   => DA2_nSYNC
-		);
-
-	FMC150 : dac3283_serializer
-		PORT MAP(
-			--System Control Inputs
-			CLK_I      => sys_con_clk,
-			RST_I      => sys_con_rst,
-			CH_A_I     => ch_a,
-			CH_B_I     => x"0000",
-
-			-- DAC interface
-			DAC_DCLK_P => DAC_DCLK_P,
-			DAC_DCLK_N => DAC_DCLK_N,
-			DAC_DATA_P => DAC_DATA_P,
-			DAC_DATA_N => DAC_DATA_N,
-			FRAME_P    => FRAME_P,
-			FRAME_N    => FRAME_N,
-			TXENABLE   => TXENABLE
-		);
+--	FMC150 : dac3283_serializer
+--		PORT MAP(
+--			--System Control Inputs
+--			CLK_I      => sys_con_clk,
+--			RST_I      => sys_con_rst,
+--			CH_A_I     => ch_a,
+--			CH_B_I     => x"0000",
+--
+--			-- DAC interface
+--			DAC_DCLK_P => DAC_DCLK_P,
+--			DAC_DCLK_N => DAC_DCLK_N,
+--			DAC_DATA_P => DAC_DATA_P,
+--			DAC_DATA_N => DAC_DATA_N,
+--			FRAME_P    => FRAME_P,
+--			FRAME_N    => FRAME_N,
+--			TXENABLE   => TXENABLE
+--		);
 
 	FMC150_CTRL : fmc150_if
 		PORT MAP(
@@ -386,16 +395,17 @@ begin
 		);
 
 	test_clocks(0) <= sys_con_clk;
+	test_clocks(2) <= clk_to_fpga_b;
 
 	CLK_TO_FPGA_IBUFG : IBUFG
 		generic map(
 			IBUF_LOW_PWR => TRUE,       -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
 			IOSTANDARD   => "DEFAULT")
 		port map(
-			O => test_clocks(2),        -- Clock buffer output
+			O => clk_to_fpga_b,         -- Clock buffer output
 			I => CLK_TO_FPGA            -- Clock buffer input (connect directly to top-level port)
 		);
-		
+
 	CLK_AB_P_IBUFGDS : IBUFGDS
 		generic map(
 			DIFF_TERM    => FALSE,      -- Differential Termination 

@@ -54,14 +54,14 @@ begin
 			else
 				if (read_count = '1') then
 					if (count_valid(0) = '1') then  --(count_valid = x"F")
-						user_mem(0) <= final_count(0)(31 downto 16);
-						user_mem(1) <= final_count(0)(15 downto 0);
-						user_mem(2) <= final_count(1)(31 downto 16);
-						user_mem(3) <= final_count(1)(15 downto 0);
-						user_mem(4) <= final_count(2)(31 downto 16);
-						user_mem(5) <= final_count(2)(15 downto 0);
-						user_mem(6) <= final_count(3)(31 downto 16);
-						user_mem(7) <= final_count(3)(15 downto 0);
+						user_mem(0) <= x"00" & final_count(0)(31 downto 24); --final_count(0)(31 downto 16);
+						user_mem(1) <= x"00" & final_count(0)(23 downto 16);--final_count(0)(15 downto 0);
+						user_mem(2) <= x"00" & final_count(1)(31 downto 24);--final_count(1)(31 downto 16);
+						user_mem(3) <= x"00" & final_count(1)(23 downto 16);--final_count(1)(15 downto 0);
+						user_mem(4) <= x"00" & final_count(2)(31 downto 24);--final_count(2)(31 downto 16);
+						user_mem(5) <= x"00" & final_count(2)(23 downto 16);--final_count(2)(15 downto 0);
+						user_mem(6) <= x"00" & final_count(3)(31 downto 24);--final_count(3)(31 downto 16);
+						user_mem(7) <= x"00" & final_count(3)(23 downto 16);--final_count(3)(15 downto 0);
 						rst_count   <= '1';
 						read_count  <= '0';
 					end if;
