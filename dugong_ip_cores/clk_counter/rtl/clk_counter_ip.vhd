@@ -21,30 +21,27 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity spi_master_ip is
+entity clk_counter_ip is
 	generic(
 		DATA_WIDTH      : NATURAL               := 16;
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-		CORE_DATA_WIDTH : NATURAL               := 8;
-		CORE_ADDR_WIDTH : NATURAL               := 5
+		CORE_DATA_WIDTH : NATURAL               := 16;
+		CORE_ADDR_WIDTH : NATURAL               := 4
 	);
 	port(
 		--System Control Inputs
-		CLK_I    : in  STD_LOGIC;
-		RST_I    : in  STD_LOGIC;
+		CLK_I       : in  STD_LOGIC;
+		RST_I       : in  STD_LOGIC;
 		--Slave to WB
-		WB_I     : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-		WB_O     : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-		--Serial Peripheral Interface
-		SPI_CLK  : out STD_LOGIC;
-		SPI_MOSI : out STD_LOGIC;
-		SPI_MISO : in  STD_LOGIC;
-		SPI_N_SS : out STD_LOGIC
+		WB_I        : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+		WB_O        : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		--Test Clocks
+		TEST_CLOCKS : in  STD_LOGIC_VECTOR(3 downto 0)
 	);
-end spi_master_ip;
+end clk_counter_ip;
 
-architecture Behavioral of spi_master_ip is
+architecture Behavioral of clk_counter_ip is
 	signal dat_i : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 	signal dat_o : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 	signal adr_i : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
@@ -78,30 +75,25 @@ architecture Behavioral of spi_master_ip is
 		);
 	end component;
 
-	component spi_master is
+	component clk_counter is
 		generic(
-			DATA_WIDTH     : natural := 8;
-			ADDR_WIDTH     : natural := 5;
-			SPI_INST_WIDTH : natural := 8;
-			SPI_DATA_WIDTH : natural := 8
+			DATA_WIDTH : natural := 16;
+			ADDR_WIDTH : natural := 4
 		);
 		port(
 			--System Control Inputs
-			CLK_I    : in  STD_LOGIC;
-			RST_I    : in  STD_LOGIC;
+			CLK_I       : in  STD_LOGIC;
+			RST_I       : in  STD_LOGIC;
 			--Wishbone Slave Lines
-			DAT_I    : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O    : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I    : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			STB_I    : in  STD_LOGIC;
-			WE_I     : in  STD_LOGIC;
+			--DAT_I       : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O       : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I       : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_I       : in  STD_LOGIC;
+			--WE_I        : in  STD_LOGIC;
 			--		CYC_I : in   STD_LOGIC;
-			ACK_O    : out STD_LOGIC;
-			--Serial Peripheral Interface
-			SPI_CLK  : out STD_LOGIC;
-			SPI_MOSI : out STD_LOGIC;
-			SPI_MISO : in  STD_LOGIC;
-			SPI_N_SS : out STD_LOGIC
+			ACK_O       : out STD_LOGIC;
+			--Test Clocks
+			TEST_CLOCKS : in  STD_LOGIC_VECTOR(3 downto 0)
 		);
 	end component;
 
@@ -131,30 +123,25 @@ begin
 			ACK_O => ack_o
 		);
 
-	user_logic : spi_master
+	user_logic : clk_counter
 		generic map(
 			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH,
-			SPI_INST_WIDTH => 8,
-			SPI_DATA_WIDTH => 8
+			ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
 			--System Control Inputs
-			CLK_I    => CLK_I,
-			RST_I    => RST_I,
+			CLK_I       => CLK_I,
+			RST_I       => RST_I,
 			--Wishbone Slave Lines
-			DAT_I    => dat_i(CORE_DATA_WIDTH - 1 downto 0),
-			DAT_O    => dat_o(CORE_DATA_WIDTH - 1 downto 0),
-			ADR_I    => adr_i,
-			STB_I    => stb_i,
-			WE_I     => we_i,
+			--DAT_I       => dat_i(CORE_DATA_WIDTH - 1 downto 0),
+			DAT_O       => dat_o(CORE_DATA_WIDTH - 1 downto 0),
+			ADR_I       => adr_i,
+			STB_I       => stb_i,
+			--WE_I        => we_i,
 			--	CYC_I =>
-			ACK_O    => ack_o,
-			--Serial Peripheral Interface
-			SPI_CLK  => SPI_CLK,
-			SPI_MOSI => SPI_MOSI,
-			SPI_MISO => SPI_MISO,
-			SPI_N_SS => SPI_N_SS
+			ACK_O       => ack_o,
+			--Test Clocks
+			TEST_CLOCKS => TEST_CLOCKS
 		);
 
 end Behavioral;

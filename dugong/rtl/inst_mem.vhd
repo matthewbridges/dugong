@@ -60,7 +60,7 @@ begin
 			DOB_REG             => 0,   -- Specifies to enable=1/disable=0 port B output registers
 			INIT_A              => X"000000000", -- Initial values on A output port
 			INIT_B              => X"000000000", -- Initial values on B output port
-			INIT_FILE           => "NONE",--"inst_mem_data.mem", -- INIT_FILE: Optional file used to specify initial RAM contents
+			INIT_FILE           => "inst_mem_data.mem", -- INIT_FILE: Optional file used to specify initial RAM contents
 			-- EN_RSTRAM_A/EN_RSTRAM_B: Enable/disable RST
 			EN_RSTRAM_A         => TRUE,
 			EN_RSTRAM_B         => FALSE,

@@ -67,7 +67,8 @@ architecture Behavioral of wb_s is
 	signal ack_sm : std_logic;
 
 	signal core_sel     : boolean;
-	signal core_mem_sel : boolean;
+--	signal core_mem_sel : boolean;
+	signal core_adr : integer;
 
 	type ram_type is array (0 to 7) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal core_mem : ram_type;
@@ -88,14 +89,14 @@ begin
 				core_mem(3) <= x"0" & std_logic_vector(BASE_ADDR + (2 ** CORE_ADDR_WIDTH) - 1);
 				core_mem(4) <= "1010101010101010"; --Test Signal
 
-			elsif (core_sel and core_mem_sel) then
+			elsif (core_sel and (core_adr < 8)) then
 				--Check for strobe
 				if (stb_ms = '1') then
-					dat_sm <= core_mem(to_integer(unsigned(adr_ms(2 downto 0))));
+					dat_sm <= core_mem(core_adr);
 					ack_sm <= '1';
 					--Check for write
 					if (we_ms = '1') then
-						core_mem(to_integer(unsigned(adr_ms(2 downto 0)))) <= dat_ms;
+						core_mem(core_adr) <= dat_ms;
 					end if;
 				else
 					ack_sm <= '0';
@@ -105,12 +106,13 @@ begin
 	end process;
 
 	core_sel     <= (adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH) = std_logic_vector(BASE_ADDR(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH)));
-	core_mem_sel <= (adr_ms(CORE_ADDR_WIDTH - 1 downto 3) = "0"); --ISSUE here
+--	core_mem_sel <= (adr_ms(CORE_ADDR_WIDTH - 1 downto 3) = "0"); --ISSUE here
+	core_adr <= to_integer(unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0)));
 
-	process(core_sel, core_mem_sel, DAT_O, ACK_O, dat_sm, ack_sm, stb_ms, cyc_ms)
+	process(core_sel, core_adr, DAT_O, ACK_O, dat_sm, ack_sm, stb_ms, cyc_ms)
 	begin
 		if (core_sel) then
-			if (core_mem_sel) then
+			if (core_adr < 8) then
 				--WB Output Ports
 				WB_O <= (ack_sm & dat_sm);
 				--WB Input Ports

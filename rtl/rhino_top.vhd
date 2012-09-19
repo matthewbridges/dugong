@@ -32,56 +32,56 @@ use UNISIM.VComponents.all;
 entity rhino_top is
 	port(
 		--System Control Inputs
-		SYS_CLK_P    : in  STD_LOGIC;
-		SYS_CLK_N    : in  STD_LOGIC;
-		SYS_RST      : in  STD_LOGIC;
-		
-		--GPIO Interface
-		GPIO         : out STD_LOGIC_VECTOR(7 downto 0);
-		
-		--LED Interface
-		LED          : out STD_LOGIC_VECTOR(7 downto 0);
-		
---		--DA2 Interface
---		DA2_D1       : out STD_LOGIC;
---		DA2_D2       : out STD_LOGIC;
---		DA2_CLK_OUT  : out STD_LOGIC;
---		DA2_nSYNC    : out STD_LOGIC;
-		
-		-- FMC150  interface
-		CLK_TO_FPGA  : in  STD_LOGIC;
-		
-		-- FMC150 ADC interface
-		CLK_AB_P     : in  STD_LOGIC;
-		CLK_AB_N     : in  STD_LOGIC;
+		SYS_CLK_P   : in  STD_LOGIC;
+		SYS_CLK_N   : in  STD_LOGIC;
+		SYS_RST     : in  STD_LOGIC;
 
---		-- FMC150 DAC interface		
---		DAC_DCLK_P   : out STD_LOGIC;
---		DAC_DCLK_N   : out STD_LOGIC;
---		DAC_DATA_P   : out STD_LOGIC_VECTOR(7 downto 0);
---		DAC_DATA_N   : out STD_LOGIC_VECTOR(7 downto 0);
---		FRAME_P      : out STD_LOGIC;
---		FRAME_N      : out STD_LOGIC;
---		TXENABLE     : out STD_LOGIC;
-		
-		--FMC150 CTRL interface
-		spi_sclk     : out std_logic;
-		spi_sdata    : out std_logic;
-		adc_n_en     : out std_logic;
-		adc_sdo      : in  std_logic;
-		adc_reset    : out std_logic;
-		cdce_n_en    : out std_logic;
-		cdce_sdo     : in  std_logic;
-		cdce_n_reset : out std_logic;
-		cdce_n_pd    : out std_logic;
-		ref_en       : out std_logic;
-		pll_status   : in  std_logic;
-		dac_n_en     : out std_logic;
-		dac_sdo      : in  std_logic;
-		mon_n_en     : out std_logic;
-		mon_sdo      : in  std_logic;
-		mon_n_reset  : out std_logic;
-		mon_n_int    : in  std_logic
+		--GPIO Interface
+		GPIO        : out STD_LOGIC_VECTOR(15 downto 0);
+
+		--LED Interface
+		LED         : out STD_LOGIC_VECTOR(7 downto 0);
+
+		--		--DA2 Interface
+		--		DA2_D1       : out STD_LOGIC;
+		--		DA2_D2       : out STD_LOGIC;
+		--		DA2_CLK_OUT  : out STD_LOGIC;
+		--		DA2_nSYNC    : out STD_LOGIC;
+
+		-- FMC150  interface
+		CLK_TO_FPGA : in  STD_LOGIC;
+
+		-- FMC150 ADC interface
+		CLK_AB_P    : in  STD_LOGIC;
+		CLK_AB_N    : in  STD_LOGIC;
+
+	--		-- FMC150 DAC interface		
+	--		DAC_DCLK_P   : out STD_LOGIC;
+	--		DAC_DCLK_N   : out STD_LOGIC;
+	--		DAC_DATA_P   : out STD_LOGIC_VECTOR(7 downto 0);
+	--		DAC_DATA_N   : out STD_LOGIC_VECTOR(7 downto 0);
+	--		FRAME_P      : out STD_LOGIC;
+	--		FRAME_N      : out STD_LOGIC;
+	--		TXENABLE     : out STD_LOGIC;
+
+	--		--FMC150 CTRL interface
+			SPI_SCLK     : out STD_LOGIC;
+			SPI_SDATA    : out STD_LOGIC;
+	--		ADC_N_EN     : out STD_LOGIC;
+	--		ADC_SDO      : in  STD_LOGIC;
+	--		ADC_RESET    : out STD_LOGIC;
+	--		CDCE_N_EN    : out STD_LOGIC;
+	--		CDCE_SDO     : in  STD_LOGIC;
+	--		CDCE_N_RESET : out STD_LOGIC;
+	--		CDCE_N_PD    : out STD_LOGIC;
+	--		REF_EN       : out STD_LOGIC;
+	--		PLL_STATUS   : in  STD_LOGIC;
+			DAC_N_EN     : out STD_LOGIC;
+			DAC_SDO      : in  STD_LOGIC
+	--		MON_N_EN     : out STD_LOGIC;
+	--		MON_SDO      : in  STD_LOGIC;
+	--		MON_N_RESET  : out STD_LOGIC;
+	--		MON_N_INT    : in  STD_LOGIC
 	);
 end rhino_top;
 
@@ -95,8 +95,8 @@ architecture Behavioral of rhino_top is
 
 	signal test_clocks : std_logic_vector(3 downto 0);
 
---	signal ch_a : std_logic_vector(15 downto 0);
---	signal ch_b : std_logic_vector(15 downto 0);
+	--	signal ch_a : std_logic_vector(15 downto 0);
+	--	signal ch_b : std_logic_vector(15 downto 0);
 
 	COMPONENT system_controller
 		PORT(
@@ -167,6 +167,25 @@ architecture Behavioral of rhino_top is
 		);
 	END COMPONENT;
 
+	COMPONENT spi_master_ip
+		GENERIC(
+			DATA_WIDTH      : NATURAL               := 16;
+			ADDR_WIDTH      : NATURAL               := 12;
+			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+			CORE_DATA_WIDTH : NATURAL               := 8;
+			CORE_ADDR_WIDTH : NATURAL               := 5);
+		PORT(
+			CLK_I    : in  STD_LOGIC;
+			RST_I    : in  STD_LOGIC;
+			WB_I     : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_O     : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			SPI_CLK  : out STD_LOGIC;
+			SPI_MOSI : out STD_LOGIC;
+			SPI_MISO : in  STD_LOGIC;
+			SPI_N_SS : out STD_LOGIC
+		);
+	END COMPONENT;
+
 --	COMPONENT dds_core_ip
 --		GENERIC(
 --			DATA_WIDTH      : NATURAL               := 16;
@@ -232,35 +251,35 @@ architecture Behavioral of rhino_top is
 --		);
 --	END COMPONENT;
 
-	COMPONENT fmc150_if
-		generic(
-			START_ADDR : std_logic_vector(27 downto 0) := x"0000000";
-			STOP_ADDR  : std_logic_vector(27 downto 0) := x"00000FF"
-		);
-		port(
-			-- Global signals
-			rst          : in  std_logic;
-			clk          : in  std_logic;
-
-			spi_sclk     : out std_logic;
-			spi_sdata    : out std_logic;
-			adc_n_en     : out std_logic;
-			adc_sdo      : in  std_logic;
-			adc_reset    : out std_logic;
-			cdce_n_en    : out std_logic;
-			cdce_sdo     : in  std_logic;
-			cdce_n_reset : out std_logic;
-			cdce_n_pd    : out std_logic;
-			ref_en       : out std_logic;
-			pll_status   : in  std_logic;
-			dac_n_en     : out std_logic;
-			dac_sdo      : in  std_logic;
-			mon_n_en     : out std_logic;
-			mon_sdo      : in  std_logic;
-			mon_n_reset  : out std_logic;
-			mon_n_int    : in  std_logic
-		);
-	END COMPONENT;
+--	COMPONENT fmc150_if
+--		generic(
+--			START_ADDR : std_logic_vector(27 downto 0) := x"0000000";
+--			STOP_ADDR  : std_logic_vector(27 downto 0) := x"00000FF"
+--		);
+--		port(
+--			-- Global signals
+--			rst          : in  std_logic;
+--			clk          : in  std_logic;
+--
+--			spi_sclk     : out std_logic;
+--			spi_sdata    : out std_logic;
+--			adc_n_en     : out std_logic;
+--			adc_sdo      : in  std_logic;
+--			adc_reset    : out std_logic;
+--			cdce_n_en    : out std_logic;
+--			cdce_sdo     : in  std_logic;
+--			cdce_n_reset : out std_logic;
+--			cdce_n_pd    : out std_logic;
+--			ref_en       : out std_logic;
+--			pll_status   : in  std_logic;
+--			dac_n_en     : out std_logic;
+--			dac_sdo      : in  std_logic;
+--			mon_n_en     : out std_logic;
+--			mon_sdo      : in  std_logic;
+--			mon_n_reset  : out std_logic;
+--			mon_n_int    : in  std_logic
+--		);
+--	END COMPONENT;
 
 begin
 	Sys_Con : system_controller
@@ -280,11 +299,10 @@ begin
 			WB_I  => wb_sm,
 			WB_O  => wb_ms
 		);
-		
-	CLK_COUNTER : clk_counter_ip
+
+	Clock_Counter : clk_counter_ip
 		GENERIC MAP(
-			BASE_ADDR       => x"100",
-			CORE_DATA_WIDTH => 16
+			BASE_ADDR       => x"100"
 		)
 		PORT MAP(
 			CLK_I       => sys_con_clk,
@@ -297,7 +315,7 @@ begin
 	GPIOs_8 : gpio_controller_ip
 		GENERIC MAP(
 			BASE_ADDR       => x"E00",
-			CORE_DATA_WIDTH => 8
+			CORE_DATA_WIDTH => 16
 		)
 		PORT MAP(
 			CLK_I => sys_con_clk,
@@ -320,79 +338,96 @@ begin
 			GPIO  => LED
 		);
 
---	DDS : dds_core_ip
---		GENERIC MAP(
---			BASE_ADDR       => x"700",
---			CORE_DATA_WIDTH => 16
---		)
---		PORT MAP(
---			CLK_I  => sys_con_clk,
---			RST_I  => sys_con_rst,
---			WB_I   => wb_ms,
---			WB_O   => wb_sm,
---			CH_A_O => ch_a,
---			CH_B_O => ch_b
---		);
---
---	DAC : da2_controller_ip
---		GENERIC MAP(
---			BASE_ADDR       => x"800",
---			CORE_DATA_WIDTH => 12
---		)
---		PORT MAP(
---			CLK_I   => sys_con_clk,
---			RST_I   => sys_con_rst,
---			WB_I    => wb_ms,
---			WB_O    => wb_sm,
---			CH_A_I  => ch_a(15 downto 4),
---			CH_B_I  => ch_b(15 downto 4),
---			D1      => DA2_D1,
---			D2      => DA2_D2,
---			CLK_OUT => DA2_CLK_OUT,
---			nSYNC   => DA2_nSYNC
---		);
+	--DAC3283 :
 
---	FMC150 : dac3283_serializer
---		PORT MAP(
---			--System Control Inputs
---			CLK_I      => sys_con_clk,
---			RST_I      => sys_con_rst,
---			CH_A_I     => ch_a,
---			CH_B_I     => x"0000",
---
---			-- DAC interface
---			DAC_DCLK_P => DAC_DCLK_P,
---			DAC_DCLK_N => DAC_DCLK_N,
---			DAC_DATA_P => DAC_DATA_P,
---			DAC_DATA_N => DAC_DATA_N,
---			FRAME_P    => FRAME_P,
---			FRAME_N    => FRAME_N,
---			TXENABLE   => TXENABLE
---		);
-
-	FMC150_CTRL : fmc150_if
+	inst : spi_master_ip
+		GENERIC MAP(
+			BASE_ADDR       => x"A00"
+		)
 		PORT MAP(
-			-- Global signals
-			rst          => sys_con_rst,
-			clk          => sys_con_clk,
-			spi_sclk     => spi_sclk,
-			spi_sdata    => spi_sdata,
-			adc_n_en     => adc_n_en,
-			adc_sdo      => adc_sdo,
-			adc_reset    => adc_reset,
-			cdce_n_en    => cdce_n_en,
-			cdce_sdo     => cdce_sdo,
-			cdce_n_reset => cdce_n_reset,
-			cdce_n_pd    => cdce_n_pd,
-			ref_en       => ref_en,
-			pll_status   => pll_status,
-			dac_n_en     => dac_n_en,
-			dac_sdo      => dac_sdo,
-			mon_n_en     => mon_n_en,
-			mon_sdo      => mon_sdo,
-			mon_n_reset  => mon_n_reset,
-			mon_n_int    => mon_n_int
+			CLK_I    => sys_con_clk,
+			RST_I    => sys_con_rst,
+			WB_I     => wb_ms,
+			WB_O     => wb_sm,
+			SPI_CLK  => SPI_SCLK,
+			SPI_MOSI => SPI_SDATA,
+			SPI_MISO => DAC_SDO,
+			SPI_N_SS => DAC_N_EN
 		);
+
+	--	DDS : dds_core_ip
+	--		GENERIC MAP(
+	--			BASE_ADDR       => x"700",
+	--			CORE_DATA_WIDTH => 16
+	--		)
+	--		PORT MAP(
+	--			CLK_I  => sys_con_clk,
+	--			RST_I  => sys_con_rst,
+	--			WB_I   => wb_ms,
+	--			WB_O   => wb_sm,
+	--			CH_A_O => ch_a,
+	--			CH_B_O => ch_b
+	--		);
+	--
+	--	DAC : da2_controller_ip
+	--		GENERIC MAP(
+	--			BASE_ADDR       => x"800",
+	--			CORE_DATA_WIDTH => 12
+	--		)
+	--		PORT MAP(
+	--			CLK_I   => sys_con_clk,
+	--			RST_I   => sys_con_rst,
+	--			WB_I    => wb_ms,
+	--			WB_O    => wb_sm,
+	--			CH_A_I  => ch_a(15 downto 4),
+	--			CH_B_I  => ch_b(15 downto 4),
+	--			D1      => DA2_D1,
+	--			D2      => DA2_D2,
+	--			CLK_OUT => DA2_CLK_OUT,
+	--			nSYNC   => DA2_nSYNC
+	--		);
+
+	--	FMC150 : dac3283_serializer
+	--		PORT MAP(
+	--			--System Control Inputs
+	--			CLK_I      => sys_con_clk,
+	--			RST_I      => sys_con_rst,
+	--			CH_A_I     => ch_a,
+	--			CH_B_I     => x"0000",
+	--
+	--			-- DAC interface
+	--			DAC_DCLK_P => DAC_DCLK_P,
+	--			DAC_DCLK_N => DAC_DCLK_N,
+	--			DAC_DATA_P => DAC_DATA_P,
+	--			DAC_DATA_N => DAC_DATA_N,
+	--			FRAME_P    => FRAME_P,
+	--			FRAME_N    => FRAME_N,
+	--			TXENABLE   => TXENABLE
+	--		);
+
+	--	FMC150_CTRL : fmc150_if
+	--		PORT MAP(
+	--			-- Global signals
+	--			rst          => sys_con_rst,
+	--			clk          => sys_con_clk,
+	--			spi_sclk     => spi_sclk,
+	--			spi_sdata    => spi_sdata,
+	--			adc_n_en     => adc_n_en,
+	--			adc_sdo      => adc_sdo,
+	--			adc_reset    => adc_reset,
+	--			cdce_n_en    => cdce_n_en,
+	--			cdce_sdo     => cdce_sdo,
+	--			cdce_n_reset => cdce_n_reset,
+	--			cdce_n_pd    => cdce_n_pd,
+	--			ref_en       => ref_en,
+	--			pll_status   => pll_status,
+	--			dac_n_en     => dac_n_en,
+	--			dac_sdo      => dac_sdo,
+	--			mon_n_en     => mon_n_en,
+	--			mon_sdo      => mon_sdo,
+	--			mon_n_reset  => mon_n_reset,
+	--			mon_n_int    => mon_n_int
+	--		);
 
 	test_clocks(0) <= sys_con_clk;
 	test_clocks(2) <= clk_to_fpga_b;
