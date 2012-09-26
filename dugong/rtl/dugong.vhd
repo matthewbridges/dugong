@@ -122,12 +122,12 @@ architecture Behavioral of dugong is
 		port(
 			--Wishbone Slave Lines
 			CLK_I : in  STD_LOGIC;
-			RST_I : in  STD_LOGIC;
-			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			--RST_I : in  STD_LOGIC;
+			--DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			WE_I  : in  STD_LOGIC;
-			STB_I : in  STD_LOGIC
+			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0)
+			--WE_I  : in  STD_LOGIC;
+			--STB_I : in  STD_LOGIC
 		--	CYC_I : in   STD_LOGIC;
 		);
 	end component;
@@ -174,12 +174,12 @@ begin
 
 	instruction_mem : inst_mem PORT MAP(
 			CLK_I => clk_i_180,
-			RST_I => RST_I,
-			DAT_I => (others => '0'),
+--			RST_I => RST_I,
+--			DAT_I => (others => '0'),
 			DAT_O => instruction,
-			ADR_I => pc,
-			WE_I  => '0',
-			STB_I => '1'
+			ADR_I => pc
+--			WE_I  => '0',
+--			STB_I => '1'
 		);
 
 	process(CLK_I)

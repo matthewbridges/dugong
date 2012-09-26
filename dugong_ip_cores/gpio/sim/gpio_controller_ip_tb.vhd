@@ -33,6 +33,13 @@ USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
 ENTITY gpio_controller_ip_tb IS
+	generic(
+		DATA_WIDTH      : NATURAL               := 16;
+		ADDR_WIDTH      : NATURAL               := 12;
+		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+		CORE_DATA_WIDTH : NATURAL               := 16;
+		CORE_ADDR_WIDTH : NATURAL               := 4
+	);
 END gpio_controller_ip_tb;
 
 ARCHITECTURE behavior OF gpio_controller_ip_tb IS
@@ -43,9 +50,9 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 		generic(
 			DATA_WIDTH      : NATURAL               := 16;
 			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"F00";
-			CORE_ADDR_WIDTH : NATURAL               := 4;
-			GPIO_WIDTH      : natural               := 8
+			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+			CORE_DATA_WIDTH : NATURAL               := 16;
+			CORE_ADDR_WIDTH : NATURAL               := 4
 		);
 		port(
 			--System Control Inputs
@@ -55,18 +62,18 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			--GPIO Interface
-			GPIO  : out STD_LOGIC_VECTOR(GPIO_WIDTH - 1 downto 0)
+			GPIO  : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
 	END COMPONENT;
 
 	--Inputs
-	signal CLK_I : std_logic                     := '0';
-	signal RST_I : std_logic                     := '1';
-	signal WB_I  : std_logic_vector(30 downto 0) := (others => '0');
+	signal CLK_I : std_logic                                              := '0';
+	signal RST_I : std_logic                                              := '1';
+	signal WB_I  : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0) := (others => '0');
 
 	--Outputs
-	signal WB_O : std_logic_vector(16 downto 0);
-	signal GPIO : std_logic_vector(7 downto 0);
+	signal WB_O : std_logic_vector(DATA_WIDTH downto 0);
+	signal GPIO : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
@@ -101,22 +108,22 @@ BEGIN
 
 		-- insert stimulus here 
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"F08" & x"000F";
+		WB_I <= "111" & x"008" & x"000F";
 		wait until rising_edge(WB_O(16));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"0000";
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"F08" & x"00FF";
+		WB_I <= "101" & x"008" & x"00FF";
 		wait until rising_edge(WB_O(16));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"0000";
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"F03" & x"000F";
+		WB_I <= "101" & x"003" & x"000F";
 		wait until rising_edge(WB_O(16));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"0000";
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"E08" & x"000F";
+		WB_I <= "111" & x"108" & x"000F";
 		wait until rising_edge(WB_O(16));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"0000";

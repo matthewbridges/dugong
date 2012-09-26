@@ -55,29 +55,29 @@ entity rhino_top is
 		CLK_AB_P    : in  STD_LOGIC;
 		CLK_AB_N    : in  STD_LOGIC;
 
-	--		-- FMC150 DAC interface		
-	--		DAC_DCLK_P   : out STD_LOGIC;
-	--		DAC_DCLK_N   : out STD_LOGIC;
-	--		DAC_DATA_P   : out STD_LOGIC_VECTOR(7 downto 0);
-	--		DAC_DATA_N   : out STD_LOGIC_VECTOR(7 downto 0);
-	--		FRAME_P      : out STD_LOGIC;
-	--		FRAME_N      : out STD_LOGIC;
-	--		TXENABLE     : out STD_LOGIC;
+		--		-- FMC150 DAC interface		
+		--		DAC_DCLK_P   : out STD_LOGIC;
+		--		DAC_DCLK_N   : out STD_LOGIC;
+		--		DAC_DATA_P   : out STD_LOGIC_VECTOR(7 downto 0);
+		--		DAC_DATA_N   : out STD_LOGIC_VECTOR(7 downto 0);
+		--		FRAME_P      : out STD_LOGIC;
+		--		FRAME_N      : out STD_LOGIC;
+		--		TXENABLE     : out STD_LOGIC;
 
-	--		--FMC150 CTRL interface
-			SPI_SCLK     : out STD_LOGIC;
-			SPI_SDATA    : out STD_LOGIC;
-	--		ADC_N_EN     : out STD_LOGIC;
-	--		ADC_SDO      : in  STD_LOGIC;
-	--		ADC_RESET    : out STD_LOGIC;
-	--		CDCE_N_EN    : out STD_LOGIC;
-	--		CDCE_SDO     : in  STD_LOGIC;
-	--		CDCE_N_RESET : out STD_LOGIC;
-	--		CDCE_N_PD    : out STD_LOGIC;
-	--		REF_EN       : out STD_LOGIC;
-	--		PLL_STATUS   : in  STD_LOGIC;
-			DAC_N_EN     : out STD_LOGIC;
-			DAC_SDO      : in  STD_LOGIC
+		--		--FMC150 CTRL interface
+		SPI_SCLK    : out STD_LOGIC;
+		SPI_SDATA   : out STD_LOGIC;
+		--		ADC_N_EN     : out STD_LOGIC;
+		--		ADC_SDO      : in  STD_LOGIC;
+		--		ADC_RESET    : out STD_LOGIC;
+		--		CDCE_N_EN    : out STD_LOGIC;
+		--		CDCE_SDO     : in  STD_LOGIC;
+		--		CDCE_N_RESET : out STD_LOGIC;
+		--		CDCE_N_PD    : out STD_LOGIC;
+		--		REF_EN       : out STD_LOGIC;
+		--		PLL_STATUS   : in  STD_LOGIC;
+		DAC_N_EN    : out STD_LOGIC;
+		DAC_SDO     : in  STD_LOGIC
 	--		MON_N_EN     : out STD_LOGIC;
 	--		MON_SDO      : in  STD_LOGIC;
 	--		MON_N_RESET  : out STD_LOGIC;
@@ -90,6 +90,8 @@ architecture Behavioral of rhino_top is
 	signal wb_sm       : std_logic_vector(16 downto 0);
 	signal sys_con_clk : std_logic;
 	signal sys_con_rst : std_logic;
+
+	signal clk_6mhz : std_logic;
 
 	signal clk_to_fpga_b : std_logic;
 
@@ -106,8 +108,9 @@ architecture Behavioral of rhino_top is
 			--System Reset
 			SYS_RST    : in  STD_LOGIC;
 			--System Control Inputs
-			CLK_100MHz : out STD_LOGIC;
-			CLK_200Mhz : out STD_LOGIC;
+			CLK_6MHZ   : out STD_LOGIC;
+			CLK_100MHZ : out STD_LOGIC;
+			CLK_200MHZ : out STD_LOGIC;
 			RST_O      : out STD_LOGIC
 		);
 	END COMPONENT;
@@ -173,12 +176,17 @@ architecture Behavioral of rhino_top is
 			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 			CORE_DATA_WIDTH : NATURAL               := 8;
-			CORE_ADDR_WIDTH : NATURAL               := 5);
+			CORE_ADDR_WIDTH : NATURAL               := 6
+		);
 		PORT(
+			--System Control Inputs
 			CLK_I    : in  STD_LOGIC;
 			RST_I    : in  STD_LOGIC;
+			--Slave to WB
 			WB_I     : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O     : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			--Serial Peripheral Interface
+			SCLK_I   : in  STD_LOGIC;
 			SPI_CLK  : out STD_LOGIC;
 			SPI_MOSI : out STD_LOGIC;
 			SPI_MISO : in  STD_LOGIC;
@@ -287,6 +295,7 @@ begin
 			SYS_CLK_P  => SYS_CLK_P,
 			SYS_CLK_N  => SYS_CLK_N,
 			SYS_RST    => SYS_RST,
+			CLK_6MHZ   => clk_6mhz,
 			CLK_100MHz => sys_con_clk,
 			CLK_200Mhz => test_clocks(1),
 			RST_O      => sys_con_rst
@@ -302,7 +311,7 @@ begin
 
 	Clock_Counter : clk_counter_ip
 		GENERIC MAP(
-			BASE_ADDR       => x"100"
+			BASE_ADDR => x"100"
 		)
 		PORT MAP(
 			CLK_I       => sys_con_clk,
@@ -338,17 +347,16 @@ begin
 			GPIO  => LED
 		);
 
-	--DAC3283 :
-
-	inst : spi_master_ip
+	DAC3283_ctrl : spi_master_ip
 		GENERIC MAP(
-			BASE_ADDR       => x"A00"
+			BASE_ADDR => x"A00"
 		)
 		PORT MAP(
 			CLK_I    => sys_con_clk,
 			RST_I    => sys_con_rst,
 			WB_I     => wb_ms,
 			WB_O     => wb_sm,
+			SCLK_I   => clk_6mhz,
 			SPI_CLK  => SPI_SCLK,
 			SPI_MOSI => SPI_SDATA,
 			SPI_MISO => DAC_SDO,

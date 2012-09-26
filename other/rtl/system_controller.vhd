@@ -14,8 +14,9 @@ entity system_controller is
 		SYS_RST    : in  STD_LOGIC;
 
 		--System Control Inputs
-		CLK_100MHz : out STD_LOGIC;
-		CLK_200Mhz : out STD_LOGIC;
+		CLK_6MHZ   : out STD_LOGIC;
+		CLK_100MHZ : out STD_LOGIC;
+		CLK_200MHZ : out STD_LOGIC;
 		RST_O      : out STD_LOGIC
 	);
 end entity system_controller;
@@ -29,6 +30,8 @@ architecture RTL of system_controller is
 	signal clk0_b          : std_logic;
 	signal clk2x           : std_logic;
 	signal clk2x_b         : std_logic;
+	signal clkdv           : std_logic;
+	signal clkdv_b         : std_logic;
 	signal locked_internal : std_logic;
 
 begin
@@ -48,7 +51,7 @@ begin
 	--    * Unused outputs are labelled unused
 	dcm_sp_inst : DCM_SP
 		generic map(
-			CLKDV_DIVIDE       => 2.000,
+			CLKDV_DIVIDE       => 16.000,
 			CLKFX_DIVIDE       => 1,
 			CLKFX_MULTIPLY     => 4,
 			CLKIN_DIVIDE_BY_2  => FALSE,
@@ -72,7 +75,7 @@ begin
 			CLK2X180 => open,
 			CLKFX    => open,
 			CLKFX180 => open,
-			CLKDV    => open,
+			CLKDV    => clkdv,
 			-- Ports for dynamic phase shift
 			PSCLK    => '0',
 			PSEN     => '0',
@@ -95,13 +98,20 @@ begin
 
 	clk2x_buf : BUFG
 		port map(
-			O => CLK2x_b,
+			O => clk2x_b,
 			I => clk2x
 		);
 
-	CLK_100MHz <= clk0_b;
-	CLK_200Mhz <= clk2x;
-	
+	clkdv_buf : BUFG
+		port map(
+			O => clkdv_b,
+			I => clkdv
+		);
+
+	CLK_100MHZ <= clk0_b;
+	CLK_200MHZ <= clk2x;
+	CLK_6MHZ   <= clkdv_b;
+
 	RST_O <= not locked_internal;
 
 end architecture RTL;

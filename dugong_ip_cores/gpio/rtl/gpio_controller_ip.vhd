@@ -78,8 +78,8 @@ architecture Behavioral of gpio_controller_ip is
 	component gpio_controller is
 		generic(
 			DATA_WIDTH : natural := 16;
-			ADDR_WIDTH : natural := 4;
-			GPIO_WIDTH : natural := 8
+			ADDR_WIDTH : natural := 3;
+			GPIO_WIDTH : natural := 16
 		);
 		port(
 			--System Control Inputs
@@ -128,7 +128,7 @@ begin
 	user_logic : gpio_controller
 		generic map(
 			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH,
+			ADDR_WIDTH => 3,
 			GPIO_WIDTH => CORE_DATA_WIDTH
 		)
 		port map(
@@ -138,7 +138,7 @@ begin
 			--Wishbone Slave Lines
 			DAT_I => dat_i(CORE_DATA_WIDTH - 1 downto 0),
 			DAT_O => dat_o(CORE_DATA_WIDTH - 1 downto 0),
-			ADR_I => adr_i,
+			ADR_I => adr_i(2 downto 0),
 			STB_I => stb_i,
 			WE_I  => we_i,
 			--	CYC_I =>

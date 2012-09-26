@@ -27,7 +27,7 @@ entity spi_master_ip is
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 		CORE_DATA_WIDTH : NATURAL               := 8;
-		CORE_ADDR_WIDTH : NATURAL               := 5
+		CORE_ADDR_WIDTH : NATURAL               := 6
 	);
 	port(
 		--System Control Inputs
@@ -37,6 +37,7 @@ entity spi_master_ip is
 		WB_I     : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 		WB_O     : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--Serial Peripheral Interface
+		SCLK_I   : in  STD_LOGIC;		
 		SPI_CLK  : out STD_LOGIC;
 		SPI_MOSI : out STD_LOGIC;
 		SPI_MISO : in  STD_LOGIC;
@@ -98,6 +99,7 @@ architecture Behavioral of spi_master_ip is
 			--		CYC_I : in   STD_LOGIC;
 			ACK_O    : out STD_LOGIC;
 			--Serial Peripheral Interface
+			SCLK_I   : in  STD_LOGIC;			
 			SPI_CLK  : out STD_LOGIC;
 			SPI_MOSI : out STD_LOGIC;
 			SPI_MISO : in  STD_LOGIC;
@@ -134,7 +136,7 @@ begin
 	user_logic : spi_master
 		generic map(
 			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH,
+			ADDR_WIDTH => 5,
 			SPI_INST_WIDTH => 8,
 			SPI_DATA_WIDTH => CORE_DATA_WIDTH
 		)
@@ -142,15 +144,17 @@ begin
 			--System Control Inputs
 			CLK_I    => CLK_I,
 			RST_I    => RST_I,
+
 			--Wishbone Slave Lines
 			DAT_I    => dat_i(CORE_DATA_WIDTH - 1 downto 0),
 			DAT_O    => dat_o(CORE_DATA_WIDTH - 1 downto 0),
-			ADR_I    => adr_i,
+			ADR_I    => adr_i(4 downto 0),
 			STB_I    => stb_i,
 			WE_I     => we_i,
 			--	CYC_I =>
 			ACK_O    => ack_o,
 			--Serial Peripheral Interface
+			SCLK_I   => SCLK_I,
 			SPI_CLK  => SPI_CLK,
 			SPI_MOSI => SPI_MOSI,
 			SPI_MISO => SPI_MISO,

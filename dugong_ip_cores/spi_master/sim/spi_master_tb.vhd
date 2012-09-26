@@ -49,6 +49,7 @@ ARCHITECTURE behavior OF spi_master_tb IS
          STB_I : IN  std_logic;
          WE_I : IN  std_logic;
          ACK_O : OUT  std_logic;
+			SCLK_I   : in  STD_LOGIC;
          SPI_CLK : OUT  std_logic;
          SPI_MOSI : OUT  std_logic;
          SPI_MISO : IN  std_logic;
@@ -64,6 +65,7 @@ ARCHITECTURE behavior OF spi_master_tb IS
    signal ADR_I : std_logic_vector(4 downto 0) := (others => '0');
    signal STB_I : std_logic := '0';
    signal WE_I : std_logic := '0';
+	signal SCLK_I   : STD_LOGIC := '0';
    signal SPI_MISO : std_logic := '1';
 
  	--Outputs
@@ -75,6 +77,7 @@ ARCHITECTURE behavior OF spi_master_tb IS
 
    -- Clock period definitions
    constant CLK_I_period : time := 10 ns;
+	constant sclk_period : time := 160 ns;
  
 BEGIN
  
@@ -88,6 +91,7 @@ BEGIN
           STB_I => STB_I,
           WE_I => WE_I,
           ACK_O => ACK_O,
+			 SCLK_I => SCLK_I,
           SPI_CLK => SPI_CLK,
           SPI_MOSI => SPI_MOSI,
           SPI_MISO => SPI_MISO,
@@ -102,6 +106,14 @@ BEGIN
 		CLK_I <= '1';
 		wait for CLK_I_period/2;
    end process; 
+	
+			sclk_process : process
+	begin
+		SCLK_I <= '0';
+		wait for sclk_period / 2;
+		SCLK_I <= '1';
+		wait for sclk_period / 2;
+	end process;
 
    -- Stimulus process
    stim_proc: process
