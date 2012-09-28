@@ -7,111 +7,155 @@ use unisim.vcomponents.all;
 entity system_controller is
 	port(
 		--System Clock Differential Inputs 100MHz
-		SYS_CLK_P  : in  STD_LOGIC;
-		SYS_CLK_N  : in  STD_LOGIC;
-
+		SYS_CLK_P      : in  STD_LOGIC;
+		SYS_CLK_N      : in  STD_LOGIC;
+		--System Clock Differential Outputs 100MHz
+		SYS_CLK_P_o    : out STD_LOGIC;
+		SYS_CLK_N_o    : out STD_LOGIC;
 		--System Reset
-		SYS_RST    : in  STD_LOGIC;
-
-		--System Control Inputs
-		CLK_6MHZ   : out STD_LOGIC;
-		CLK_100MHZ : out STD_LOGIC;
-		CLK_200MHZ : out STD_LOGIC;
-		RST_O      : out STD_LOGIC
+		SYS_RST        : in  STD_LOGIC;
+		--System Status
+		SYS_PWR_ON     : out STD_LOGIC;
+		SYS_PLL_Locked : out STD_LOGIC;
+		--System Control Outputs
+		CLK_100MHZ     : out STD_LOGIC;
+		CLK_100MHZ_n   : out STD_LOGIC;
+		CLK_200MHZ     : out STD_LOGIC;
+		RST_O          : out STD_LOGIC
 	);
 end entity system_controller;
 
 architecture RTL of system_controller is
 
 	-- Input clock buffering / unused connectors
-	signal sys_clk_b       : std_logic;
+	signal sys_clk_b       : std_ulogic;
 	-- Output clock buffering
-	signal clk0            : std_logic;
-	signal clk0_b          : std_logic;
-	signal clk2x           : std_logic;
-	signal clk2x_b         : std_logic;
-	signal clkdv           : std_logic;
-	signal clkdv_b         : std_logic;
+	signal sys_clk_o_pb    : std_ulogic;
+	signal clkout0         : std_ulogic;
+	signal clkout0_b       : std_ulogic;
+	signal clkout1         : std_ulogic;
+	signal clkout1_b       : std_ulogic;
+	signal clkout2         : std_ulogic;
+	signal clkout2_b       : std_ulogic;
+	signal clkfbout        : std_ulogic;
 	signal locked_internal : std_logic;
 
 begin
+	SYS_PWR_ON <= '1';
+
 	-- Input buffering
-	sys_clk_in_buf : IBUFGDS
+	SYS_CLK_IBUFGDS : IBUFGDS
 		port map(
 			O  => sys_clk_b,
 			I  => SYS_CLK_P,
 			IB => SYS_CLK_N
 		);
 
-	-- Clocking primitive
-	--------------------------------------
+	-- PLL_BASE: Phase Locked Loop (PLL) Clock Management Component
+	--           Spartan-6
+	-- Xilinx HDL Libraries Guide, version 14.1
 
-	-- Instantiation of the DCM primitive
-	--    * Unused inputs are tied off
-	--    * Unused outputs are labelled unused
-	dcm_sp_inst : DCM_SP
+	SYS_CLK_PLL_BASE : PLL_BASE
 		generic map(
-			CLKDV_DIVIDE       => 16.000,
-			CLKFX_DIVIDE       => 1,
-			CLKFX_MULTIPLY     => 4,
-			CLKIN_DIVIDE_BY_2  => FALSE,
-			CLKIN_PERIOD       => 10.0,
-			CLKOUT_PHASE_SHIFT => "NONE",
-			CLK_FEEDBACK       => "1X",
-			DESKEW_ADJUST      => "SYSTEM_SYNCHRONOUS",
-			PHASE_SHIFT        => 0,
-			STARTUP_WAIT       => FALSE
+			BANDWIDTH             => "HIGH", -- "HIGH", "LOW" or "OPTIMIZED"
+			CLKFBOUT_MULT         => 10, -- Multiply value for all CLKOUT clock outputs (1-64)
+			CLKFBOUT_PHASE        => 0.0, -- Phase offset in degrees of the clock feedback output (0.0-360.0).
+			CLKIN_PERIOD          => 10.0, -- Input clock period in ns to ps resolution (i.e. 33.333 is 30MHz).
+			-- CLKOUT0_DIVIDE - CLKOUT5_DIVIDE: Divide amount for CLKOUT# clock output (1-128)
+			CLKOUT0_DIVIDE        => 10,
+			CLKOUT1_DIVIDE        => 10,
+			CLKOUT2_DIVIDE        => 5,
+			CLKOUT3_DIVIDE        => 1,
+			CLKOUT4_DIVIDE        => 1,
+			CLKOUT5_DIVIDE        => 1,
+			-- CLKOUT0_DUTY_CYCLE - CLKOUT5_DUTY_CYCLE: Duty cycle for CLKOUT# clock output (0.01-0.99).
+			CLKOUT0_DUTY_CYCLE    => 0.5,
+			CLKOUT1_DUTY_CYCLE    => 0.5,
+			CLKOUT2_DUTY_CYCLE    => 0.5,
+			CLKOUT3_DUTY_CYCLE    => 0.5,
+			CLKOUT4_DUTY_CYCLE    => 0.5,
+			CLKOUT5_DUTY_CYCLE    => 0.5,
+			-- CLKOUT0_PHASE - CLKOUT5_PHASE: Output phase relationship for CLKOUT# clock output (-360.0-360.0).
+			CLKOUT0_PHASE         => 0.0,
+			CLKOUT1_PHASE         => 180.0,
+			CLKOUT2_PHASE         => 0.0,
+			CLKOUT3_PHASE         => 0.0,
+			CLKOUT4_PHASE         => 0.0,
+			CLKOUT5_PHASE         => 0.0,
+			CLK_FEEDBACK          => "CLKFBOUT", -- Clock source to drive CLKFBIN ("CLKFBOUT" or "CLKOUT0")
+			COMPENSATION          => "SYSTEM_SYNCHRONOUS", -- "SYSTEM_SYNCHRONOUS", "SOURCE_SYNCHRONOUS", "EXTERNAL"
+			DIVCLK_DIVIDE         => 1, -- Division value for all output clocks (1-52)
+			REF_JITTER            => 0.001, -- Reference Clock Jitter in UI (0.000-0.999).
+			RESET_ON_LOSS_OF_LOCK => FALSE -- Must be set to FALSE
 		)
 		port map(
-			-- Input clock
-			CLKIN    => sys_clk_b,
-			CLKFB    => clk0_b,
-			-- Output clocks
-			CLK0     => clk0,
-			CLK90    => open,
-			CLK180   => open,
-			CLK270   => open,
-			CLK2X    => clk2x,
-			CLK2X180 => open,
-			CLKFX    => open,
-			CLKFX180 => open,
-			CLKDV    => clkdv,
-			-- Ports for dynamic phase shift
-			PSCLK    => '0',
-			PSEN     => '0',
-			PSINCDEC => '0',
-			PSDONE   => open,
-			-- Other control and status signals
-			LOCKED   => locked_internal,
-			STATUS   => open,
-			RST      => SYS_RST,
-			-- Unused pin, tie low
-
-			DSSEN    => '0'
+			CLKFBOUT => clkfbout,       -- 1-bit output: PLL_BASE feedback output
+			-- CLKOUT0 - CLKOUT5: 1-bit (each) output: Clock outputs
+			CLKOUT0  => clkout0,
+			CLKOUT1  => clkout1,
+			CLKOUT2  => clkout2,
+			CLKOUT3  => open,
+			CLKOUT4  => open,
+			CLKOUT5  => open,
+			LOCKED   => locked_internal, -- 1-bit output: PLL_BASE lock status output
+			CLKFBIN  => clkfbout,       -- 1-bit input: Feedback clock input
+			CLKIN    => sys_clk_b,      -- 1-bit input: Clock input
+			RST      => SYS_RST         -- 1-bit input: Reset input
 		);
 
-	clk0_buf : BUFG
+	-- End of PLL_BASE_inst instantiation
+
+
+	clkout0_buf : BUFG
 		port map(
-			O => clk0_b,
-			I => clk0
+			O => clkout0_b,
+			I => clkout0
 		);
 
-	clk2x_buf : BUFG
+	CLK_100MHZ <= clkout0_b;
+
+	clkout1_buf : BUFG
 		port map(
-			O => clk2x_b,
-			I => clk2x
+			O => clkout1_b,
+			I => clkout1
 		);
 
-	clkdv_buf : BUFG
+	CLK_100MHZ_n <= clkout1_b;
+
+	clkout2_buf : BUFG
 		port map(
-			O => clkdv_b,
-			I => clkdv
+			O => clkout2_b,
+			I => clkout2
 		);
 
-	CLK_100MHZ <= clk0_b;
-	CLK_200MHZ <= clk2x;
-	CLK_6MHZ   <= clkdv_b;
+	CLK_200MHZ <= clkout2_b;
 
-	RST_O <= not locked_internal;
+	RST_O          <= not locked_internal;
+	SYS_PLL_Locked <= locked_internal;
+
+	--ODDR for Clock Forwarding
+	SYS_CLK_o_ODDR2 : ODDR2
+		generic map(
+			DDR_ALIGNMENT => "NONE",    -- Sets output alignment to "NONE", "C0", "C1"
+			INIT          => '0',       -- Sets initial state of the Q output to '0' or '1'
+			SRTYPE        => "SYNC")    -- Specifies "SYNC" or "ASYNC" set/reset
+		port map(
+			Q  => sys_clk_o_pb,         -- 1-bit output data
+			C0 => clkout0_b,            -- 1-bit clock input
+			C1 => clkout1_b,            -- 1-bit clock input
+			CE => locked_internal,      -- 1-bit clock enable input
+			D0 => '1',                  -- 1-bit data input (associated with C0)
+			D1 => '0',                  -- 1-bit data input (associated with C1)
+			R  => '0',                  -- 1-bit reset input
+			S  => '0'                   -- 1-bit set input
+		);
+
+	-- Output buffering
+	SYS_CLK_o_OBUFDS : OBUFDS
+		port map(
+			O  => SYS_CLK_P_o,
+			OB => SYS_CLK_N_o,
+			I  => sys_clk_o_pb
+		);
 
 end architecture RTL;

@@ -37,7 +37,7 @@ entity spi_master_ip is
 		WB_I     : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 		WB_O     : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--Serial Peripheral Interface
-		SCLK_I   : in  STD_LOGIC;		
+		SCLK_O   : out  STD_LOGIC;		
 		SPI_CLK  : out STD_LOGIC;
 		SPI_MOSI : out STD_LOGIC;
 		SPI_MISO : in  STD_LOGIC;
@@ -99,7 +99,7 @@ architecture Behavioral of spi_master_ip is
 			--		CYC_I : in   STD_LOGIC;
 			ACK_O    : out STD_LOGIC;
 			--Serial Peripheral Interface
-			SCLK_I   : in  STD_LOGIC;			
+			SCLK_O   : out  STD_LOGIC;			
 			SPI_CLK  : out STD_LOGIC;
 			SPI_MOSI : out STD_LOGIC;
 			SPI_MISO : in  STD_LOGIC;
@@ -154,7 +154,7 @@ begin
 			--	CYC_I =>
 			ACK_O    => ack_o,
 			--Serial Peripheral Interface
-			SCLK_I   => SCLK_I,
+			SCLK_O   => SCLK_O,
 			SPI_CLK  => SPI_CLK,
 			SPI_MOSI => SPI_MOSI,
 			SPI_MISO => SPI_MISO,

@@ -1,33 +1,12 @@
+#System Control
+NET "SYS_CLK_P" LOC = B14;
+NET "SYS_CLK_P_o" LOC = E13;
+NET "SYS_RST" LOC = H18;
+NET "SYS_PWR_ON" LOC = H19;
+NET "SYS_PLL_Locked" LOC = C21;
 
-# PlanAhead Generated IO constraints 
-
-NET "GPIO[0]" DRIVE = 24;
-NET "GPIO[1]" DRIVE = 24;
-NET "GPIO[2]" DRIVE = 24;
-NET "GPIO[3]" DRIVE = 24;
-NET "GPIO[4]" DRIVE = 24;
-NET "GPIO[5]" DRIVE = 24;
-NET "GPIO[6]" DRIVE = 24;
-NET "GPIO[7]" DRIVE = 24;
-NET "GPIO[8]" DRIVE = 24;
-NET "GPIO[9]" DRIVE = 24;
-NET "GPIO[10]" DRIVE = 24;
-NET "GPIO[11]" DRIVE = 24;
-NET "GPIO[12]" DRIVE = 24;
-NET "GPIO[13]" DRIVE = 24;
-NET "GPIO[14]" DRIVE = 24;
-NET "GPIO[15]" DRIVE = 24;
-NET "LED[0]" DRIVE = 24;
-NET "LED[1]" DRIVE = 24;
-NET "LED[2]" DRIVE = 24;
-NET "LED[3]" DRIVE = 24;
-NET "LED[4]" DRIVE = 24;
-NET "LED[5]" DRIVE = 24;
-NET "LED[6]" DRIVE = 24;
-NET "LED[7]" DRIVE = 24;
-
-# PlanAhead Generated physical constraints 
-
+#GPIO_16 Interface
+NET "GPIO[0]" LOC = R8;
 NET "GPIO[1]" LOC = T8;
 NET "GPIO[2]" LOC = U5;
 NET "GPIO[3]" LOC = T4;
@@ -43,6 +22,8 @@ NET "GPIO[12]" LOC = N8;
 NET "GPIO[13]" LOC = N7;
 NET "GPIO[14]" LOC = R4;
 NET "GPIO[15]" LOC = R3;
+
+#LED_8 Interface
 NET "LED[0]" LOC = Y3;
 NET "LED[1]" LOC = Y1;
 NET "LED[2]" LOC = W2;
@@ -51,11 +32,16 @@ NET "LED[4]" LOC = V3;
 NET "LED[5]" LOC = V1;
 NET "LED[6]" LOC = U2;
 NET "LED[7]" LOC = U1;
-NET "CLK_AB_P" LOC = AE15;
-NET "CLK_TO_FPGA" LOC = W24;
-NET "DAC_N_EN" LOC = W10;
-NET "DAC_SDO" LOC = W9;
+
+#DEBUG Interface
+NET "DEBUG[0]" LOC = F20;#FMC1_LA_P[30]
+NET "DEBUG[1]" LOC = E20;#FMC1_LA_N[30]
+NET "DEBUG[2]" LOC = H17;#FMC1_LA_P[31]
+NET "DEBUG[3]" LOC = G17;#FMC1_LA_N[31]
+
+# PlanAhead Generated physical constraints 
+
 NET "SPI_SCLK" LOC = AE5;
+NET "DAC_N_EN" LOC = W10;
 NET "SPI_SDATA" LOC = AF5;
-NET "SYS_CLK_P" LOC = B14;
-NET "SYS_RST" LOC = R8;
+NET "DAC_SDO" LOC = W9;

@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   10:40:19 09/26/2012
+-- Create Date:   16:04:49 09/28/2012
 -- Design Name:   
 -- Module Name:   /home/mbridges/Projects/Dugong/other/sim/system_controller_tb.vhd
 -- Project Name:  Dugong
@@ -43,9 +43,13 @@ ARCHITECTURE behavior OF system_controller_tb IS
     PORT(
          SYS_CLK_P : IN  std_logic;
          SYS_CLK_N : IN  std_logic;
+         SYS_CLK_P_o : OUT  std_logic;
+         SYS_CLK_N_o : OUT  std_logic;
          SYS_RST : IN  std_logic;
-         CLK_6MHZ : OUT  std_logic;
+         SYS_PWR_ON : OUT  std_logic;
+         SYS_PLL_Locked : OUT  std_logic;
          CLK_100MHZ : OUT  std_logic;
+         CLK_100MHZ_n : OUT  std_logic;
          CLK_200MHZ : OUT  std_logic;
          RST_O : OUT  std_logic
         );
@@ -54,17 +58,21 @@ ARCHITECTURE behavior OF system_controller_tb IS
 
    --Inputs
    signal SYS_CLK_P : std_logic := '0';
-   signal SYS_CLK_N : std_logic := '1';
+   signal SYS_CLK_N : std_logic := '0';
    signal SYS_RST : std_logic := '0';
 
  	--Outputs
-   signal CLK_6MHZ : std_logic;
+   signal SYS_CLK_P_o : std_logic;
+   signal SYS_CLK_N_o : std_logic;
+   signal SYS_PWR_ON : std_logic;
+   signal SYS_PLL_Locked : std_logic;
    signal CLK_100MHZ : std_logic;
+   signal CLK_100MHZ_n : std_logic;
    signal CLK_200MHZ : std_logic;
    signal RST_O : std_logic;
 
    -- Clock period definitions
-   constant SYS_CLK_P_period : time := 10 ns;
+   constant SYS_CLK_period : time := 10 ns;
  
 BEGIN
  
@@ -72,22 +80,26 @@ BEGIN
    uut: system_controller PORT MAP (
           SYS_CLK_P => SYS_CLK_P,
           SYS_CLK_N => SYS_CLK_N,
+          SYS_CLK_P_o => SYS_CLK_P_o,
+          SYS_CLK_N_o => SYS_CLK_N_o,
           SYS_RST => SYS_RST,
-          CLK_6MHZ => CLK_6MHZ,
+          SYS_PWR_ON => SYS_PWR_ON,
+          SYS_PLL_Locked => SYS_PLL_Locked,
           CLK_100MHZ => CLK_100MHZ,
+          CLK_100MHZ_n => CLK_100MHZ_n,
           CLK_200MHZ => CLK_200MHZ,
           RST_O => RST_O
         );
 
    -- Clock process definitions
-   SYS_CLK_P_process :process
+   SYS_CLK_process :process
    begin
 		SYS_CLK_P <= '0';
 		SYS_CLK_N <= '1';
-		wait for SYS_CLK_P_period/2;
+		wait for SYS_CLK_period/2;
 		SYS_CLK_P <= '1';
 		SYS_CLK_N <= '0';
-		wait for SYS_CLK_P_period/2;
+		wait for SYS_CLK_period/2;
    end process;
  
 
@@ -97,7 +109,7 @@ BEGIN
       -- hold reset state for 100 ns.
       wait for 100 ns;	
 
-      wait for SYS_CLK_P_period*10;
+      wait for SYS_CLK_period*10;
 
       -- insert stimulus here 
 

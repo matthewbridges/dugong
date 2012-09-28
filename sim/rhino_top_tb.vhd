@@ -51,7 +51,8 @@ ARCHITECTURE behavior OF rhino_top_tb IS
 			 SPI_SCLK    : out STD_LOGIC;
 			 SPI_SDATA   : out STD_LOGIC;
 			 DAC_N_EN    : out STD_LOGIC;
-			 DAC_SDO     : in  STD_LOGIC);
+			 DAC_SDO     : in  STD_LOGIC;
+			 DEBUG :out STD_LOGIC_VECTOR(3 downto 0));
 	end component rhino_top;
 
 	--Inputs
@@ -68,6 +69,7 @@ ARCHITECTURE behavior OF rhino_top_tb IS
 	signal SPI_SCLK : STD_LOGIC;
 	signal SPI_SDATA : STD_LOGIC;
 	signal DAC_N_EN : STD_LOGIC;
+	signal DEBUG    : STD_LOGIC_VECTOR(3 downto 0);
 
 	-- Clock period definitions
 	constant SYS_CLK_P_period : time := 10 ns;
@@ -87,7 +89,8 @@ BEGIN
 			     SPI_SCLK    => SPI_SCLK,
 			     SPI_SDATA   => SPI_SDATA,
 			     DAC_N_EN    => DAC_N_EN,
-			     DAC_SDO     => DAC_SDO);
+			     DAC_SDO     => DAC_SDO,
+				  DEBUG => DEBUG);
 
 	-- Clock process definitions
 	SYS_CLK_P_process : process
