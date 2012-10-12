@@ -60,14 +60,14 @@ entity rhino_top is
 		--		CLK_AB_P       : in  STD_LOGIC;
 		---		CLK_AB_N       : in  STD_LOGIC;
 
-		--		-- FMC150 DAC interface		
-		--		DAC_DCLK_P   : out STD_LOGIC;
-		--		DAC_DCLK_N   : out STD_LOGIC;
-		--		DAC_DATA_P   : out STD_LOGIC_VECTOR(7 downto 0);
-		--		DAC_DATA_N   : out STD_LOGIC_VECTOR(7 downto 0);
-		--		FRAME_P      : out STD_LOGIC;
-		--		FRAME_N      : out STD_LOGIC;
-		--		TXENABLE     : out STD_LOGIC;
+		-- FMC150 DAC interface		
+		DAC_DCLK_P     : out STD_LOGIC;
+		DAC_DCLK_N     : out STD_LOGIC;
+		DAC_DATA_P     : out STD_LOGIC_VECTOR(7 downto 0);
+		DAC_DATA_N     : out STD_LOGIC_VECTOR(7 downto 0);
+		FRAME_P        : out STD_LOGIC;
+		FRAME_N        : out STD_LOGIC;
+		TXENABLE       : out STD_LOGIC;
 
 		--FMC150 CTRL interface
 		SPI_SCLK       : out STD_LOGIC;
@@ -87,8 +87,29 @@ entity rhino_top is
 		--			MON_SDO      : in  STD_LOGIC;
 		--			MON_N_RESET  : out STD_LOGIC;
 		--			MON_N_INT    : in  STD_LOGIC;
+
+		--Gigabit Ethernet PHY Interface
+		--GMII interface for 1 Gig Ethernet PHY
+		--      GIGE_GTX_CLK   : out std_logic;
+		--		GIGE_TX_CLK  : in    std_logic;
+		--		GIGE_TX_EN   : out   std_logic;
+		--		GIGE_TX_ER   : out   std_logic;
+		--		GIGE_TXD     : out   std_logic_vector(7 downto 0);
+		--		GIGE_RX_CLK  : in    std_logic;
+		--		GIGE_RX_DV   : in    std_logic;
+		--		GIGE_RX_ER   : in    std_logic;
+		--		GIGE_RXD     : in    std_logic_vector(7 downto 0);
+		--		GIGE_CRS     : in    std_logic;
+		--		GIGE_COL     : in    std_logic;
+		--		-- Control and MDIO interface for 1 Gig Ethernet PHY
+		--		GIGE_MDC     : out   std_logic;
+		--		GIGE_MDIO    : inout std_logic;
+		--		GIGE_nINT    : in    std_logic;
+		--      GIGE_nRESET    : out std_logic;
+		--      GIGE_COMA      : out std_logic;
+
 		-- Debug
-		DEBUG          : out STD_LOGIC_VECTOR(3 downto 0)
+		DEBUG          : out STD_LOGIC_VECTOR(15 downto 0)
 	);
 end rhino_top;
 
@@ -98,16 +119,17 @@ architecture Behavioral of rhino_top is
 	signal wb_ms       : std_logic_vector(30 downto 0);
 	signal wb_sm       : std_logic_vector(16 downto 0);
 
+	signal ch_a : std_logic_vector(15 downto 0);
+	signal ch_b : std_logic_vector(15 downto 0);
+
 	-- DEBUGGING SIGNAL
 	signal temp : std_logic_vector(3 downto 0);
+	signal temp2 : std_logic;
 
 	--	signal clk_to_fpga_b : std_logic;
 
 	--	signal test_clocks : std_logic_vector(3 downto 0);
 	--	signal init_done : std_logic;
-
-	--	signal ch_a : std_logic_vector(15 downto 0);
-	--	signal ch_b : std_logic_vector(15 downto 0);
 
 	COMPONENT system_controller
 		port(
@@ -125,6 +147,8 @@ architecture Behavioral of rhino_top is
 			--System Control Outputs
 			CLK_100MHZ     : out STD_LOGIC;
 			CLK_100MHZ_n   : out STD_LOGIC;
+			CLK_125MHZ     : out STD_LOGIC;
+			CLK_125MHZ_n   : out STD_LOGIC;
 			CLK_200MHZ     : out STD_LOGIC;
 			RST_O          : out STD_LOGIC
 		);
@@ -187,11 +211,12 @@ architecture Behavioral of rhino_top is
 
 	COMPONENT spi_master_ip
 		GENERIC(
-			DATA_WIDTH      : NATURAL               := 16;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 8;
-			CORE_ADDR_WIDTH : NATURAL               := 6
+		DATA_WIDTH      : NATURAL                                 := 16;
+		ADDR_WIDTH      : NATURAL                                 := 12;
+		BASE_ADDR       : UNSIGNED(11 downto 0)                   := x"000";
+		CORE_DATA_WIDTH : NATURAL                                 := 8;
+		CORE_ADDR_WIDTH : NATURAL                                 := 6;
+		DEFAULT_DATA    : std_logic_vector((2 ** 8) - 1 downto 0) := (others => '0')
 		);
 		PORT(
 			--System Control Inputs
@@ -201,7 +226,7 @@ architecture Behavioral of rhino_top is
 			WB_I     : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O     : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			--Serial Peripheral Interface
-			SCLK_O   : out  STD_LOGIC;
+			SCLK_O   : out STD_LOGIC;
 			SPI_CLK  : out STD_LOGIC;
 			SPI_MOSI : out STD_LOGIC;
 			SPI_MISO : in  STD_LOGIC;
@@ -209,70 +234,72 @@ architecture Behavioral of rhino_top is
 		);
 	END COMPONENT;
 
---	COMPONENT dds_core_ip
---		GENERIC(
---			DATA_WIDTH      : NATURAL               := 16;
---			ADDR_WIDTH      : NATURAL               := 12;
---			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
---			CORE_DATA_WIDTH : NATURAL               := 16;
---			CORE_ADDR_WIDTH : NATURAL               := 4
---		);
---		PORT(
---			--System Control Inputs
---			CLK_I  : in  STD_LOGIC;
---			RST_I  : in  STD_LOGIC;
---			--Slave to WB
---			WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
---			WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
---			CH_A_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
---			CH_B_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
---		);
---	END COMPONENT;
+	--	COMPONENT dds_core_ip
+	--		GENERIC(
+	--			DATA_WIDTH      : NATURAL               := 16;
+	--			ADDR_WIDTH      : NATURAL               := 12;
+	--			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+	--			CORE_DATA_WIDTH : NATURAL               := 16;
+	--			CORE_ADDR_WIDTH : NATURAL               := 4
+	--		);
+	--		PORT(
+	--			--System Control Inputs
+	--			CLK_I  : in  STD_LOGIC;
+	--			RST_I  : in  STD_LOGIC;
+	--			--Slave to WB
+	--			WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+	--			WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+	--			CH_A_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+	--			CH_B_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+	--		);
+	--	END COMPONENT;
 
---	COMPONENT da2_controller_ip
---		GENERIC(
---			DATA_WIDTH      : NATURAL               := 16;
---			ADDR_WIDTH      : NATURAL               := 12;
---			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
---			CORE_DATA_WIDTH : NATURAL               := 16;
---			CORE_ADDR_WIDTH : NATURAL               := 4
---		);
---		PORT(
---			--System Control Inputs
---			CLK_I   : in  STD_LOGIC;
---			RST_I   : in  STD_LOGIC;
---			--Slave to WB
---			WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
---			WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
---			CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
---			CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
---			--DA2 Pmod interface signals
---			D1      : out std_logic;
---			D2      : out std_logic;
---			CLK_OUT : out std_logic;
---			nSYNC   : out std_logic
---		);
---	END COMPONENT;
---
---	COMPONENT dac3283_serializer
---		PORT(
---			--System Control Inputs
---			CLK_I      : in  STD_LOGIC;
---			RST_I      : in  STD_LOGIC;
---
---			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
---			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
---
---			-- DAC interface
---			DAC_DCLK_P : out STD_LOGIC;
---			DAC_DCLK_N : out STD_LOGIC;
---			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
---			DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
---			FRAME_P    : out STD_LOGIC;
---			FRAME_N    : out STD_LOGIC;
---			TXENABLE   : out STD_LOGIC
---		);
---	END COMPONENT;
+	--	COMPONENT da2_controller_ip
+	--		GENERIC(
+	--			DATA_WIDTH      : NATURAL               := 16;
+	--			ADDR_WIDTH      : NATURAL               := 12;
+	--			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+	--			CORE_DATA_WIDTH : NATURAL               := 16;
+	--			CORE_ADDR_WIDTH : NATURAL               := 4
+	--		);
+	--		PORT(
+	--			--System Control Inputs
+	--			CLK_I   : in  STD_LOGIC;
+	--			RST_I   : in  STD_LOGIC;
+	--			--Slave to WB
+	--			WB_I    : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+	--			WB_O    : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+	--			CH_A_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+	--			CH_B_I  : in  STD_LOGIC_VECTOR(11 downto 0);
+	--			--DA2 Pmod interface signals
+	--			D1      : out std_logic;
+	--			D2      : out std_logic;
+	--			CLK_OUT : out std_logic;
+	--			nSYNC   : out std_logic
+	--		);
+	--	END COMPONENT;
+
+	COMPONENT dac3283_serializer
+		PORT(
+			--System Control Inputs
+			CLK_I      : in  STD_LOGIC;
+			RST_I      : in  STD_LOGIC;
+
+			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+
+			-- DAC interface
+			DAC_DCLK_P : out STD_LOGIC;
+			DAC_DCLK_N : out STD_LOGIC;
+			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
+			DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
+			FRAME_P    : out STD_LOGIC;
+			FRAME_N    : out STD_LOGIC;
+			TXENABLE   : out STD_LOGIC;
+			-- Debug
+			DEBUG      : out STD_LOGIC_VECTOR(11 downto 0)
+		);
+	END COMPONENT;
 
 --	COMPONENT fmc150_if
 --		generic(
@@ -330,7 +357,9 @@ begin
 			SYS_PLL_Locked => SYS_PLL_Locked,
 			--System Control Outputs	
 			CLK_100MHZ     => sys_con_clk,
-			CLK_100MHZ_n   => open,
+			CLK_100MHZ_n   => temp2,
+			CLK_125MHZ     => open,
+			CLK_125MHZ_n   => open,
 			CLK_200MHZ     => open,
 			RST_O          => sys_con_rst
 		);
@@ -383,6 +412,23 @@ begin
 
 	DAC3283_ctrl : spi_master_ip
 		GENERIC MAP(
+			BASE_ADDR => x"A00",
+			DEFAULT_DATA => x"12240000000000830400000000022455AA00FF55AA00FF00000000FF10001570"
+		)
+		PORT MAP(
+			CLK_I    => sys_con_clk,
+			RST_I    => sys_con_rst,
+			WB_I     => wb_ms,
+			WB_O     => wb_sm,
+			SCLK_O   => temp(0),
+			SPI_CLK  => SPI_SCLK,
+			SPI_MOSI => temp(1),        --SPI_SDATA,
+			SPI_MISO => temp(2),        --DAC_SDO,
+			SPI_N_SS => temp(3)         --DAC_N_EN
+		);
+		
+	ADS62P49_ctrl : spi_master_ip
+		GENERIC MAP(
 			BASE_ADDR => x"A00"
 		)
 		PORT MAP(
@@ -401,57 +447,61 @@ begin
 	temp(2)   <= DAC_SDO;
 	DAC_N_EN  <= temp(3);
 
-	DEBUG <= temp;
+	DEBUG(3 downto 0) <= temp;
 
---	DDS : dds_core_ip
---		GENERIC MAP(
---			BASE_ADDR       => x"700",
---			CORE_DATA_WIDTH => 16
---		)
---		PORT MAP(
---			CLK_I  => sys_con_clk,
---			RST_I  => sys_con_rst,
---			WB_I   => wb_ms,
---			WB_O   => wb_sm,
---			CH_A_O => ch_a,
---			CH_B_O => ch_b
---		);
---
---	DAC : da2_controller_ip
---		GENERIC MAP(
---			BASE_ADDR       => x"800",
---			CORE_DATA_WIDTH => 12
---		)
---		PORT MAP(
---			CLK_I   => sys_con_clk,
---			RST_I   => sys_con_rst,
---			WB_I    => wb_ms,
---			WB_O    => wb_sm,
---			CH_A_I  => ch_a(15 downto 4),
---			CH_B_I  => ch_b(15 downto 4),
---			D1      => DA2_D1,
---			D2      => DA2_D2,
---			CLK_OUT => DA2_CLK_OUT,
---			nSYNC   => DA2_nSYNC
---		);
+	--	DDS : dds_core_ip
+	--		GENERIC MAP(
+	--			BASE_ADDR       => x"700",
+	--			CORE_DATA_WIDTH => 16
+	--		)
+	--		PORT MAP(
+	--			CLK_I  => sys_con_clk,
+	--			RST_I  => sys_con_rst,
+	--			WB_I   => wb_ms,
+	--			WB_O   => wb_sm,
+	--			CH_A_O => ch_a,
+	--			CH_B_O => ch_b
+	--		);
+	--
+	--	DAC : da2_controller_ip
+	--		GENERIC MAP(
+	--			BASE_ADDR       => x"800",
+	--			CORE_DATA_WIDTH => 12
+	--		)
+	--		PORT MAP(
+	--			CLK_I   => sys_con_clk,
+	--			RST_I   => sys_con_rst,
+	--			WB_I    => wb_ms,
+	--			WB_O    => wb_sm,
+	--			CH_A_I  => ch_a(15 downto 4),
+	--			CH_B_I  => ch_b(15 downto 4),
+	--			D1      => DA2_D1,
+	--			D2      => DA2_D2,
+	--			CLK_OUT => DA2_CLK_OUT,
+	--			nSYNC   => DA2_nSYNC
+	--		);
+	
+	ch_a <= x"FF00";
+	ch_b <= x"AA55";
 
---	FMC150 : dac3283_serializer
---		PORT MAP(
---			--System Control Inputs
---			CLK_I      => sys_con_clk,
---			RST_I      => sys_con_rst,
---			CH_A_I     => ch_a,
---			CH_B_I     => x"0000",
---
---			-- DAC interface
---			DAC_DCLK_P => DAC_DCLK_P,
---			DAC_DCLK_N => DAC_DCLK_N,
---			DAC_DATA_P => DAC_DATA_P,
---			DAC_DATA_N => DAC_DATA_N,
---			FRAME_P    => FRAME_P,
---			FRAME_N    => FRAME_N,
---			TXENABLE   => TXENABLE
---		);
+	FMC150 : dac3283_serializer
+		PORT MAP(
+			--System Control Inputs
+			CLK_I      => temp2,
+			RST_I      => sys_con_rst,
+			CH_A_I     => ch_a,
+			CH_B_I     => ch_b,
+
+			-- DAC interface
+			DAC_DCLK_P => DAC_DCLK_P,
+			DAC_DCLK_N => DAC_DCLK_N,
+			DAC_DATA_P => DAC_DATA_P,
+			DAC_DATA_N => DAC_DATA_N,
+			FRAME_P    => FRAME_P,
+			FRAME_N    => FRAME_N,
+			TXENABLE   => TXENABLE,
+			DEBUG      => DEBUG(15 downto 4)
+		);
 
 --		FMC150_CTRL : fmc150_if
 --			PORT MAP(

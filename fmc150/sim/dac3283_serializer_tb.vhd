@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   16:51:45 09/12/2012
+-- Create Date:   15:33:29 10/03/2012
 -- Design Name:   
 -- Module Name:   /home/mbridges/Projects/Dugong/fmc150/sim/dac3283_serializer_tb.vhd
 -- Project Name:  Dugong
@@ -27,95 +27,93 @@
 --------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
- 
+
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
- 
+
 ENTITY dac3283_serializer_tb IS
 END dac3283_serializer_tb;
- 
-ARCHITECTURE behavior OF dac3283_serializer_tb IS 
- 
-    -- Component Declaration for the Unit Under Test (UUT)
- 
-    COMPONENT dac3283_serializer
-    PORT(
-         CLK_I : IN  std_logic;
-         RST_I : IN  std_logic;
-         CH_A_I : IN  std_logic_vector(15 downto 0);
-         CH_B_I : IN  std_logic_vector(15 downto 0);
-         DAC_DCLK_P : OUT  std_logic;
-         DAC_DCLK_N : OUT  std_logic;
-         DAC_DATA_P : OUT  std_logic_vector(7 downto 0);
-         DAC_DATA_N : OUT  std_logic_vector(7 downto 0);
-         FRAME_P : OUT  std_logic;
-         FRAME_N : OUT  std_logic;
-         TXENABLE : OUT  std_logic
-        );
-    END COMPONENT;
-    
 
-   --Inputs
-   signal CLK_I : std_logic := '0';
-   signal RST_I : std_logic := '1';
-   signal CH_A_I : std_logic_vector(15 downto 0) := (others => '0');
-   signal CH_B_I : std_logic_vector(15 downto 0) := (others => '0');
+ARCHITECTURE behavior OF dac3283_serializer_tb IS
 
- 	--Outputs
-   signal DAC_DCLK_P : std_logic;
-   signal DAC_DCLK_N : std_logic;
-   signal DAC_DATA_P : std_logic_vector(7 downto 0);
-   signal DAC_DATA_N : std_logic_vector(7 downto 0);
-   signal FRAME_P : std_logic;
-   signal FRAME_N : std_logic;
-   signal TXENABLE : std_logic;
+	-- Component Declaration for the Unit Under Test (UUT)
 
-   -- Clock period definitions
-   constant CLK_I_period : time := 5 ns;
- 
+	COMPONENT dac3283_serializer
+		PORT(
+			CLK_I      : IN  std_logic;
+			RST_I      : IN  std_logic;
+			CH_A_I     : IN  std_logic_vector(15 downto 0);
+			CH_B_I     : IN  std_logic_vector(15 downto 0);
+			DAC_DCLK_P : OUT std_logic;
+			DAC_DCLK_N : OUT std_logic;
+			DAC_DATA_P : OUT std_logic_vector(7 downto 0);
+			DAC_DATA_N : OUT std_logic_vector(7 downto 0);
+			FRAME_P    : OUT std_logic;
+			FRAME_N    : OUT std_logic;
+			TXENABLE   : OUT std_logic;
+			DEBUG      : OUT std_logic_vector(11 downto 0)
+		);
+	END COMPONENT;
+
+	--Inputs
+	signal CLK_I  : std_logic                     := '0';
+	signal RST_I  : std_logic                     := '1';
+	signal CH_A_I : std_logic_vector(15 downto 0) := (others => '0');
+	signal CH_B_I : std_logic_vector(15 downto 0) := (others => '0');
+
+	--Outputs
+	signal DAC_DCLK_P : std_logic;
+	signal DAC_DCLK_N : std_logic;
+	signal DAC_DATA_P : std_logic_vector(7 downto 0);
+	signal DAC_DATA_N : std_logic_vector(7 downto 0);
+	signal FRAME_P    : std_logic;
+	signal FRAME_N    : std_logic;
+	signal TXENABLE   : std_logic;
+	signal DEBUG      : std_logic_vector(11 downto 0);
+
+	-- Clock period definitions
+	constant CLK_I_period : time := 40 ns;
+
 BEGIN
- 
+
 	-- Instantiate the Unit Under Test (UUT)
-   uut: dac3283_serializer PORT MAP (
-          CLK_I => CLK_I,
-          RST_I => RST_I,
-          CH_A_I => CH_A_I,
-          CH_B_I => CH_B_I,
-          DAC_DCLK_P => DAC_DCLK_P,
-          DAC_DCLK_N => DAC_DCLK_N,
-          DAC_DATA_P => DAC_DATA_P,
-          DAC_DATA_N => DAC_DATA_N,
-          FRAME_P => FRAME_P,
-          FRAME_N => FRAME_N,
-          TXENABLE => TXENABLE
-        );
+	uut : dac3283_serializer PORT MAP(
+			CLK_I      => CLK_I,
+			RST_I      => RST_I,
+			CH_A_I     => CH_A_I,
+			CH_B_I     => CH_B_I,
+			DAC_DCLK_P => DAC_DCLK_P,
+			DAC_DCLK_N => DAC_DCLK_N,
+			DAC_DATA_P => DAC_DATA_P,
+			DAC_DATA_N => DAC_DATA_N,
+			FRAME_P    => FRAME_P,
+			FRAME_N    => FRAME_N,
+			TXENABLE   => TXENABLE,
+			DEBUG      => DEBUG
+		);
 
-   -- Clock process definitions
-   CLK_I_process :process
-   begin
+	-- Clock process definitions
+	CLK_I_process : process
+	begin
 		CLK_I <= '0';
-		wait for CLK_I_period/2;
+		wait for CLK_I_period / 2;
 		CLK_I <= '1';
-		wait for CLK_I_period/2;
-   end process;
- 
+		wait for CLK_I_period / 2;
+	end process;
 
-   -- Stimulus process
-   stim_proc: process
-   begin		
-      -- hold reset state for 100 ns.
-      wait for 100 ns;	
-      
-      RST_I <= '0';
+	-- Stimulus process
+	stim_proc : process
+	begin
+		-- hold reset state for 100 ns.
+		wait for 100 ns;
 
-      wait for CLK_I_period*10;
+		RST_I <= '0';
 
-      -- insert stimulus here 
-      
-      wait until rising_edge(TXENABLE);
-      
-      		-- insert stimulus here
+		wait until rising_edge(TXENABLE);
+
+		-- insert stimulus here 
+
 		wait until rising_edge(CLK_I);
 		CH_A_I <= x"89AB";
 		CH_B_I <= x"CDEF";
@@ -125,9 +123,8 @@ BEGIN
 		wait until rising_edge(CLK_I);
 		CH_A_I <= x"0000";
 		CH_B_I <= x"0000";
-		
 
-      wait;
-   end process;
+		wait;
+	end process;
 
 END;

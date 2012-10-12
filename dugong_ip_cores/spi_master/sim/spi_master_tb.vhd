@@ -27,107 +27,105 @@
 --------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
- 
+
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
- 
+
 ENTITY spi_master_tb IS
 END spi_master_tb;
- 
-ARCHITECTURE behavior OF spi_master_tb IS 
- 
-    -- Component Declaration for the Unit Under Test (UUT)
- 
-    COMPONENT spi_master
-    PORT(
-         CLK_I : IN  std_logic;
-         RST_I : IN  std_logic;
-         DAT_I : IN  std_logic_vector(7 downto 0);
-         DAT_O : OUT  std_logic_vector(7 downto 0);
-         ADR_I : IN  std_logic_vector(4 downto 0);
-         STB_I : IN  std_logic;
-         WE_I : IN  std_logic;
-         ACK_O : OUT  std_logic;
-			SCLK_I   : in  STD_LOGIC;
-         SPI_CLK : OUT  std_logic;
-         SPI_MOSI : OUT  std_logic;
-         SPI_MISO : IN  std_logic;
-         SPI_N_SS : OUT  std_logic
-        );
-    END COMPONENT;
-    
 
-   --Inputs
-   signal CLK_I : std_logic := '0';
-   signal RST_I : std_logic := '1';
-   signal DAT_I : std_logic_vector(7 downto 0) := (others => '0');
-   signal ADR_I : std_logic_vector(4 downto 0) := (others => '0');
-   signal STB_I : std_logic := '0';
-   signal WE_I : std_logic := '0';
-	signal SCLK_I   : STD_LOGIC := '0';
-   signal SPI_MISO : std_logic := '1';
+ARCHITECTURE behavior OF spi_master_tb IS
 
- 	--Outputs
-   signal DAT_O : std_logic_vector(7 downto 0);
-   signal ACK_O : std_logic;
-   signal SPI_CLK : std_logic;
-   signal SPI_MOSI : std_logic;
-   signal SPI_N_SS : std_logic;
+	-- Component Declaration for the Unit Under Test (UUT)
 
-   -- Clock period definitions
-   constant CLK_I_period : time := 10 ns;
-	constant sclk_period : time := 160 ns;
- 
+	COMPONENT spi_master
+		GENERIC(
+			DATA_WIDTH     : natural                                  := 8;
+			ADDR_WIDTH     : natural                                  := 5;
+			SPI_INST_WIDTH : natural                                  := 8;
+			SPI_DATA_WIDTH : natural                                  := 8;
+			DEFAULT_DATA   : std_logic_vector((2 ** 8) - 1 downto 0) := (others => '0')
+		);
+		PORT(
+			CLK_I    : IN  std_logic;
+			RST_I    : IN  std_logic;
+			DAT_I    : IN  std_logic_vector(7 downto 0);
+			DAT_O    : OUT std_logic_vector(7 downto 0);
+			ADR_I    : IN  std_logic_vector(4 downto 0);
+			STB_I    : IN  std_logic;
+			WE_I     : IN  std_logic;
+			ACK_O    : OUT std_logic;
+			SPI_CLK  : OUT std_logic;
+			SPI_MOSI : OUT std_logic;
+			SPI_MISO : IN  std_logic;
+			SPI_N_SS : OUT std_logic
+		);
+	END COMPONENT;
+
+	--Inputs
+	signal CLK_I    : std_logic                    := '0';
+	signal RST_I    : std_logic                    := '1';
+	signal DAT_I    : std_logic_vector(7 downto 0) := (others => '0');
+	signal ADR_I    : std_logic_vector(4 downto 0) := (others => '0');
+	signal STB_I    : std_logic                    := '0';
+	signal WE_I     : std_logic                    := '0';
+	signal SPI_MISO : std_logic                    := '1';
+
+	--Outputs
+	signal DAT_O    : std_logic_vector(7 downto 0);
+	signal ACK_O    : std_logic;
+	signal SPI_CLK  : std_logic;
+	signal SPI_MOSI : std_logic;
+	signal SPI_N_SS : std_logic;
+
+	-- Clock period definitions
+	constant CLK_I_period : time := 10 ns;
+
 BEGIN
- 
-	-- Instantiate the Unit Under Test (UUT)
-   uut: spi_master PORT MAP (
-          CLK_I => CLK_I,
-          RST_I => RST_I,
-          DAT_I => DAT_I,
-          DAT_O => DAT_O,
-          ADR_I => ADR_I,
-          STB_I => STB_I,
-          WE_I => WE_I,
-          ACK_O => ACK_O,
-			 SCLK_I => SCLK_I,
-          SPI_CLK => SPI_CLK,
-          SPI_MOSI => SPI_MOSI,
-          SPI_MISO => SPI_MISO,
-          SPI_N_SS => SPI_N_SS
-        );
 
-   -- Clock process definitions
-   CLK_I_process :process
-   begin
-		CLK_I <= '0';
-		wait for CLK_I_period/2;
-		CLK_I <= '1';
-		wait for CLK_I_period/2;
-   end process; 
-	
-			sclk_process : process
+	-- Instantiate the Unit Under Test (UUT)
+	uut : spi_master
+		GENERIC MAP(
+			DEFAULT_DATA => x"12240000000000830400000000022455AA00FF55AA00FF00000000FF10001570"
+		)
+		PORT MAP(
+			CLK_I    => CLK_I,
+			RST_I    => RST_I,
+			DAT_I    => DAT_I,
+			DAT_O    => DAT_O,
+			ADR_I    => ADR_I,
+			STB_I    => STB_I,
+			WE_I     => WE_I,
+			ACK_O    => ACK_O,
+			SPI_CLK  => SPI_CLK,
+			SPI_MOSI => SPI_MOSI,
+			SPI_MISO => SPI_MISO,
+			SPI_N_SS => SPI_N_SS
+		);
+
+	-- Clock process definitions
+	CLK_I_process : process
 	begin
-		SCLK_I <= '0';
-		wait for sclk_period / 2;
-		SCLK_I <= '1';
-		wait for sclk_period / 2;
+		CLK_I <= '0';
+		wait for CLK_I_period / 2;
+		CLK_I <= '1';
+		wait for CLK_I_period / 2;
 	end process;
 
-   -- Stimulus process
-   stim_proc: process
-   begin		
-      -- hold reset state for 100 ns.
-      wait for 100 ns;	
-      
-      RST_I <= '0';
+	-- Stimulus process
+	stim_proc : process
+	begin
+		-- hold reset state for 100 ns.
+		wait for 100 ns;
 
-      wait for CLK_I_period*10;
+		RST_I <= '0';
 
-      -- insert stimulus here 
+		wait for CLK_I_period * 10;
 
-      wait;
-   end process;
+		-- insert stimulus here 
+
+		wait;
+	end process;
 
 END;

@@ -21,27 +21,30 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+use work.rhino_dugong.all;
+
 entity spi_master_ip is
 	generic(
-		DATA_WIDTH      : NATURAL               := 16;
-		ADDR_WIDTH      : NATURAL               := 12;
-		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-		CORE_DATA_WIDTH : NATURAL               := 8;
-		CORE_ADDR_WIDTH : NATURAL               := 6
+		DATA_WIDTH      : NATURAL                                 := 16;
+		ADDR_WIDTH      : NATURAL                                 := 12;
+		BASE_ADDR       : UNSIGNED(11 downto 0)                   := x"000";
+		CORE_DATA_WIDTH : NATURAL                                 := 8;
+		CORE_ADDR_WIDTH : NATURAL                                 := 6;
+		DEFAULT_DATA   : word_vector(0 to 127) := (others => x"00000000")
 	);
 	port(
 		--System Control Inputs
-		CLK_I    : in  STD_LOGIC;
-		RST_I    : in  STD_LOGIC;
+		CLK_I     : in  STD_LOGIC;
+		RST_I     : in  STD_LOGIC;
 		--Slave to WB
-		WB_I     : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-		WB_O     : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+		WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--Serial Peripheral Interface
-		SCLK_O   : out  STD_LOGIC;		
-		SPI_CLK  : out STD_LOGIC;
-		SPI_MOSI : out STD_LOGIC;
-		SPI_MISO : in  STD_LOGIC;
-		SPI_N_SS : out STD_LOGIC
+		SPI_CLK_I : in  STD_LOGIC;
+		SPI_CE    : in  STD_LOGIC;
+		SPI_MOSI  : out STD_LOGIC;
+		SPI_MISO  : in  STD_LOGIC;
+		SPI_N_SS  : out STD_LOGIC
 	);
 end spi_master_ip;
 
@@ -81,29 +84,29 @@ architecture Behavioral of spi_master_ip is
 
 	component spi_master is
 		generic(
-			DATA_WIDTH     : natural := 8;
-			ADDR_WIDTH     : natural := 5;
-			SPI_INST_WIDTH : natural := 8;
-			SPI_DATA_WIDTH : natural := 8
+			DATA_WIDTH     : natural                                 := 8;
+			ADDR_WIDTH     : natural                                 := 5;
+			SPI_INST_WIDTH : natural                                 := 8;
+			DEFAULT_DATA   : word_vector(0 to 127) := (others => x"00000000")
 		);
 		port(
 			--System Control Inputs
-			CLK_I    : in  STD_LOGIC;
-			RST_I    : in  STD_LOGIC;
+			CLK_I     : in  STD_LOGIC;
+			RST_I     : in  STD_LOGIC;
 			--Wishbone Slave Lines
-			DAT_I    : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O    : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I    : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			STB_I    : in  STD_LOGIC;
-			WE_I     : in  STD_LOGIC;
+			DAT_I     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_I     : in  STD_LOGIC;
+			WE_I      : in  STD_LOGIC;
 			--		CYC_I : in   STD_LOGIC;
-			ACK_O    : out STD_LOGIC;
+			ACK_O     : out STD_LOGIC;
 			--Serial Peripheral Interface
-			SCLK_O   : out  STD_LOGIC;			
-			SPI_CLK  : out STD_LOGIC;
-			SPI_MOSI : out STD_LOGIC;
-			SPI_MISO : in  STD_LOGIC;
-			SPI_N_SS : out STD_LOGIC
+			SPI_CLK_I : in  STD_LOGIC;
+			SPI_CE    : in  STD_LOGIC;
+			SPI_MOSI  : out STD_LOGIC;
+			SPI_MISO  : in  STD_LOGIC;
+			SPI_N_SS  : out STD_LOGIC
 		);
 	end component;
 
@@ -135,30 +138,29 @@ begin
 
 	user_logic : spi_master
 		generic map(
-			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => 5,
+			DATA_WIDTH     => CORE_DATA_WIDTH,
+			ADDR_WIDTH     => CORE_ADDR_WIDTH - 1,
 			SPI_INST_WIDTH => 8,
-			SPI_DATA_WIDTH => CORE_DATA_WIDTH
+			DEFAULT_DATA   => DEFAULT_DATA
 		)
 		port map(
 			--System Control Inputs
-			CLK_I    => CLK_I,
-			RST_I    => RST_I,
-
+			CLK_I     => CLK_I,
+			RST_I     => RST_I,
 			--Wishbone Slave Lines
-			DAT_I    => dat_i(CORE_DATA_WIDTH - 1 downto 0),
-			DAT_O    => dat_o(CORE_DATA_WIDTH - 1 downto 0),
-			ADR_I    => adr_i(4 downto 0),
-			STB_I    => stb_i,
-			WE_I     => we_i,
+			DAT_I     => dat_i(CORE_DATA_WIDTH - 1 downto 0),
+			DAT_O     => dat_o(CORE_DATA_WIDTH - 1 downto 0),
+			ADR_I     => adr_i(CORE_ADDR_WIDTH - 2 downto 0),
+			STB_I     => stb_i,
+			WE_I      => we_i,
 			--	CYC_I =>
-			ACK_O    => ack_o,
+			ACK_O     => ack_o,
 			--Serial Peripheral Interface
-			SCLK_O   => SCLK_O,
-			SPI_CLK  => SPI_CLK,
-			SPI_MOSI => SPI_MOSI,
-			SPI_MISO => SPI_MISO,
-			SPI_N_SS => SPI_N_SS
+			SPI_CLK_I => SPI_CLK_I,
+			SPI_CE    => SPI_CE,
+			SPI_MOSI  => SPI_MOSI,
+			SPI_MISO  => SPI_MISO,
+			SPI_N_SS  => SPI_N_SS
 		);
 
 end Behavioral;
