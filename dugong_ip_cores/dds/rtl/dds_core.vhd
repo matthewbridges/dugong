@@ -25,27 +25,31 @@ use work.sine_lut_pkg.all;
 entity dds_core is
 	generic(
 		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 4
+		ADDR_WIDTH : natural := 2
 	);
 	port(
 		--System Control Inputs
-		CLK_I : in  STD_LOGIC;
-		RST_I : in  STD_LOGIC;
+		CLK_I  : in  STD_LOGIC;
+		RST_I  : in  STD_LOGIC;
 		--Wishbone Slave Lines
-		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-		STB_I : in  STD_LOGIC;
-		WE_I  : in  STD_LOGIC;
+		DAT_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		DAT_O  : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		ADR_I  : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+		STB_I  : in  STD_LOGIC;
+		WE_I   : in  STD_LOGIC;
 		--		CYC_I : in   STD_LOGIC;
-
-		ACK_O : out STD_LOGIC;
+		ACK_O  : out STD_LOGIC;
+		--Signal Channel Outputs
 		CH_A_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		CH_B_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
 	);
 end dds_core;
 
 architecture Behavioral of dds_core is
+	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal user_mem : ram_type;
+	signal mem_adr  : integer;
+
 	component dds_synthesizer
 		generic(
 			ftw_width : integer
@@ -59,12 +63,6 @@ architecture Behavioral of dds_core is
 			ampl_o  : out std_logic_vector(AMPL_WIDTH - 1 downto 0)
 		);
 	end component;
-
-	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 9) of std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal user_mem : ram_type;
-	signal q        : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal adr      : integer;
-
 begin
 	dds_synth : dds_synthesizer
 		generic map(
@@ -74,9 +72,9 @@ begin
 			clk_i   => CLK_I,
 			rst_i   => RST_I,
 			ftw_i   => user_mem(0),
-			phase_i => user_mem(1)(15 downto 4),
-			phase_o => user_mem(2)(15 downto 4),
-			ampl_o  => user_mem(4)(15 downto 4)
+			phase_i => user_mem(1)(15 downto 8),
+			phase_o => user_mem(2)(15 downto 8),
+			ampl_o  => user_mem(3)(15 downto 8)
 		);
 
 	process(CLK_I)
@@ -86,37 +84,31 @@ begin
 		if (rising_edge(CLK_I)) then
 			--Check for reset
 			if (RST_I = '1') then
-				q <= (others => '0');
-				user_mem(1) <= (others => '0');
+				DAT_O       <= (others => '0');
+				user_mem(0) <= (others => '0');
 			--Check for strobe
 			elsif (STB_I = '1') then
-				q <= user_mem(adr);
+				DAT_O <= user_mem(mem_adr);
 				--Check for write
 				if (WE_I = '1') then
-					case (adr) is
+					case (mem_adr) is
 						when 0      => user_mem(0) <= dat_i;
 						when 1      => user_mem(1) <= dat_i;
-						when 3      => user_mem(3) <= dat_i;
-						when 6      => user_mem(6) <= dat_i;
-						when 7      => user_mem(7) <= dat_i;
 						when others => null;
 					end case;
 				end if;
 			end if;
+			ACK_O <= STB_I;
 		end if;
 	end process;
 
-	ACK_O <= STB_I;
-	DAT_O <= q;
-	
-	user_mem(2)(3 downto 0) <= x"0";
-	user_mem(4)(3 downto 0) <= x"0";
+	mem_adr <= to_integer(unsigned(ADR_I));
 
-	adr <= to_integer(unsigned(ADR_I)) - 8;
-	user_mem(5) <= not (user_mem(4)(DATA_WIDTH - 1)) & user_mem(4)(DATA_WIDTH - 2 downto 0);
-	
-	CH_A_O <= user_mem(4);
-	CH_B_O <= user_mem(5);
+--	user_mem(3) <= not (user_mem(2)(DATA_WIDTH - 1)) & user_mem(2)(DATA_WIDTH - 2 downto 0);
+--	user_mem(5) <= not (user_mem(4)(DATA_WIDTH - 1)) & user_mem(4)(DATA_WIDTH - 2 downto 0);
+
+	CH_A_O <= user_mem(2);
+	CH_B_O <= user_mem(3);
 
 end Behavioral;
 

@@ -31,16 +31,17 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity dugong is
 	generic(
-		DATA_WIDTH : natural := 16;
+		DATA_WIDTH : natural := 32;
 		ADDR_WIDTH : natural := 12
 	);
 	port(
 		--System Control Inputs
-		CLK_I : in  STD_LOGIC;
-		RST_I : in  STD_LOGIC;
+		CLK_I   : in  STD_LOGIC;
+		CLK_I_n : in  STD_LOGIC;
+		RST_I   : in  STD_LOGIC;
 		--Master to WB
-		WB_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-		WB_O  : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0)
+		WB_I    : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		WB_O    : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0)
 	);
 end dugong;
 
@@ -64,14 +65,12 @@ architecture Behavioral of dugong is
 	signal wait_en   : std_logic;
 	signal pc_en     : std_logic;
 
-	signal instruction : std_logic_vector(31 downto 0);
+	signal instruction : std_logic_vector(ADDR_WIDTH + DATA_WIDTH + 3 downto 0);
 	signal pc          : std_logic_vector(8 downto 0);
-	signal wait_cntr   : integer;
+	signal wait_cntr   : unsigned(ADDR_WIDTH + DATA_WIDTH - 1 downto 0);
 	signal accum       : std_logic_vector(DATA_WIDTH - 1 downto 0);
 
 	signal pc_ack_i : std_logic;
-	
-	signal clk_i_180 : std_logic;
 
 	component wb_m is
 		generic(
@@ -80,8 +79,8 @@ architecture Behavioral of dugong is
 		);
 		port(
 			--System Control Inputs
---			CLK_I : in  STD_LOGIC;
---			RST_I : in  STD_LOGIC;
+			--			CLK_I : in  STD_LOGIC;
+			--			RST_I : in  STD_LOGIC;
 			--Master to WB
 			WB_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			WB_O  : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
@@ -114,23 +113,13 @@ architecture Behavioral of dugong is
 		);
 	end component;
 
-	component inst_mem is
-		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 9
+	COMPONENT inst_mem
+		PORT(
+			clka  : IN  STD_LOGIC;
+			addra : IN  STD_LOGIC_VECTOR(8 DOWNTO 0);
+			douta : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
 		);
-		port(
-			--Wishbone Slave Lines
-			CLK_I : in  STD_LOGIC;
-			--RST_I : in  STD_LOGIC;
-			--DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0)
-			--WE_I  : in  STD_LOGIC;
-			--STB_I : in  STD_LOGIC
-		--	CYC_I : in   STD_LOGIC;
-		);
-	end component;
+	END COMPONENT;
 
 begin
 	bus_logic : wb_m
@@ -140,8 +129,8 @@ begin
 		)
 		port map(
 			--System Control Inputs
---			CLK_I => CLK_I,
---			RST_I => RST_I,
+			--			CLK_I => CLK_I,
+			--			RST_I => RST_I,
 			--Master to WB
 			WB_I  => WB_I,
 			WB_O  => WB_O,
@@ -172,14 +161,11 @@ begin
 			ACK_O => pc_ack_i
 		);
 
-	instruction_mem : inst_mem PORT MAP(
-			CLK_I => clk_i_180,
---			RST_I => RST_I,
---			DAT_I => (others => '0'),
-			DAT_O => instruction,
-			ADR_I => pc
---			WE_I  => '0',
---			STB_I => '1'
+	instruction_mem : inst_mem
+		PORT MAP(
+			clka  => clk_I_n,
+			addra => pc,
+			douta => instruction
 		);
 
 	process(CLK_I)
@@ -229,20 +215,18 @@ begin
 				if (pc_ack_i = '1') then
 					dat       <= instruction(DATA_WIDTH - 1 downto 0);
 					adr       <= instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
-					wait_cntr <= to_integer(unsigned(instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto 0) & x"0"));
-					bus_en    <= instruction(28) or instruction(29);
-					write_en  <= instruction(28);
-					accum_en  <= instruction(29);
-					branch_en <= instruction(30);
-					wait_en   <= instruction(31);
+					wait_cntr <= unsigned(instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto 0));
+					bus_en    <= instruction(ADDR_WIDTH + DATA_WIDTH) or instruction(ADDR_WIDTH + DATA_WIDTH + 1);
+					write_en  <= instruction(ADDR_WIDTH + DATA_WIDTH);
+					accum_en  <= instruction(ADDR_WIDTH + DATA_WIDTH + 1);
+					branch_en <= instruction(ADDR_WIDTH + DATA_WIDTH + 2);
+					wait_en   <= instruction(ADDR_WIDTH + DATA_WIDTH + 3);
 					pc_en     <= '0';
 				end if;
 
 			end if;
 		end if;
 	end process;
-	
-	clk_i_180 <= not CLK_I;
 
 end Behavioral;
 

@@ -25,12 +25,14 @@ use work.rhino_dugong.all;
 
 entity spi_master_ip is
 	generic(
-		DATA_WIDTH      : NATURAL                                 := 16;
-		ADDR_WIDTH      : NATURAL                                 := 12;
-		BASE_ADDR       : UNSIGNED(11 downto 0)                   := x"000";
-		CORE_DATA_WIDTH : NATURAL                                 := 8;
-		CORE_ADDR_WIDTH : NATURAL                                 := 6;
-		DEFAULT_DATA   : word_vector(0 to 127) := (others => x"00000000")
+		DATA_WIDTH      : NATURAL                    := 32;
+		ADDR_WIDTH      : NATURAL                    := 12;
+		BASE_ADDR       : UNSIGNED(11 downto 0)      := x"000";
+		CORE_DATA_WIDTH : NATURAL                    := 16;
+		CORE_ADDR_WIDTH : NATURAL                    := 3;
+		SPI_DATA_WIDTH  : natural                    := 8;
+		DEFAULT_DATA    : word_vector(0 to 127)      := (others => x"000000000");
+		REVERSE_BITS    : boolean                    := false
 	);
 	port(
 		--System Control Inputs
@@ -58,11 +60,11 @@ architecture Behavioral of spi_master_ip is
 
 	component wb_s is
 		generic(
-			DATA_WIDTH      : NATURAL               := 16;
+			DATA_WIDTH      : NATURAL               := 32;
 			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 4
+			CORE_ADDR_WIDTH : NATURAL               := 3
 		);
 		port(
 			--System Control Inputs
@@ -84,10 +86,11 @@ architecture Behavioral of spi_master_ip is
 
 	component spi_master is
 		generic(
-			DATA_WIDTH     : natural                                 := 8;
-			ADDR_WIDTH     : natural                                 := 5;
-			SPI_INST_WIDTH : natural                                 := 8;
-			DEFAULT_DATA   : word_vector(0 to 127) := (others => x"00000000")
+			DATA_WIDTH      : natural                    := 16;
+			ADDR_WIDTH      : natural                    := 2;
+			SPI_DATA_WIDTH  : natural                    := 8;
+			DEFAULT_DATA    : word_vector(0 to 127)      := (others => x"000000000");
+			REVERSE_BITS    : boolean                    := false
 		);
 		port(
 			--System Control Inputs
@@ -140,8 +143,9 @@ begin
 		generic map(
 			DATA_WIDTH     => CORE_DATA_WIDTH,
 			ADDR_WIDTH     => CORE_ADDR_WIDTH - 1,
-			SPI_INST_WIDTH => 8,
-			DEFAULT_DATA   => DEFAULT_DATA
+			SPI_DATA_WIDTH => SPI_DATA_WIDTH,
+			DEFAULT_DATA   => DEFAULT_DATA,
+			REVERSE_BITS   => REVERSE_BITS
 		)
 		port map(
 			--System Control Inputs

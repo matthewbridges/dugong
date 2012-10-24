@@ -4,8 +4,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity clk_counter is
 	generic(
-		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 4
+		DATA_WIDTH : natural := 32;
+		ADDR_WIDTH : natural := 2
 	);
 	port(
 		--System Control Inputs
@@ -16,26 +16,27 @@ entity clk_counter is
 		DAT_O       : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		ADR_I       : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 		STB_I       : in  STD_LOGIC;
-		--WE_I        : in  STD_LOGIC;
-		--		CYC_I : in   STD_LOGIC;
+		--WE_I  : in  STD_LOGIC;
+		--CYC_I : in   STD_LOGIC;
 		ACK_O       : out STD_LOGIC;
 		--Test Clocks
-		TEST_CLOCKS : in  STD_LOGIC_VECTOR(3 downto 0)
+		TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** ADDR_WIDTH) - 1 downto 0)
 	);
 end entity clk_counter;
 
 architecture RTL of clk_counter is
-	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 9) of std_logic_vector(DATA_WIDTH - 1 downto 0);
+	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal user_mem : ram_type;
+	signal mem_adr  : integer;
 
-	signal master_count : unsigned(27 downto 0);
-	type count_mem is array (0 to 3) of unsigned(31 downto 0);
+	signal master_count : unsigned(DATA_WIDTH - 5 downto 0);
+	type count_mem is array (0 to (2 ** ADDR_WIDTH) - 1) of unsigned(DATA_WIDTH - 1 downto 0);
 	signal count : count_mem;
-	type final_count_mem is array (0 to 3) of std_logic_vector(31 downto 0);
+	type final_count_mem is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal final_count : final_count_mem;
 
 	signal read_count  : std_logic;
-	signal count_valid : std_logic_vector(0 to 3);
+	signal count_valid : std_logic_vector(0 to (2 ** ADDR_WIDTH) - 1);
 	signal rst_count   : std_logic;
 
 begin
@@ -53,15 +54,11 @@ begin
 			--Check for strobe
 			else
 				if (read_count = '1') then
-					if (count_valid(0) = '1') then  --(count_valid = x"F")
-						user_mem(0) <= final_count(0)(31 downto 16);
-						user_mem(1) <= final_count(0)(15 downto 0);
-						user_mem(2) <= final_count(1)(31 downto 16);
-						user_mem(3) <= final_count(1)(15 downto 0);
-						user_mem(4) <= final_count(2)(31 downto 16);
-						user_mem(5) <= final_count(2)(15 downto 0);
-						user_mem(6) <= final_count(3)(31 downto 16);
-						user_mem(7) <= final_count(3)(15 downto 0);
+					if (count_valid(0) = '1') then --(count_valid = x"F")
+						user_mem(0) <= final_count(0)(23 downto 0) & final_count(0)(31 downto 24);
+						user_mem(1) <= final_count(1)(23 downto 0) & final_count(1)(31 downto 24);
+						user_mem(2) <= final_count(2)(23 downto 0) & final_count(2)(31 downto 24);
+						user_mem(3) <= final_count(3)(23 downto 0) & final_count(3)(31 downto 24);
 						rst_count   <= '1';
 						read_count  <= '0';
 					end if;
@@ -69,22 +66,23 @@ begin
 					if (rst_count = '1') then
 						master_count <= x"0000000";
 						rst_count    <= '0';
-					elsif (master_count < x"BEBC1FF") then  --x"BEBC200" - '1'  --Subtract 1 to account for signal propogation
+					elsif (master_count < x"BEBC1FF") then --x"BEBC200" - '1'  --Subtract 1 to account for signal propogation
 						master_count <= master_count + 1;
 					else
 						read_count <= '1';
 					end if;
 
+					--Check for strobe
 					if (STB_I = '1') then
-						DAT_O <= user_mem(to_integer(unsigned(ADR_I)) - 8);
-						ACK_O <= '1';
-					else
-						ACK_O <= '0';
+						DAT_O <= user_mem(mem_adr);
 					end if;
+					ACK_O <= STB_I;
 				end if;
 			end if;
 		end if;
 	end process;
+
+	mem_adr <= to_integer(unsigned(ADR_I));
 
 	-- We have multiple clocks- step over every test_clock, instantiating the required elements
 	Test_CLOCKS_Processes : for clk_number in 0 to 3 generate

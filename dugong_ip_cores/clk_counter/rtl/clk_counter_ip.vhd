@@ -23,11 +23,11 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity clk_counter_ip is
 	generic(
-		DATA_WIDTH      : NATURAL               := 16;
+		DATA_WIDTH      : NATURAL               := 32;
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-		CORE_DATA_WIDTH : NATURAL               := 16;
-		CORE_ADDR_WIDTH : NATURAL               := 4
+		CORE_DATA_WIDTH : NATURAL               := 32;
+		CORE_ADDR_WIDTH : NATURAL               := 3
 	);
 	port(
 		--System Control Inputs
@@ -51,11 +51,11 @@ architecture Behavioral of clk_counter_ip is
 
 	component wb_s is
 		generic(
-			DATA_WIDTH      : NATURAL               := 16;
+			DATA_WIDTH      : NATURAL               := 32;
 			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 4
+			CORE_ADDR_WIDTH : NATURAL               := 3
 		);
 		port(
 			--System Control Inputs
@@ -77,8 +77,8 @@ architecture Behavioral of clk_counter_ip is
 
 	component clk_counter is
 		generic(
-			DATA_WIDTH : natural := 16;
-			ADDR_WIDTH : natural := 4
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 3
 		);
 		port(
 			--System Control Inputs
@@ -90,7 +90,7 @@ architecture Behavioral of clk_counter_ip is
 			ADR_I       : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			STB_I       : in  STD_LOGIC;
 			--WE_I        : in  STD_LOGIC;
-			--		CYC_I : in   STD_LOGIC;
+			--CYC_I       : in   STD_LOGIC;
 			ACK_O       : out STD_LOGIC;
 			--Test Clocks
 			TEST_CLOCKS : in  STD_LOGIC_VECTOR(3 downto 0)
@@ -126,19 +126,20 @@ begin
 	user_logic : clk_counter
 		generic map(
 			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH
+			ADDR_WIDTH => CORE_ADDR_WIDTH - 1
 		)
 		port map(
 			--System Control Inputs
 			CLK_I       => CLK_I,
 			RST_I       => RST_I,
 			--Wishbone Slave Lines
-			--DAT_I       => dat_i(CORE_DATA_WIDTH - 1 downto 0),
+			--DAT_I => dat_i(CORE_DATA_WIDTH - 1 downto 0),
+
 			DAT_O       => dat_o(CORE_DATA_WIDTH - 1 downto 0),
-			ADR_I       => adr_i,
+			ADR_I       => adr_i(CORE_ADDR_WIDTH - 2 downto 0),
 			STB_I       => stb_i,
-			--WE_I        => we_i,
-			--	CYC_I =>
+			--WE_I  => we_i,
+			--CYC_I =>
 			ACK_O       => ack_o,
 			--Test Clocks
 			TEST_CLOCKS => TEST_CLOCKS

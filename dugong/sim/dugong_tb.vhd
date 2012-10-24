@@ -33,6 +33,10 @@ USE ieee.std_logic_1164.ALL;
 --USE ieee.numeric_std.ALL;
 
 ENTITY dugong_tb IS
+	generic(
+		DATA_WIDTH : natural := 32;
+		ADDR_WIDTH : natural := 12
+	);
 END dugong_tb;
 
 ARCHITECTURE behavior OF dugong_tb IS
@@ -40,55 +44,69 @@ ARCHITECTURE behavior OF dugong_tb IS
 	-- Component Declaration for the Unit Under Test (UUT)
 
 	COMPONENT dugong
-		PORT(
-			CLK_I : IN  std_logic;
-			RST_I : IN  std_logic;
-			WB_I  : IN  std_logic_vector(16 downto 0);
-			WB_O  : OUT std_logic_vector(30 downto 0)
+		generic(
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 12
+		);
+		port(
+			--System Control Inputs
+			CLK_I   : in  STD_LOGIC;
+			CLK_I_n : in  STD_LOGIC;
+			RST_I   : in  STD_LOGIC;
+			--Master to WB
+			WB_I    : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			WB_O    : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0)
 		);
 	END COMPONENT;
 
 	--Inputs
-	signal CLK_I : std_logic                     := '0';
-	signal RST_I : std_logic                     := '1';
-	signal WB_I  : std_logic_vector(16 downto 0) := (others => '0');
+	signal CLK_I   : std_logic                             := '0';
+	signal CLK_I_n : std_logic                             := '1';
+	signal RST_I   : std_logic                             := '1';
+	signal WB_I    : std_logic_vector(DATA_WIDTH downto 0) := (others => '0');
 
 	--Outputs
-	signal WB_O : std_logic_vector(30 downto 0);
-	
-	signal temp : std_logic_vector(15 downto 0) := (others => '0');
-	
+	signal WB_O : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+
+	signal temp    : std_logic_vector(DATA_WIDTH - 1 downto 0) := (others => '0');
 	signal dat_out : std_logic_vector(15 downto 0);
 	signal adr_out : std_logic_vector(11 downto 0);
-	signal stb : std_logic;
-	signal we : std_logic; 
-	signal ack : std_logic;
+	signal stb     : std_logic;
+	signal we      : std_logic;
+	signal ack     : std_logic;
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
 
 BEGIN
-
 	dat_out <= WB_O(15 downto 0);
 	adr_out <= WB_O(27 downto 16);
-	stb <= WB_O(28);
-	we <= WB_O(29);
-	ack <= WB_I(16);
+	stb     <= WB_O(28);
+	we      <= WB_O(29);
+	ack     <= WB_I(16);
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : dugong PORT MAP(
-			CLK_I => CLK_I,
-			RST_I => RST_I,
-			WB_I  => WB_I,
-			WB_O  => WB_O
+	uut : dugong
+		generic map(
+			DATA_WIDTH => DATA_WIDTH,
+			ADDR_WIDTH => ADDR_WIDTH
+		)
+		port map(
+			CLK_I   => CLK_I,
+			CLK_I_n => CLK_I_n,
+			RST_I   => RST_I,
+			WB_I    => WB_I,
+			WB_O    => WB_O
 		);
 
 	-- Clock process definitions
 	CLK_I_process : process
 	begin
-		CLK_I <= '0';
+		CLK_I   <= '0';
+		CLK_I_n <= '1';
 		wait for CLK_I_period / 2;
-		CLK_I <= '1';
+		CLK_I   <= '1';
+		CLK_I_n <= '0';
 		wait for CLK_I_period / 2;
 	end process;
 
@@ -98,24 +116,26 @@ BEGIN
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
 
+		RST_I <= '0';
+
 		wait for CLK_I_period * 10;
 		-- insert stimulus here 
-		RST_I <= '0';
+
 
 		wait;
 	end process;
 
-	ACK_proc : process
-	begin
-		wait until (rising_edge(WB_O(28)));
-		wait until (rising_edge(CLK_I));
-		WB_I(15 downto 0) <= temp;		
-		temp <= WB_O(15 downto 0);
-		WB_I(16) <= '1';
-		wait until (rising_edge(CLK_I));
-		--wait until (falling_edge(WB_O(28)));
-		WB_I(16) <= '0';
-		WB_I(15 downto 0) <= x"0000";
-	end process;
+--	ACK_proc : process
+--	begin
+--		wait until (rising_edge(WB_O(28)));
+--		wait until (rising_edge(CLK_I));
+--		WB_I(15 downto 0) <= temp;
+--		temp              <= WB_O(15 downto 0);
+--		WB_I(16)          <= '1';
+--		wait until (rising_edge(CLK_I));
+--		--wait until (falling_edge(WB_O(28)));
+--		WB_I(16)          <= '0';
+--		WB_I(15 downto 0) <= x"0000";
+--	end process;
 
 END;

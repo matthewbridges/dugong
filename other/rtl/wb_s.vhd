@@ -31,11 +31,11 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity wb_s is
 	generic(
-		DATA_WIDTH      : NATURAL               := 16;
+		DATA_WIDTH      : NATURAL               := 32;
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 		CORE_DATA_WIDTH : NATURAL               := 16;
-		CORE_ADDR_WIDTH : NATURAL               := 4
+		CORE_ADDR_WIDTH : NATURAL               := 3
 	);
 	port(
 		--System Control Inputs
@@ -70,7 +70,7 @@ architecture Behavioral of wb_s is
 --	signal core_mem_sel : boolean;
 	signal core_adr : unsigned(CORE_ADDR_WIDTH - 1 downto 0);
 
-	type ram_type is array (0 to 7) of std_logic_vector(DATA_WIDTH - 1 downto 0);
+	type ram_type is array (0 to 3) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal core_mem : ram_type;
 
 begin
@@ -83,13 +83,12 @@ begin
 			if (RST_I = '1') then
 				dat_sm      <= (others => '0');
 				ack_sm      <= '0';
-				core_mem(0) <= x"0000"; --For 32 bit addressing
-				core_mem(1) <= x"0" & std_logic_vector(BASE_ADDR);
-				core_mem(2) <= x"0000"; --For 32 bit addressing
-				core_mem(3) <= x"0" & std_logic_vector(BASE_ADDR + (2 ** CORE_ADDR_WIDTH) - 1);
-				core_mem(4) <= "1010101010101010"; --Test Signal
+				core_mem(0)(ADDR_WIDTH - 1 downto 0) <= std_logic_vector(BASE_ADDR);--For 32 bit addressing
+				core_mem(1)(ADDR_WIDTH - 1 downto 0) <= std_logic_vector(BASE_ADDR + (2 ** CORE_ADDR_WIDTH) - 1); --For 32 bit addressing
+				core_mem(2) <= "10101010101010101010101010101010"; --Test Signal
+				core_mem(3) <= "01010101010101010101010101010101"; --Test Signal
 
-			elsif (core_sel and (core_adr < 8)) then
+			elsif (core_sel and (core_adr < 4)) then
 				--Check for strobe
 				if (stb_ms = '1') then
 					dat_sm <= core_mem(to_integer(core_adr));
@@ -113,7 +112,7 @@ begin
 	process(core_sel, core_adr, DAT_O, ACK_O, dat_sm, ack_sm, stb_ms, cyc_ms)
 	begin
 		if (core_sel) then
-			if (core_adr < 8) then
+			if (core_adr < 4) then
 				--WB Output Ports
 				WB_O <= (ack_sm & dat_sm);
 				--WB Input Ports
@@ -138,7 +137,7 @@ begin
 
 	--WB Input Ports
 	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);
-	ADR_I <= std_logic_vector(core_adr - 8);
+	ADR_I <= std_logic_vector(core_adr - 4);
 	WE_I  <= we_ms;
 end Behavioral;
 

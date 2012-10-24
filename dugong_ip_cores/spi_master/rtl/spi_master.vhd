@@ -28,10 +28,11 @@ use work.rhino_dugong.all;
 
 entity spi_master is
 	generic(
-		DATA_WIDTH     : natural               := 8;
-		ADDR_WIDTH     : natural               := 5;
-		SPI_INST_WIDTH : natural               := 8;
-		DEFAULT_DATA   : word_vector(0 to 127) := (others => x"00000000")
+		DATA_WIDTH      : natural                    := 16;
+		ADDR_WIDTH      : natural                    := 2;
+		SPI_DATA_WIDTH  : natural                    := 8;
+		DEFAULT_DATA    : word_vector(0 to 127)      := (others => x"000000000");
+		REVERSE_BITS    : boolean                    := false
 	);
 	port(
 		--System Control Inputs
@@ -55,12 +56,10 @@ entity spi_master is
 end spi_master;
 
 architecture Behavioral of spi_master is
-	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector (DATA_WIDTH - 1 downto 0);
+	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH downto 0); --One data valid bit
 	signal user_mem          : ram_type;
 	signal user_mem_defaults : ram_type;
-	signal data_valid        : std_logic_vector(0 to (2 ** ADDR_WIDTH) - 1) := (others => '0');
 	signal mem_adr           : integer;
-	--	constant MSB : natural := SPI_INST_WIDTH + SPI_DATA_WIDTH - 1;
 
 	signal idle    : boolean;
 	signal reading : boolean;
@@ -69,18 +68,27 @@ architecture Behavioral of spi_master is
 	signal mem_stb : boolean;
 	signal mem_ack : boolean;
 
-	signal adr           : unsigned(ADDR_WIDTH - 1 downto 0);
-	signal write_data    : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal read_data     : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal transfer_inst : std_logic_vector(SPI_INST_WIDTH - 1 downto 0);
-	signal transfer_bit  : integer;
+	signal adr          : unsigned(ADDR_WIDTH - 1 downto 0);
+	signal write_data   : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal read_data    : std_logic_vector(SPI_DATA_WIDTH - 1 downto 0);
+	signal transfer_bit : integer;
 
 begin
-
-	--	c1 <= clkout1;
 	DEFAULT_MEM : for addr in 0 to (2 ** ADDR_WIDTH) - 1 generate
 	begin
-		user_mem_defaults(addr) <= DEFAULT_DATA(addr)(DATA_WIDTH - 1 downto 0);
+		DEFAULT_MSB : if not REVERSE_BITS generate
+			user_mem_defaults(addr) <= DEFAULT_DATA(addr)(DATA_WIDTH downto 0);
+		end generate DEFAULT_MSB;
+
+		DEFAULT_LSB : if REVERSE_BITS generate
+			process(user_mem_defaults(addr))
+			begin
+				user_mem_defaults(addr)(DATA_WIDTH) <= DEFAULT_DATA(addr)(DATA_WIDTH);
+				for i in 0 to DATA_WIDTH - 1 loop
+					user_mem_defaults(addr)(i) <= DEFAULT_DATA(addr)(DATA_WIDTH - 1 - i);
+				end loop;
+			end process;
+		end generate DEFAULT_LSB;
 	end generate DEFAULT_MEM;
 
 	process(CLK_I)
@@ -90,55 +98,20 @@ begin
 
 			--Check for reset
 			if (RST_I = '1') then
-				DAT_O      <= (others => '0');
-				user_mem   <= user_mem_defaults;
-				--				user_mem(0)  <= x"70";
-				--				user_mem(1)  <= x"15";
-				--				user_mem(2)  <= x"00";
-				--				user_mem(3)  <= x"10";
-				--				user_mem(4)  <= x"FF";
-				--				user_mem(5)  <= x"00";
-				--				user_mem(6)  <= x"00";
-				--				user_mem(7)  <= x"00";
-				--				user_mem(8)  <= x"00";
-				--				user_mem(9)  <= x"FF";
-				--				user_mem(10) <= x"00";
-				--				user_mem(11) <= x"AA";
-				--				user_mem(12) <= x"55";
-				--				user_mem(13) <= x"FF";
-				--				user_mem(14) <= x"00";
-				--				user_mem(15) <= x"AA";
-				--				user_mem(16) <= x"55";
-				--				user_mem(17) <= x"24";
-				--				user_mem(18) <= x"02";
-				--				user_mem(19) <= x"00";
-				--				user_mem(20) <= x"00";
-				--				user_mem(21) <= x"00";
-				--				user_mem(22) <= x"00";
-				--				user_mem(23) <= x"04";
-				--				user_mem(24) <= x"83";
-				--				user_mem(25) <= x"00";
-				--				user_mem(26) <= x"00";
-				--				user_mem(27) <= x"00";
-				--				user_mem(28) <= x"00";
-				--				user_mem(29) <= x"00";
-				--				user_mem(30) <= x"24";
-				--				user_mem(31) <= x"12";
-				data_valid <= "11011000111111111110000110000011";
-
+				DAT_O    <= (others => '0');
+				user_mem <= user_mem_defaults;
 			--Check for strobe
 			elsif (STB_I = '1') then
-				DAT_O <= user_mem(mem_adr);
+				DAT_O <= user_mem(mem_adr)(DATA_WIDTH - 1 downto 0);
 				--Check for write
 				if (WE_I = '1') then
-					user_mem(mem_adr)   <= DAT_I;
-					data_valid(mem_adr) <= '1';
+					user_mem(mem_adr) <= '1' & DAT_I;
 				end if;
 			elsif (mem_stb) then
 				if (reading) then
-					user_mem(mem_adr) <= read_data;
+					user_mem(mem_adr)(SPI_DATA_WIDTH - 1 downto 0) <= read_data;
 				else
-					data_valid(mem_adr) <= '0';
+					user_mem(mem_adr)(DATA_WIDTH) <= DEFAULT_DATA(mem_adr)(DATA_WIDTH + 1);
 				end if;
 				mem_ack <= true;
 			else
@@ -147,7 +120,6 @@ begin
 			ACK_O <= STB_I;
 		end if;
 	end process;
-
 	mem_adr <= to_integer(unsigned(ADR_I)) when (STB_I = '1') else to_integer(adr);
 
 	--SPI Shifter Process
@@ -156,27 +128,25 @@ begin
 		--Perform Rising Edge operations
 		if (rising_edge(SPI_CLK_I)) then
 			if (RST_I = '1') then
-				adr      <= (others => '0');
-				idle     <= true;
-				SPI_MOSI <= '0';
-				SPI_N_SS <= '1';
-				read     <= false;
-			elsif (idle and SPI_CE = '1') then
-				transfer_inst(ADDR_WIDTH - 1 downto 0) <= std_logic_vector(adr);
-				--				transfer_inst(SPI_INST_WIDTH - 2)      <= '0';
-				--				transfer_inst(SPI_INST_WIDTH - 3)      <= '0';
-				if (data_valid(to_integer(adr)) = '1') then
-					transfer_inst(SPI_INST_WIDTH - 1) <= '0';
-					reading                           <= false;
-					write_data                        <= user_mem(to_integer(adr));
-				else
-					transfer_inst(SPI_INST_WIDTH - 1) <= '1';
-					reading                           <= true;
+				adr        <= (others => '0');
+				write_data <= (others => '0');
+				idle       <= true;
+				read       <= false;
+				SPI_MOSI   <= '0';
+				SPI_N_SS   <= '1';
+
+			elsif (idle) then
+				if (SPI_CE = '1') then
+					if (user_mem(to_integer(adr))(DATA_WIDTH) = '1') then
+						reading    <= false;
+						write_data <= user_mem(to_integer(adr))(DATA_WIDTH - 1 downto 0);
+					else
+						reading    <= true;
+						write_data <= '1' & user_mem(to_integer(adr))(DATA_WIDTH - 2 downto 0);
+					end if;
+					transfer_bit <= DATA_WIDTH - 1;
+					idle         <= false;
 				end if;
-
-				transfer_bit <= SPI_INST_WIDTH + DATA_WIDTH - 1;
-				idle         <= false;
-
 			--Check if SPI transfer has completed
 			elsif (mem_stb and mem_ack) then
 				mem_stb <= false;
@@ -188,7 +158,7 @@ begin
 					SPI_MOSI <= '0';
 					SPI_N_SS <= '1';
 					read     <= false;
-				elsif (transfer_bit < 8) then
+				elsif (transfer_bit < SPI_DATA_WIDTH) then
 					if (reading) then
 						SPI_MOSI <= '0';
 						read     <= true;
@@ -196,16 +166,22 @@ begin
 						SPI_MOSI <= write_data(transfer_bit);
 					end if;
 				else
-					SPI_MOSI <= transfer_inst(transfer_bit - 8);
+					SPI_MOSI <= write_data(transfer_bit);
 					SPI_N_SS <= '0';
 				end if;
 				--Decrement Transfer bit;
 				transfer_bit <= transfer_bit - 1;
 			end if;
 		end if;
+	end process;
 
+	--SPI Shifter Process
+	process(SPI_CLK_I)
+	begin
 		if (falling_edge(SPI_CLK_I)) then
-			if (read) then
+			if (RST_I = '1') then
+				read_data <= (others => '0');
+			elsif (read) then
 				read_data(transfer_bit + 1) <= SPI_MISO;
 			end if;
 		end if;

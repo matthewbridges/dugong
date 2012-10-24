@@ -51,6 +51,10 @@ begin
 
 	-- Input buffering
 	SYS_CLK_IBUFGDS : IBUFGDS
+		generic map(
+			DIFF_TERM  => FALSE,
+			IOSTANDARD => "LVPECL_33"
+		)
 		port map(
 			O  => sys_clk_b,
 			I  => SYS_CLK_P,
@@ -68,8 +72,8 @@ begin
 			CLKFBOUT_PHASE        => 0.0, -- Phase offset in degrees of the clock feedback output (0.0-360.0).
 			CLKIN_PERIOD          => 10.0, -- Input clock period in ns to ps resolution (i.e. 33.333 is 30MHz).
 			-- CLKOUT0_DIVIDE - CLKOUT5_DIVIDE: Divide amount for CLKOUT# clock output (1-128)
-			CLKOUT0_DIVIDE        => 10, 
-			CLKOUT1_DIVIDE        => 40, --should be 10
+			CLKOUT0_DIVIDE        => 20,
+			CLKOUT1_DIVIDE        => 20,
 			CLKOUT2_DIVIDE        => 8,
 			CLKOUT3_DIVIDE        => 8,
 			CLKOUT4_DIVIDE        => 5,
@@ -135,7 +139,7 @@ begin
 		);
 
 	CLK_125MHZ <= clkout2_b;
-	
+
 	clkout3_buf : BUFG
 		port map(
 			O => clkout3_b,

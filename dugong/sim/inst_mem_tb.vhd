@@ -41,26 +41,18 @@ ARCHITECTURE behavior OF inst_mem_tb IS
 
 	COMPONENT inst_mem
 		PORT(
-			RST_I : IN  std_logic;
-			CLK_I : IN  std_logic;
-			ADR_I : IN  std_logic_vector(8 downto 0);
-			DAT_I : IN  std_logic_vector(31 downto 0);
-			DAT_O : OUT std_logic_vector(31 downto 0);
-			WE_I  : IN  std_logic;
-			STB_I : IN  std_logic
+			clka  : IN  STD_LOGIC;
+			addra : IN  STD_LOGIC_VECTOR(8 DOWNTO 0);
+			douta : OUT STD_LOGIC_VECTOR(63 DOWNTO 0)
 		);
 	END COMPONENT;
 
 	--Inputs
-	signal RST_I : std_logic                     := '0';
-	signal CLK_I : std_logic                     := '0';
-	signal ADR_I : std_logic_vector(7 downto 0)  := (others => '0');
-	signal DAT_I : std_logic_vector(31 downto 0) := (others => '0');
-	signal WE_I  : std_logic                     := '0';
-	signal STB_I : std_logic                     := '0';
+	signal CLK_I : std_logic                    := '1';
+	signal ADR_I : std_logic_vector(8 downto 0) := (others => '0');
 
 	--Outputs
-	signal DAT_O : std_logic_vector(31 downto 0);
+	signal DAT_O : std_logic_vector(63 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
@@ -68,22 +60,19 @@ ARCHITECTURE behavior OF inst_mem_tb IS
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : inst_mem PORT MAP(
-			RST_I => RST_I,
-			CLK_I => CLK_I,
-			ADR_I => '0' & ADR_I,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			WE_I  => WE_I,
-			STB_I  => STB_I
+	uut : inst_mem
+		port map(
+			clka  => CLK_I,
+			addra => ADR_I,
+			douta => DAT_O
 		);
 
 	-- Clock process definitions
 	CLK_I_process : process
 	begin
-		CLK_I <= '0';
-		wait for CLK_I_period / 2;
 		CLK_I <= '1';
+		wait for CLK_I_period / 2;
+		CLK_I <= '0';
 		wait for CLK_I_period / 2;
 	end process;
 
@@ -96,39 +85,38 @@ BEGIN
 		wait for CLK_I_period * 10;
 
 		-- insert stimulus here 
-		STB_I <= '1';
 		wait for 20 ns;
-		ADR_I <= x"00";
+		ADR_I <= '0' & x"00";
 		wait for 20 ns;
-		ADR_I <= x"01";
+		ADR_I <= '0' & x"01";
 		wait for 20 ns;
-		ADR_I <= x"02";
+		ADR_I <= '0' & x"02";
 		wait for 20 ns;
-		ADR_I <= x"03";
+		ADR_I <= '0' & x"03";
 		wait for 20 ns;
-		ADR_I <= x"04";
+		ADR_I <= '0' & x"04";
 		wait for 20 ns;
-		ADR_I <= x"05";
+		ADR_I <= '0' & x"05";
 		wait for 20 ns;
-		ADR_I <= x"06";
+		ADR_I <= '0' & x"06";
 		wait for 20 ns;
-		ADR_I <= x"07";
+		ADR_I <= '0' & x"07";
 		wait for 20 ns;
-		ADR_I <= x"08";
+		ADR_I <= '0' & x"08";
 		wait for 20 ns;
-		ADR_I <= x"09";
+		ADR_I <= '0' & x"09";
 		wait for 20 ns;
-		ADR_I <= x"0A";
+		ADR_I <= '0' & x"0A";
 		wait for 20 ns;
-		ADR_I <= x"0B";
+		ADR_I <= '0' & x"0B";
 		wait for 20 ns;
-		ADR_I <= x"0C";
+		ADR_I <= '0' & x"0C";
 		wait for 20 ns;
-		ADR_I <= x"0D";
+		ADR_I <= '0' & x"0D";
 		wait for 20 ns;
-		ADR_I <= x"0E";
+		ADR_I <= '0' & x"0E";
 		wait for 20 nS;
-		ADR_I <= x"0F";
+		ADR_I <= '0' & x"0F";
 		wait;
 	end process;
 
