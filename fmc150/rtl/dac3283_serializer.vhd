@@ -68,17 +68,17 @@ begin
 				tx_en        <= '0';
 			elsif (bufpll_locked = '1') then
 				if (counting_up) then
-					if (test_signal > 19000) then
+					if (test_signal > 31000) then
 					counting_up <= false;
 					end if;
 					--test_signal <= x"7F00";
-				test_signal <= test_signal + 13107;	
+				test_signal <= test_signal + 1057;	
 				else
-					if (test_signal < -19000) then
+					if (test_signal < -31000) then
 					counting_up <= true;
 					end if;
 					--test_signal <= x"8000";
-				test_signal <= test_signal - 13107;
+				test_signal <= test_signal - 1057;
 				end if;
 
 				if (sample_count = 7) then
@@ -100,11 +100,11 @@ begin
 	PLL_BASE_inst : PLL_BASE
 		generic map(
 			BANDWIDTH             => "OPTIMIZED", -- "HIGH", "LOW" or "OPTIMIZED"
-			CLKFBOUT_MULT         => 8, -- Multiply value for all CLKOUT clock outputs (1-64)
+			CLKFBOUT_MULT         => 4, -- Multiply value for all CLKOUT clock outputs (1-64)
 			CLKFBOUT_PHASE        => 0.0, -- Phase offset in degrees of the clock feedback output (0.0-360.0).
-			CLKIN_PERIOD          => 10.1, -- Input clock period in ns to ps resolution (i.e. 33.333 is 30 MHz).
+			CLKIN_PERIOD          => 4.069, -- Input clock period in ns to ps resolution (i.e. 33.333 is 30 MHz).
 			-- CLKOUT0_DIVIDE - CLKOUT5_DIVIDE: Divide amount for CLKOUT# clock output (1-128)
-			CLKOUT0_DIVIDE        => 2,
+			CLKOUT0_DIVIDE        => 1,
 			CLKOUT1_DIVIDE        => 1,
 			CLKOUT2_DIVIDE        => 1,
 			CLKOUT3_DIVIDE        => 1,
@@ -202,37 +202,39 @@ begin
 			TRAIN     => '0'            -- 1-bit input: Training pattern enable input
 		);
 
-	DAC_DCLK_IODELAY2 : IODELAY2
-		generic map(
-			COUNTER_WRAPAROUND => "WRAPAROUND", -- "STAY_AT_LIMIT" or "WRAPAROUND"
-			DATA_RATE          => "SDR", -- "SDR" or "DDR"
-			DELAY_SRC          => "ODATAIN", -- "IO", "ODATAIN" or "IDATAIN"
-			IDELAY2_VALUE      => 0,    -- Delay value when IDELAY_MODE="PCI" (0-255)
-			IDELAY_MODE        => "NORMAL", -- "NORMAL" or "PCI"
-			IDELAY_TYPE        => "FIXED", -- "FIXED", "DEFAULT", "VARIABLE_FROM_ZERO", "VARIABLE_FROM_HALF_MAX"
-			-- or "DIFF_PHASE_DETECTOR"
-			IDELAY_VALUE       => 0,    -- Amount of taps for fixed input delay (0-255)
-			ODELAY_VALUE       => 63,   -- Amount of taps fixed output delay (0-255)
-			SERDES_MODE        => "NONE", -- "NONE", "MASTER" or "SLAVE"
-			SIM_TAPDELAY_VALUE => 78    -- Per tap delay used for simulation in ps
-		)
-		port map(
-			BUSY     => open,           -- 1-bit output: Busy output after CAL
-			DATAOUT  => open,           -- 1-bit output: Delayed data output to ISERDES/input register
-			DATAOUT2 => open,           -- 1-bit output: Delayed data output to general FPGA fabric
-			DOUT     => dac_dclk_o,     -- 1-bit output: Delayed data output
-			TOUT     => open,           -- 1-bit output: Delayed 3-state output
-			CAL      => '0',            -- 1-bit input: Initiate calibration input
-			CE       => '0',            -- 1-bit input: Enable INC input
-			CLK      => '0',            -- 1-bit input: Clock input
-			IDATAIN  => '0',            -- 1-bit input: Data input (connect to top-level port or I/O buffer)
-			INC      => '0',            -- 1-bit input: Increment / decrement input
-			IOCLK0   => '0',            -- 1-bit input: Input from the I/O clock network
-			IOCLK1   => '0',            -- 1-bit input: Input from the I/O clock network
-			ODATAIN  => dac_dclk_predelay, -- 1-bit input: Output data input from output register or OSERDES2.
-			RST      => '0',            -- 1-bit input: Reset to zero or 1/2 of total delay period
-			T        => '0'             -- 1-bit input: 3-state input signal
-		);
+--	DAC_DCLK_IODELAY2 : IODELAY2
+--		generic map(
+--			COUNTER_WRAPAROUND => "WRAPAROUND", -- "STAY_AT_LIMIT" or "WRAPAROUND"
+--			DATA_RATE          => "SDR", -- "SDR" or "DDR"
+--			DELAY_SRC          => "ODATAIN", -- "IO", "ODATAIN" or "IDATAIN"
+--			IDELAY2_VALUE      => 0,    -- Delay value when IDELAY_MODE="PCI" (0-255)
+--			IDELAY_MODE        => "NORMAL", -- "NORMAL" or "PCI"
+--			IDELAY_TYPE        => "FIXED", -- "FIXED", "DEFAULT", "VARIABLE_FROM_ZERO", "VARIABLE_FROM_HALF_MAX"
+--			-- or "DIFF_PHASE_DETECTOR"
+--			IDELAY_VALUE       => 0,    -- Amount of taps for fixed input delay (0-255)
+--			ODELAY_VALUE       => 0,   -- Amount of taps fixed output delay (0-255)
+--			SERDES_MODE        => "NONE", -- "NONE", "MASTER" or "SLAVE"
+--			SIM_TAPDELAY_VALUE => 50    -- Per tap delay used for simulation in ps
+--		)
+--		port map(
+--			BUSY     => open,           -- 1-bit output: Busy output after CAL
+--			DATAOUT  => open,           -- 1-bit output: Delayed data output to ISERDES/input register
+--			DATAOUT2 => open,           -- 1-bit output: Delayed data output to general FPGA fabric
+--			DOUT     => dac_dclk_o,     -- 1-bit output: Delayed data output
+--			TOUT     => open,           -- 1-bit output: Delayed 3-state output
+--			CAL      => '0',            -- 1-bit input: Initiate calibration input
+--			CE       => '0',            -- 1-bit input: Enable INC input
+--			CLK      => '0',            -- 1-bit input: Clock input
+--			IDATAIN  => '0',            -- 1-bit input: Data input (connect to top-level port or I/O buffer)
+--			INC      => '0',            -- 1-bit input: Increment / decrement input
+--			IOCLK0   => '0',            -- 1-bit input: Input from the I/O clock network
+--			IOCLK1   => '0',            -- 1-bit input: Input from the I/O clock network
+--			ODATAIN  => dac_dclk_predelay, -- 1-bit input: Output data input from output register or OSERDES2.
+--			RST      => '0',            -- 1-bit input: Reset to zero or 1/2 of total delay period
+--			T        => '0'             -- 1-bit input: 3-state input signal
+--		);
+
+	dac_dclk_o <= dac_dclk_predelay;
 
 	DAC_DCLK_OBUFDS : OBUFDS
 		generic map(
@@ -376,7 +378,7 @@ begin
 
 	TXENABLE <= tx_en;
 
-	--DEBUG <= std_logic_vector(test_signal);
+--	DEBUG <= std_logic_vector(test_signal);
 
 	DEBUG(7 downto 0)   <= std_logic_vector(frame_count);
 	DEBUG(10)           <= frame;

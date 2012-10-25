@@ -72,8 +72,8 @@ begin
 			CLKFBOUT_PHASE        => 0.0, -- Phase offset in degrees of the clock feedback output (0.0-360.0).
 			CLKIN_PERIOD          => 10.0, -- Input clock period in ns to ps resolution (i.e. 33.333 is 30MHz).
 			-- CLKOUT0_DIVIDE - CLKOUT5_DIVIDE: Divide amount for CLKOUT# clock output (1-128)
-			CLKOUT0_DIVIDE        => 20,
-			CLKOUT1_DIVIDE        => 20,
+			CLKOUT0_DIVIDE        => 10,
+			CLKOUT1_DIVIDE        => 10,
 			CLKOUT2_DIVIDE        => 8,
 			CLKOUT3_DIVIDE        => 8,
 			CLKOUT4_DIVIDE        => 5,
