@@ -29,6 +29,9 @@ use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.VComponents.all;
 
+library RHINO_DUGONG;
+use RHINO_DUGONG.dcomponents.ALL;
+
 entity rhino_top is
 	generic(
 		DATA_WIDTH : natural := 32;
@@ -130,29 +133,6 @@ architecture Behavioral of rhino_top is
 	signal clk_ab_b      : std_logic;
 
 	--	signal init_done : std_logic;
-
-	component system_controller
-		port(
-			--System Clock Differential Inputs 100MHz
-			SYS_CLK_P      : in  STD_LOGIC;
-			SYS_CLK_N      : in  STD_LOGIC;
-			--System Clock Differential Outputs 100MHz
-			SYS_CLK_P_o    : out STD_LOGIC;
-			SYS_CLK_N_o    : out STD_LOGIC;
-			--System Reset
-			SYS_RST        : in  STD_LOGIC;
-			--System Status
-			SYS_PWR_ON     : out STD_LOGIC;
-			SYS_PLL_Locked : out STD_LOGIC;
-			--System Control Outputs
-			CLK_100MHZ     : out STD_LOGIC;
-			CLK_100MHZ_n   : out STD_LOGIC;
-			CLK_125MHZ     : out STD_LOGIC;
-			CLK_125MHZ_n   : out STD_LOGIC;
-			CLK_200MHZ     : out STD_LOGIC;
-			RST_O          : out STD_LOGIC
-		);
-	end component;
 
 	component dugong
 		generic(
@@ -358,10 +338,10 @@ begin
 			SYS_PWR_ON     => SYS_PWR_ON,
 			SYS_PLL_Locked => SYS_PLL_Locked,
 			--System Control Outputs	
-			CLK_100MHZ     => sys_con_clk,
-			CLK_100MHZ_n   => sys_con_clk_n,
-			CLK_125MHZ     => open,
-			CLK_125MHZ_n   => open,
+			CLK_100MHZ     => open,
+			CLK_100MHZ_n   => open,
+			CLK_125MHZ     => sys_con_clk,
+			CLK_125MHZ_n   => sys_con_clk_n,
 			CLK_200MHZ     => open,
 			RST_O          => sys_con_rst
 		);

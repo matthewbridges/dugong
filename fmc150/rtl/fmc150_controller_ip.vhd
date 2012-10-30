@@ -5,7 +5,8 @@ use IEEE.NUMERIC_STD.ALL;
 library unisim;
 use unisim.vcomponents.all;
 
-use work.rhino_dugong.all;
+library RHINO_DUGONG;
+use RHINO_DUGONG.dcomponents.all;
 
 entity fmc150_controller_ip is
 	generic(
@@ -51,9 +52,9 @@ architecture RTL of fmc150_controller_ip is
 	signal rst             : std_logic;
 
 	signal adc_spi_ce : STD_LOGIC;
-	signal adc_mosi   : STD_LOGIC;
+	signal adc_mosi   : STD_LOGIC := '0';
 	signal adc_miso   : STD_LOGIC;
-	signal adc_n_ss   : STD_LOGIC;
+	signal adc_n_ss   : STD_LOGIC := '1';
 	signal cdc_spi_ce : STD_LOGIC;
 	signal cdc_mosi   : STD_LOGIC;
 	signal cdc_miso   : STD_LOGIC;
@@ -74,7 +75,7 @@ architecture RTL of fmc150_controller_ip is
 			CORE_DATA_WIDTH : NATURAL               := 16;
 			CORE_ADDR_WIDTH : NATURAL               := 3;
 			SPI_DATA_WIDTH  : natural               := 8;
-			DEFAULT_DATA    : word_vector(0 to 127) := (others => x"000000000");
+			DEFAULT_DATA    : word_vector(0 to 128) := (others => x"000010000");
 			REVERSE_BITS    : boolean               := false
 		);
 		port(
@@ -123,7 +124,7 @@ begin
 		end if;
 	end process;
 
-	--adc_spi_ce <= '1' when (transfer_count(6 downto 5) = "01") else '0';
+	adc_spi_ce <= '0';--'1' when (transfer_count(6 downto 5) = "01") else '0';
 	cdc_spi_ce <= '1' when (transfer_count(5) = '0') else '0';
 	dac_spi_ce <= '1' when (transfer_count(5) = '1') else '0';
 
@@ -223,59 +224,60 @@ begin
 			S  => '0'                   -- 1-bit set input
 		);
 
-	ADS62P49_ctrl : spi_master_ip
-		GENERIC MAP(
-			DATA_WIDTH      => DATA_WIDTH,
-			ADDR_WIDTH      => ADDR_WIDTH,
-			BASE_ADDR       => x"A00",
-			CORE_ADDR_WIDTH => 6,
-			DEFAULT_DATA    => (
-				0 => x"000030000",      --0xXXX & XXPV & 0xAADD
-				1 => x"000032000",
-				2 => x"000033F00",
-				3 => x"000034000",
-				4 => x"000034100",
-				5 => x"000034400",
-				6 => x"000035000",
-				7 => x"000035100",
-				8 => x"000035200",
-				9 => x"000035300",
-				10 => x"000035500",
-				11 => x"000035700",
-				12 => x"000036200",
-				13 => x"000036300",
-				14 => x"000036600",
-				15 => x"000036800",
-				16 => x"000036A00",
-				17 => x"000037500",
-				18 => x"000037600",
-				19 => x"000030001",
-				20 => x"000002000",
-				21 => x"000003F00",
-				22 => x"000004000",
-				23 => x"000004100",
-				24 => x"000004400",
-				25 => x"000005000",
-				26 => x"000005100",
-				27 => x"000005200",
-				28 => x"000006200",
-				29 => x"000006300",
-				30 => x"000007500",
-				31 => x"000007600",
-				others => x"000000000"
-			)
-		)
-		PORT MAP(
-			CLK_I     => CLK_I,
-			RST_I     => rst,
-			WB_I      => WB_I,
-			WB_O      => WB_O,
-			SPI_CLK_I => clkout0_b,
-			SPI_CE    => '0',           --adc_spi_ce,
-			SPI_MOSI  => adc_mosi,
-			SPI_MISO  => adc_miso,
-			SPI_N_SS  => adc_n_ss
-		);
+--	ADS62P49_ctrl : spi_master_ip
+--		GENERIC MAP(
+--			DATA_WIDTH      => DATA_WIDTH,
+--			ADDR_WIDTH      => ADDR_WIDTH,
+--			BASE_ADDR       => x"A00",
+--			CORE_ADDR_WIDTH => 6,
+--			DEFAULT_DATA    => (
+--				0 => x"000010070",      --0xXXX & XXPV & 0xAADD
+--				1 => x"000010101",
+--				2 => x"000000200",
+--				3 => x"000010310",
+--				4 => x"0000104FF",
+--				5 => x"000000500",
+--				6 => x"000000600",
+--				7 => x"000000700",
+--				8 => x"000010800",
+--				9 => x"000010980",
+--				10 => x"000010A00",
+--				11 => x"000010B80",
+--				12 => x"000010C00",
+--				13 => x"000010D80",
+--				14 => x"000010E00",
+--				15 => x"000010F80",
+--				16 => x"000011000",
+--				17 => x"000011124",
+--				18 => x"000011202",
+--				19 => x"000001300",
+--				20 => x"000001400",
+--				21 => x"000001500",
+--				22 => x"000001600",
+--				23 => x"000011704",
+--				24 => x"000011883",
+--				25 => x"000001900",
+--				26 => x"000001A00",
+--				27 => x"000001B00",
+--				28 => x"000001C00",
+--				29 => x"000001D00",
+--				30 => x"000011E24",
+--				31 => x"000011F12",
+--				128 => x"000000080",
+--				others => x"000000000"
+--			)
+--			)
+--		PORT MAP(
+--			CLK_I     => CLK_I,
+--			RST_I     => rst,
+--			WB_I      => WB_I,
+--			WB_O      => WB_O,
+--			SPI_CLK_I => clkout0_b,
+--			SPI_CE    => adc_spi_ce,
+--			SPI_MOSI  => adc_mosi,
+--			SPI_MISO  => adc_miso,
+--			SPI_N_SS  => adc_n_ss
+--		);
 
 	--	Inst_cdce72010_ctrl : cdce72010_ctrl PORT MAP(
 	--			rst          => RST_I,
@@ -300,25 +302,26 @@ begin
 			BASE_ADDR       => x"B00",
 			CORE_DATA_WIDTH => 32,
 			CORE_ADDR_WIDTH => 5,
-			SPI_DATA_WIDTH  => 28,
+			SPI_DATA_WIDTH  => 32,
 			DEFAULT_DATA    => (
-				0 => x"3002C0050",      --XXPV & 0xDDDDDDD & 0xA
-				1 => x"383840051",
-				2 => x"381800002",      --"001110000011010000000000000000000010",
-				3 => x"383400003",
-				4 => x"3E9800004",
-				5 => x"381800005",
-				6 => x"3EB040006",
-				7 => x"381800317",
-				8 => x"3010C0158",
-				9 => x"301000049",
-				10 => x"30C0007DA",     --x"30BFC07CA",--"001100000000000000000000000000001010",
-				11 => x"3C000840B",     --"001111000000000000000000000110001011",
-				12 => x"361E09B0C",
-				13 => x"3000000AE",
-				14 => x"30000000E",
-				15 => x"3000000CE",
-				others => x"30000000E"
+				0 => x"1002C0050",      --XXPV & 0xDDDDDDD & 0xA
+				1 => x"183840051",
+				2 => x"181800002",      --"001110000011010000000000000000000010",
+				3 => x"183400003",
+				4 => x"1E9800004",
+				5 => x"181800005",
+				6 => x"1EB040006",
+				7 => x"181800317",
+				8 => x"1010C0158",
+				9 => x"101000049",
+				10 => x"10C0007DA",     --x"30BFC07CA",--"001100000000000000000000000000001010",
+				11 => x"1C000840B",     --"001111000000000000000000000110001011",
+				12 => x"161E09B0C",
+				13 => x"000000000",
+				14 => x"000000000",
+				15 => x"000000000",
+				128 => X"00000000E",
+				others => x"000000000"
 			),
 			REVERSE_BITS    => TRUE
 		)
@@ -373,6 +376,7 @@ begin
 				29 => x"000001D00",
 				30 => x"000011E24",
 				31 => x"000011F12",
+				128 => x"000000080",
 				others => x"000000000"
 			)
 		)
@@ -391,12 +395,12 @@ begin
 	adc_miso   <= ADC_MISO_I;
 	cdc_miso   <= CDC_MISO_I;
 	dac_miso   <= DAC_MISO_I;
-	SPI_MOSI_O <= (adc_mosi and (not adc_n_ss)) or (cdc_mosi and (not cdc_n_ss)) or (dac_mosi and (not dac_n_ss));
+	SPI_MOSI_O <= (cdc_mosi and (not cdc_n_ss)) or (dac_mosi and (not dac_n_ss));--(adc_mosi and (not adc_n_ss)) or (cdc_mosi and (not cdc_n_ss)) or (dac_mosi and (not dac_n_ss));
 
 	ADC_N_SS_O <= adc_n_ss;
 	CDC_N_SS_O <= cdc_n_ss;
 	DAC_N_SS_O <= dac_n_ss;
-	n_ss       <= (adc_n_ss xnor cdc_n_ss xnor dac_n_ss);
+	n_ss       <= cdc_n_ss xnor dac_n_ss;--(adc_n_ss xnor cdc_n_ss xnor dac_n_ss);
 
 	CDC_REF_EN <= '1';
 	CDC_N_RST  <= not RST_I;

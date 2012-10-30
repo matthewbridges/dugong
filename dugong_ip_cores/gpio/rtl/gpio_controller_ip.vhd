@@ -21,6 +21,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+library RHINO_DUGONG;
+use RHINO_DUGONG.dcomponents.all;
+
 entity gpio_controller_ip is
 	generic(
 		DATA_WIDTH      : NATURAL               := 32;
@@ -48,32 +51,6 @@ architecture Behavioral of gpio_controller_ip is
 	signal stb_i : STD_LOGIC;
 	signal we_i  : STD_LOGIC;
 	signal ack_o : STD_LOGIC;
-
-	component wb_s is
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3
-		);
-		port(
-			--System Control Inputs
-			CLK_I : in  STD_LOGIC;
-			RST_I : in  STD_LOGIC;
-			--Wishbone Slave Lines (inverted)
-			DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-			STB_I : out STD_LOGIC;
-			WE_I  : out STD_LOGIC;
-			CYC_I : out STD_LOGIC;
-			ACK_O : in  STD_LOGIC;
-			--Slave to WB
-			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0)
-		);
-	end component;
 
 	component gpio_controller is
 		generic(

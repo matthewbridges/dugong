@@ -28,6 +28,8 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
+use work.dcomponents.all;
+
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
@@ -39,23 +41,34 @@ ARCHITECTURE behavior OF spi_master_tb IS
 
 	-- Component Declaration for the Unit Under Test (UUT)
 
-	COMPONENT spi_master
-		PORT(
-			CLK_I     : IN  std_logic;
-			RST_I     : IN  std_logic;
-			DAT_I     : IN  std_logic_vector(15 downto 0);
-			DAT_O     : OUT std_logic_vector(15 downto 0);
-			ADR_I     : IN  std_logic_vector(4 downto 0);
-			STB_I     : IN  std_logic;
-			WE_I      : IN  std_logic;
-			ACK_O     : OUT std_logic;
-			SPI_CLK_I : IN  std_logic;
-			SPI_CE    : IN  std_logic;
-			SPI_MOSI  : OUT std_logic;
-			SPI_MISO  : IN  std_logic;
-			SPI_N_SS  : OUT std_logic
+	component spi_master is
+		generic(
+			DATA_WIDTH     : natural               := 16;
+			ADDR_WIDTH     : natural               := 2;
+			SPI_DATA_WIDTH : natural               := 8;
+			DEFAULT_DATA   : word_vector(0 to 128) := (others => x"0000100E0");
+			REVERSE_BITS   : boolean               := false
 		);
-	END COMPONENT;
+		port(
+			--System Control Inputs
+			CLK_I     : in  STD_LOGIC;
+			RST_I     : in  STD_LOGIC;
+			--Wishbone Slave Lines
+			DAT_I     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_I     : in  STD_LOGIC;
+			WE_I      : in  STD_LOGIC;
+			--		CYC_I : in   STD_LOGIC;
+			ACK_O     : out STD_LOGIC;
+			--Serial Peripheral Interface
+			SPI_CLK_I : in  STD_LOGIC;
+			SPI_CE    : in  STD_LOGIC;
+			SPI_MOSI  : out STD_LOGIC;
+			SPI_MISO  : in  STD_LOGIC;
+			SPI_N_SS  : out STD_LOGIC
+		);
+	end component;
 
 	--Inputs
 	signal CLK_I     : std_logic                     := '0';
@@ -81,7 +94,47 @@ ARCHITECTURE behavior OF spi_master_tb IS
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : spi_master PORT MAP(
+	uut : spi_master
+		generic map(
+			ADDR_WIDTH => 5,
+			DEFAULT_DATA => (
+				0 => x"000010070",      --0xXXX & XXPV & 0xAADD
+				1 => x"000010101",
+				2 => x"000000200",
+				3 => x"000010310",
+				4 => x"0000104FF",
+				5 => x"000000500",
+				6 => x"000000600",
+				7 => x"000000700",
+				8 => x"000010800",
+				9 => x"000010980",
+				10 => x"000010A00",
+				11 => x"000010B80",
+				12 => x"000010C00",
+				13 => x"000010D80",
+				14 => x"000010E00",
+				15 => x"000010F80",
+				16 => x"000011000",
+				17 => x"000011124",
+				18 => x"000011202",
+				19 => x"000001300",
+				20 => x"000001400",
+				21 => x"000001500",
+				22 => x"000001600",
+				23 => x"000011704",
+				24 => x"000011883",
+				25 => x"000001900",
+				26 => x"000001A00",
+				27 => x"000001B00",
+				28 => x"000001C00",
+				29 => x"000001D00",
+				30 => x"000011E24",
+				31 => x"000011F12",
+				128 => x"000000080",
+				others => x"000000000"
+			)
+		)
+		PORT MAP(
 			CLK_I     => CLK_I,
 			RST_I     => RST_I,
 			DAT_I     => DAT_I,
