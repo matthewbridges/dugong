@@ -34,14 +34,15 @@ entity dds_core_ip is
 	);
 	port(
 		--System Control Inputs
-		CLK_I  : in  STD_LOGIC;
-		RST_I  : in  STD_LOGIC;
+		CLK_I     : in  STD_LOGIC;
+		RST_I     : in  STD_LOGIC;
 		--Slave to WB
-		WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-		WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+		WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--Signal Channel Outputs
-		CH_A_O : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		CH_B_O : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+		DSP_CLK_I : in  STD_LOGIC;
+		CH_A_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		CH_B_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 	);
 end dds_core_ip;
 
@@ -60,19 +61,20 @@ architecture Behavioral of dds_core_ip is
 		);
 		port(
 			--System Control Inputs
-			CLK_I  : in  STD_LOGIC;
-			RST_I  : in  STD_LOGIC;
+			CLK_I     : in  STD_LOGIC;
+			RST_I     : in  STD_LOGIC;
 			--Wishbone Slave Lines
-			DAT_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O  : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I  : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			STB_I  : in  STD_LOGIC;
-			WE_I   : in  STD_LOGIC;
+			DAT_I     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_I     : in  STD_LOGIC;
+			WE_I      : in  STD_LOGIC;
 			--		CYC_I : in   STD_LOGIC;
-			ACK_O  : out STD_LOGIC;
+			ACK_O     : out STD_LOGIC;
 			--Signal Channel Outputs
-			CH_A_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			CH_B_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+			DSP_CLK_I : in  STD_LOGIC;
+			CH_A_O    : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			CH_B_O    : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
 		);
 	end component;
 
@@ -109,19 +111,20 @@ begin
 		)
 		port map(
 			--System Control Inputs
-			CLK_I => CLK_I,
-			RST_I => RST_I,
+			CLK_I     => CLK_I,
+			RST_I     => RST_I,
 			--Wishbone Slave Lines
-			DAT_I => dat_i(CORE_DATA_WIDTH - 1 downto 0),
-			DAT_O => dat_o(CORE_DATA_WIDTH - 1 downto 0),
-			ADR_I => adr_i(CORE_ADDR_WIDTH - 2 downto 0),
-			STB_I => stb_i,
-			WE_I  => we_i,
+			DAT_I     => dat_i(CORE_DATA_WIDTH - 1 downto 0),
+			DAT_O     => dat_o(CORE_DATA_WIDTH - 1 downto 0),
+			ADR_I     => adr_i(CORE_ADDR_WIDTH - 2 downto 0),
+			STB_I     => stb_i,
+			WE_I      => we_i,
 			--	CYC_I =>
-			ACK_O => ack_o,
+			ACK_O     => ack_o,
 			--Signal Channel Outputs
-			CH_A_O => CH_A_O,
-			CH_B_O => CH_B_O
+			DSP_CLK_I => DSP_CLK_I,
+			CH_A_O    => CH_A_O,
+			CH_B_O    => CH_B_O
 		);
 
 end Behavioral;

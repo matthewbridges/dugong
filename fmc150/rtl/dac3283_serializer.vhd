@@ -6,6 +6,10 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity dac3283_serializer is
+	generic(
+		DATA_WIDTH : natural := 16;
+		ADDR_WIDTH : natural := 5
+	);
 	port(
 		--System Control Inputs
 		CLK_I      : in  STD_LOGIC;
@@ -28,6 +32,209 @@ entity dac3283_serializer is
 end entity dac3283_serializer;
 
 architecture RTL of dac3283_serializer is
+	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of signed(DATA_WIDTH - 1 downto 0);
+	constant ramp : ram_type := (
+		0      => to_signed(0,
+			DATA_WIDTH),
+		1      => to_signed(2048,
+			DATA_WIDTH),
+		2      => to_signed(4096,
+			DATA_WIDTH),
+		3      => to_signed(6144,
+			DATA_WIDTH),
+		4      => to_signed(8192,
+			DATA_WIDTH),
+		5      => to_signed(10240,
+			DATA_WIDTH),
+		6      => to_signed(12288,
+			DATA_WIDTH),
+		7      => to_signed(14336,
+			DATA_WIDTH),
+		8      => to_signed(16384,
+			DATA_WIDTH),
+		9      => to_signed(18431,
+			DATA_WIDTH),
+		10     => to_signed(20479,
+			DATA_WIDTH),
+		11     => to_signed(22527,
+			DATA_WIDTH),
+		12     => to_signed(24575,
+			DATA_WIDTH),
+		13     => to_signed(26623,
+			DATA_WIDTH),
+		14     => to_signed(28671,
+			DATA_WIDTH),
+		15     => to_signed(30719,
+			DATA_WIDTH),
+		16     => to_signed(-32767,
+			DATA_WIDTH),
+		17     => to_signed(-30719,
+			DATA_WIDTH),
+		18     => to_signed(-28671,
+			DATA_WIDTH),
+		19     => to_signed(-26623,
+			DATA_WIDTH),
+		20     => to_signed(-24575,
+			DATA_WIDTH),
+		21     => to_signed(-22527,
+			DATA_WIDTH),
+		22     => to_signed(-20479,
+			DATA_WIDTH),
+		23     => to_signed(-18431,
+			DATA_WIDTH),
+		24     => to_signed(-16384,
+			DATA_WIDTH),
+		25     => to_signed(-14336,
+			DATA_WIDTH),
+		26     => to_signed(-12288,
+			DATA_WIDTH),
+		27     => to_signed(-10240,
+			DATA_WIDTH),
+		28     => to_signed(-8192,
+			DATA_WIDTH),
+		29     => to_signed(-6144,
+			DATA_WIDTH),
+		30     => to_signed(-4096,
+			DATA_WIDTH),
+		others => to_signed(0,
+			DATA_WIDTH)
+	);
+
+	constant square : ram_type := (
+		0      => to_signed(32767,
+			DATA_WIDTH),
+		1      => to_signed(32767,
+			DATA_WIDTH),
+		2      => to_signed(32767,
+			DATA_WIDTH),
+		3      => to_signed(32767,
+			DATA_WIDTH),
+		4      => to_signed(32767,
+			DATA_WIDTH),
+		5      => to_signed(32767,
+			DATA_WIDTH),
+		6      => to_signed(32767,
+			DATA_WIDTH),
+		7      => to_signed(32767,
+			DATA_WIDTH),
+		8      => to_signed(32767,
+			DATA_WIDTH),
+		9      => to_signed(32767,
+			DATA_WIDTH),
+		10     => to_signed(32767,
+			DATA_WIDTH),
+		11     => to_signed(32767,
+			DATA_WIDTH),
+		12     => to_signed(32767,
+			DATA_WIDTH),
+		13     => to_signed(32767,
+			DATA_WIDTH),
+		14     => to_signed(32767,
+			DATA_WIDTH),
+		15     => to_signed(32767,
+			DATA_WIDTH),
+		16     => to_signed(-32767,
+			DATA_WIDTH),
+		17     => to_signed(-32767,
+			DATA_WIDTH),
+		18     => to_signed(-32767,
+			DATA_WIDTH),
+		19     => to_signed(-32767,
+			DATA_WIDTH),
+		20     => to_signed(-32767,
+			DATA_WIDTH),
+		21     => to_signed(-32767,
+			DATA_WIDTH),
+		22     => to_signed(-32767,
+			DATA_WIDTH),
+		23     => to_signed(-32767,
+			DATA_WIDTH),
+		24     => to_signed(-32767,
+			DATA_WIDTH),
+		25     => to_signed(-32767,
+			DATA_WIDTH),
+		26     => to_signed(-32767,
+			DATA_WIDTH),
+		27     => to_signed(-32767,
+			DATA_WIDTH),
+		28     => to_signed(-32767,
+			DATA_WIDTH),
+		29     => to_signed(-32767,
+			DATA_WIDTH),
+		30     => to_signed(-32767,
+			DATA_WIDTH),
+		others => to_signed(0,
+			DATA_WIDTH)
+	);
+
+	constant sine : ram_type := (
+		0      => to_signed(0,
+			DATA_WIDTH),
+		1      => to_signed(6393,
+			DATA_WIDTH),
+		2      => to_signed(12539,
+			DATA_WIDTH),
+		3      => to_signed(18204,
+			DATA_WIDTH),
+		4      => to_signed(23170,
+			DATA_WIDTH),
+		5      => to_signed(27245,
+			DATA_WIDTH),
+		6      => to_signed(30273,
+			DATA_WIDTH),
+		7      => to_signed(32137,
+			DATA_WIDTH),
+		8      => to_signed(32767,
+			DATA_WIDTH),
+		9      => to_signed(32137,
+			DATA_WIDTH),
+		10     => to_signed(30273,
+			DATA_WIDTH),
+		11     => to_signed(27245,
+			DATA_WIDTH),
+		12     => to_signed(23170,
+			DATA_WIDTH),
+		13     => to_signed(18204,
+			DATA_WIDTH),
+		14     => to_signed(12539,
+			DATA_WIDTH),
+		15     => to_signed(6393,
+			DATA_WIDTH),
+		16     => to_signed(0,
+			DATA_WIDTH),
+		17     => to_signed(-6393,
+			DATA_WIDTH),
+		18     => to_signed(-12539,
+			DATA_WIDTH),
+		19     => to_signed(-18204,
+			DATA_WIDTH),
+		20     => to_signed(-23170,
+			DATA_WIDTH),
+		21     => to_signed(-27245,
+			DATA_WIDTH),
+		22     => to_signed(-30273,
+			DATA_WIDTH),
+		23     => to_signed(-32137,
+			DATA_WIDTH),
+		24     => to_signed(-32767,
+			DATA_WIDTH),
+		25     => to_signed(-32137,
+			DATA_WIDTH),
+		26     => to_signed(-30273,
+			DATA_WIDTH),
+		27     => to_signed(-27245,
+			DATA_WIDTH),
+		28     => to_signed(-23170,
+			DATA_WIDTH),
+		29     => to_signed(-18204,
+			DATA_WIDTH),
+		30     => to_signed(-12539,
+			DATA_WIDTH),
+		others => to_signed(0,
+			DATA_WIDTH)
+	);
+	constant frequency_control_word : natural := 4;
+
 	signal dac_clk_X4 : std_logic;
 	signal clk_fb     : std_logic;
 	signal pll_locked : std_logic;
@@ -36,14 +243,15 @@ architecture RTL of dac3283_serializer is
 	signal serdesstrobe  : std_logic;
 	signal bufpll_locked : std_logic;
 
+	signal addr : unsigned(ADDR_WIDTH - 1 downto 0);
+
 	signal tx_en        : std_logic;
 	signal sample_count : unsigned(2 downto 0);
 	signal frame        : std_logic;
 	signal frame_count  : unsigned(7 downto 0);
-	signal test_signal  : signed(15 downto 0);
-	signal counting_up  : boolean;
-	signal i            : std_logic_vector(15 downto 0);
-	signal q            : std_logic_vector(15 downto 0);
+
+	signal i : std_logic_vector(15 downto 0);
+	signal q : std_logic_vector(15 downto 0);
 
 	signal dac_dclk_predelay : std_logic;
 	signal dac_dclk_o        : std_logic;
@@ -62,24 +270,13 @@ begin
 			if (RST_I = '1') then
 				sample_count <= (others => '0');
 				frame_count  <= (others => '0');
-				test_signal  <= "0111111111111111";
-				counting_up  <= false;
+				addr         <= (others => '0');
 				frame        <= '0';
 				tx_en        <= '0';
 			elsif (bufpll_locked = '1') then
-				if (counting_up) then
-					if (test_signal > 31000) then
-					counting_up <= false;
-					end if;
-					--test_signal <= x"7F00";
-				test_signal <= test_signal + 1057;	
-				else
-					if (test_signal < -31000) then
-					counting_up <= true;
-					end if;
-					--test_signal <= x"8000";
-				test_signal <= test_signal - 1057;
-				end if;
+				i    <= std_logic_vector(sine(to_integer(addr)));
+				q    <= CH_A_I; --std_logic_vector(ramp(to_integer(addr)));
+				addr <= addr + frequency_control_word;
 
 				if (sample_count = 7) then
 					frame       <= '1';
@@ -89,8 +286,6 @@ begin
 					frame <= '0';
 				end if;
 				sample_count <= sample_count + 1;
-				i            <= std_logic_vector(test_signal); --CH_A_I;
-				q            <= CH_B_I;
 			end if;
 		end if;
 	end process;
@@ -202,37 +397,37 @@ begin
 			TRAIN     => '0'            -- 1-bit input: Training pattern enable input
 		);
 
---	DAC_DCLK_IODELAY2 : IODELAY2
---		generic map(
---			COUNTER_WRAPAROUND => "WRAPAROUND", -- "STAY_AT_LIMIT" or "WRAPAROUND"
---			DATA_RATE          => "SDR", -- "SDR" or "DDR"
---			DELAY_SRC          => "ODATAIN", -- "IO", "ODATAIN" or "IDATAIN"
---			IDELAY2_VALUE      => 0,    -- Delay value when IDELAY_MODE="PCI" (0-255)
---			IDELAY_MODE        => "NORMAL", -- "NORMAL" or "PCI"
---			IDELAY_TYPE        => "FIXED", -- "FIXED", "DEFAULT", "VARIABLE_FROM_ZERO", "VARIABLE_FROM_HALF_MAX"
---			-- or "DIFF_PHASE_DETECTOR"
---			IDELAY_VALUE       => 0,    -- Amount of taps for fixed input delay (0-255)
---			ODELAY_VALUE       => 0,   -- Amount of taps fixed output delay (0-255)
---			SERDES_MODE        => "NONE", -- "NONE", "MASTER" or "SLAVE"
---			SIM_TAPDELAY_VALUE => 50    -- Per tap delay used for simulation in ps
---		)
---		port map(
---			BUSY     => open,           -- 1-bit output: Busy output after CAL
---			DATAOUT  => open,           -- 1-bit output: Delayed data output to ISERDES/input register
---			DATAOUT2 => open,           -- 1-bit output: Delayed data output to general FPGA fabric
---			DOUT     => dac_dclk_o,     -- 1-bit output: Delayed data output
---			TOUT     => open,           -- 1-bit output: Delayed 3-state output
---			CAL      => '0',            -- 1-bit input: Initiate calibration input
---			CE       => '0',            -- 1-bit input: Enable INC input
---			CLK      => '0',            -- 1-bit input: Clock input
---			IDATAIN  => '0',            -- 1-bit input: Data input (connect to top-level port or I/O buffer)
---			INC      => '0',            -- 1-bit input: Increment / decrement input
---			IOCLK0   => '0',            -- 1-bit input: Input from the I/O clock network
---			IOCLK1   => '0',            -- 1-bit input: Input from the I/O clock network
---			ODATAIN  => dac_dclk_predelay, -- 1-bit input: Output data input from output register or OSERDES2.
---			RST      => '0',            -- 1-bit input: Reset to zero or 1/2 of total delay period
---			T        => '0'             -- 1-bit input: 3-state input signal
---		);
+	--	DAC_DCLK_IODELAY2 : IODELAY2
+	--		generic map(
+	--			COUNTER_WRAPAROUND => "WRAPAROUND", -- "STAY_AT_LIMIT" or "WRAPAROUND"
+	--			DATA_RATE          => "SDR", -- "SDR" or "DDR"
+	--			DELAY_SRC          => "ODATAIN", -- "IO", "ODATAIN" or "IDATAIN"
+	--			IDELAY2_VALUE      => 0,    -- Delay value when IDELAY_MODE="PCI" (0-255)
+	--			IDELAY_MODE        => "NORMAL", -- "NORMAL" or "PCI"
+	--			IDELAY_TYPE        => "FIXED", -- "FIXED", "DEFAULT", "VARIABLE_FROM_ZERO", "VARIABLE_FROM_HALF_MAX"
+	--			-- or "DIFF_PHASE_DETECTOR"
+	--			IDELAY_VALUE       => 0,    -- Amount of taps for fixed input delay (0-255)
+	--			ODELAY_VALUE       => 0,   -- Amount of taps fixed output delay (0-255)
+	--			SERDES_MODE        => "NONE", -- "NONE", "MASTER" or "SLAVE"
+	--			SIM_TAPDELAY_VALUE => 50    -- Per tap delay used for simulation in ps
+	--		)
+	--		port map(
+	--			BUSY     => open,           -- 1-bit output: Busy output after CAL
+	--			DATAOUT  => open,           -- 1-bit output: Delayed data output to ISERDES/input register
+	--			DATAOUT2 => open,           -- 1-bit output: Delayed data output to general FPGA fabric
+	--			DOUT     => dac_dclk_o,     -- 1-bit output: Delayed data output
+	--			TOUT     => open,           -- 1-bit output: Delayed 3-state output
+	--			CAL      => '0',            -- 1-bit input: Initiate calibration input
+	--			CE       => '0',            -- 1-bit input: Enable INC input
+	--			CLK      => '0',            -- 1-bit input: Clock input
+	--			IDATAIN  => '0',            -- 1-bit input: Data input (connect to top-level port or I/O buffer)
+	--			INC      => '0',            -- 1-bit input: Increment / decrement input
+	--			IOCLK0   => '0',            -- 1-bit input: Input from the I/O clock network
+	--			IOCLK1   => '0',            -- 1-bit input: Input from the I/O clock network
+	--			ODATAIN  => dac_dclk_predelay, -- 1-bit input: Output data input from output register or OSERDES2.
+	--			RST      => '0',            -- 1-bit input: Reset to zero or 1/2 of total delay period
+	--			T        => '0'             -- 1-bit input: 3-state input signal
+	--		);
 
 	dac_dclk_o <= dac_dclk_predelay;
 
@@ -246,11 +441,11 @@ begin
 			I  => dac_dclk_o
 		);
 
---		DEBUG9_OBUF : OBUF
---			port map(
---				O => DEBUG(9),
---				I => dac_dclk_o
---			);
+	--		DEBUG9_OBUF : OBUF
+	--			port map(
+	--				O => DEBUG(9),
+	--				I => dac_dclk_o
+	--			);
 
 	----------------------------DATA(7:0) IO AND BUFFERING----------------------------
 
@@ -307,11 +502,11 @@ begin
 				I  => dac_dat_o(pin_count)
 			);
 
---		DEBUG_OBUF : OBUF
---			port map(
---				O => DEBUG(pin_count),
---				I => dac_dat_o(pin_count)
---			);
+	--		DEBUG_OBUF : OBUF
+	--			port map(
+	--				O => DEBUG(pin_count),
+	--				I => dac_dat_o(pin_count)
+	--			);
 
 	end generate DAC_DATA_pins;
 
@@ -368,17 +563,17 @@ begin
 			I  => frame_o
 		);
 
---	DEBUG8_OBUF : OBUF
---		port map(
---			O => DEBUG(8),
---			I => frame_o
---		);
+	--	DEBUG8_OBUF : OBUF
+	--		port map(
+	--			O => DEBUG(8),
+	--			I => frame_o
+	--		);
 
 	----------------------------OTHER SIGNAL ASSIGNMENT AND DEBUGING----------------------------
 
 	TXENABLE <= tx_en;
 
---	DEBUG <= std_logic_vector(test_signal);
+	--	DEBUG <= std_logic_vector(test_signal);
 
 	DEBUG(7 downto 0)   <= std_logic_vector(frame_count);
 	DEBUG(10)           <= frame;

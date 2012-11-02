@@ -37,13 +37,13 @@ entity sink_file is
 	 generic (
            stim_file:       string  := "file_io.out");
     Port ( clk : in  STD_LOGIC;
-           data : in  STD_LOGIC_VECTOR(11 downto 0));
+           data : in  STD_LOGIC_VECTOR(15 downto 0));
 end sink_file;
 
 
 
 architecture Behavioral of sink_file is
-SIGNAL data_buf :  std_logic_vector(11 downto 0);
+SIGNAL data_buf :  std_logic_vector(15 downto 0);
 
 begin
 

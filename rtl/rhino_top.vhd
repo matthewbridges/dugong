@@ -120,11 +120,13 @@ entity rhino_top is
 end rhino_top;
 
 architecture Behavioral of rhino_top is
-	signal sys_con_clk   : std_logic;
-	signal sys_con_clk_n : std_logic;
-	signal sys_con_rst   : std_logic;
-	signal wb_ms         : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-	signal wb_sm         : std_logic_vector(DATA_WIDTH downto 0);
+	signal sys_con_clk    : std_logic;
+	signal sys_con_clk_n  : std_logic;
+	signal dsp_clk_246MHZ : std_logic;
+	signal dsp_clk_983MHZ : std_logic;
+	signal sys_con_rst    : std_logic;
+	signal wb_ms          : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+	signal wb_sm          : std_logic_vector(DATA_WIDTH downto 0);
 
 	signal ch_a : std_logic_vector(15 downto 0);
 	signal ch_b : std_logic_vector(15 downto 0);
@@ -200,14 +202,15 @@ architecture Behavioral of rhino_top is
 		);
 		port(
 			--System Control Inputs
-			CLK_I  : in  STD_LOGIC;
-			RST_I  : in  STD_LOGIC;
+			CLK_I     : in  STD_LOGIC;
+			RST_I     : in  STD_LOGIC;
 			--Slave to WB
-			WB_I   : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O   : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			--Signal Channel Outputs
-			CH_A_O : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			CH_B_O : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+			DSP_CLK_I : in  STD_LOGIC;
+			CH_A_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			CH_B_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
 	END COMPONENT;
 
@@ -241,7 +244,7 @@ architecture Behavioral of rhino_top is
 			--System Control Inputs
 			CLK_I      : in  STD_LOGIC;
 			RST_I      : in  STD_LOGIC;
-    		--Signal Channel Inputs
+			--Signal Channel Inputs
 			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
 			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
 			-- DAC interface
@@ -337,12 +340,13 @@ begin
 			--System Status	
 			SYS_PWR_ON     => SYS_PWR_ON,
 			SYS_PLL_Locked => SYS_PLL_Locked,
-			--System Control Outputs	
-			CLK_100MHZ     => open,
-			CLK_100MHZ_n   => open,
-			CLK_125MHZ     => sys_con_clk,
-			CLK_125MHZ_n   => sys_con_clk_n,
-			CLK_200MHZ     => open,
+			--System Control Outputs
+			CLK_123MHZ     => sys_con_clk,
+			CLK_123MHZ_n   => sys_con_clk_n,
+			CLK_246MHZ     => dsp_clk_246MHZ,
+			CLK_983MHZ     => dsp_clk_983MHZ,
+			CLK_15MHZ      => open,
+			CLK_15MHZ_n    => open,
 			RST_O          => sys_con_rst
 		);
 
@@ -403,20 +407,21 @@ begin
 			GPIO  => GPIO
 		);
 
-		DDS : dds_core_ip
-			GENERIC MAP(
-				BASE_ADDR       => x"700",
-				CORE_DATA_WIDTH => 16
-			)
-			PORT MAP(
-				CLK_I  => sys_con_clk,
-				RST_I  => sys_con_rst,
-				WB_I   => wb_ms,
-				WB_O   => wb_sm,
-				CH_A_O => ch_a,
-				CH_B_O => ch_b
-			);
-	
+	DDS : dds_core_ip
+		GENERIC MAP(
+			BASE_ADDR       => x"700",
+			CORE_DATA_WIDTH => 16
+		)
+		PORT MAP(
+			CLK_I     => sys_con_clk,
+			RST_I     => sys_con_rst,
+			WB_I      => wb_ms,
+			WB_O      => wb_sm,
+			DSP_CLK_I => dsp_clk_246MHZ,
+			CH_A_O    => ch_a,
+			CH_B_O    => ch_b
+		);
+
 	--	DAC : da2_controller_ip
 	--		GENERIC MAP(
 	--			BASE_ADDR       => x"800",
@@ -471,7 +476,7 @@ begin
 			CH_A_I     => ch_a,
 			CH_B_I     => ch_b,
 			-- DAC interface
-			DAC_CLK_I  => clk_to_fpga_b,
+			DAC_CLK_I  => dsp_clk_246MHZ,
 			DAC_DCLK_P => DAC_DCLK_P,
 			DAC_DCLK_N => DAC_DCLK_N,
 			DAC_DATA_P => DAC_DATA_P,
