@@ -29,7 +29,7 @@ architecture RTL of clk_counter is
 	signal user_mem : ram_type;
 	signal mem_adr  : integer;
 
-	signal master_count : unsigned(DATA_WIDTH - 5 downto 0);
+	signal master_count : unsigned(DATA_WIDTH - 6 downto 0);
 	type count_mem is array (0 to (2 ** ADDR_WIDTH) - 1) of unsigned(DATA_WIDTH - 1 downto 0);
 	signal count : count_mem;
 	type final_count_mem is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
@@ -64,9 +64,9 @@ begin
 					end if;
 				else
 					if (rst_count = '1') then
-						master_count <= x"0000000";
+						master_count <= (others => '0');
 						rst_count    <= '0';
-					elsif (master_count < x"BEBC1FF") then --x"BEBC200" - '1'  --Subtract 1 to account for signal propogation
+					elsif (master_count < x"752FFFF") then --x"7530000" - '1'  --Subtract 1 to account for signal propogation
 						master_count <= master_count + 1;
 					else
 						read_count <= '1';

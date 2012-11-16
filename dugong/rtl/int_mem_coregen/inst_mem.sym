@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <symbol version="7" name="inst_mem">
     <symboltype>BLOCK</symboltype>
-    <timestamp>2012-10-19T12:9:19</timestamp>
+    <timestamp>2012-11-10T14:26:57</timestamp>
     <pin polarity="Input" x="0" y="80" name="addra[8:0]" />
     <pin polarity="Input" x="0" y="272" name="clka" />
     <pin polarity="Output" x="576" y="80" name="douta[47:0]" />

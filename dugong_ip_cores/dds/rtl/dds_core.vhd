@@ -24,8 +24,9 @@ use work.sine_lut_pkg.all;
 
 entity dds_core is
 	generic(
-		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 2
+		DATA_WIDTH  : natural := 16;
+		ADDR_WIDTH  : natural := 2;
+		PHASE_WIDTH : natural := 8
 	);
 	port(
 		--System Control Inputs
@@ -39,10 +40,10 @@ entity dds_core is
 		WE_I      : in  STD_LOGIC;
 		--		CYC_I : in   STD_LOGIC;
 		ACK_O     : out STD_LOGIC;
-		--Signal Channel Outputs
-		DSP_CLK_I : in  STD_LOGIC;
-		CH_A_O    : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		CH_B_O    : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+		--Signal Channel Inputs
+		DSP_CLK_I  : in  STD_LOGIC;
+		CH_A_O     : out  STD_LOGIC_VECTOR(15 downto 0);
+		CH_B_O     : out  STD_LOGIC_VECTOR(15 downto 0)
 	);
 end dds_core;
 
@@ -51,238 +52,142 @@ architecture Behavioral of dds_core is
 	signal user_mem : ram_type;
 	signal mem_adr  : integer;
 
-	constant frequency_control_word : natural := 4;
-
-	type lut_type is array (0 to (2 ** 5) - 1) of signed(DATA_WIDTH - 1 downto 0);
-	signal addr   : unsigned(5 - 1 downto 0);
-	constant ramp : lut_type := (
-		0      => to_signed(0,
-			DATA_WIDTH),
-		1      => to_signed(2048,
-			DATA_WIDTH),
-		2      => to_signed(4096,
-			DATA_WIDTH),
-		3      => to_signed(6144,
-			DATA_WIDTH),
-		4      => to_signed(8192,
-			DATA_WIDTH),
-		5      => to_signed(10240,
-			DATA_WIDTH),
-		6      => to_signed(12288,
-			DATA_WIDTH),
-		7      => to_signed(14336,
-			DATA_WIDTH),
-		8      => to_signed(16384,
-			DATA_WIDTH),
-		9      => to_signed(18431,
-			DATA_WIDTH),
-		10     => to_signed(20479,
-			DATA_WIDTH),
-		11     => to_signed(22527,
-			DATA_WIDTH),
-		12     => to_signed(24575,
-			DATA_WIDTH),
-		13     => to_signed(26623,
-			DATA_WIDTH),
-		14     => to_signed(28671,
-			DATA_WIDTH),
-		15     => to_signed(30719,
-			DATA_WIDTH),
-		16     => to_signed(-32767,
-			DATA_WIDTH),
-		17     => to_signed(-30719,
-			DATA_WIDTH),
-		18     => to_signed(-28671,
-			DATA_WIDTH),
-		19     => to_signed(-26623,
-			DATA_WIDTH),
-		20     => to_signed(-24575,
-			DATA_WIDTH),
-		21     => to_signed(-22527,
-			DATA_WIDTH),
-		22     => to_signed(-20479,
-			DATA_WIDTH),
-		23     => to_signed(-18431,
-			DATA_WIDTH),
-		24     => to_signed(-16384,
-			DATA_WIDTH),
-		25     => to_signed(-14336,
-			DATA_WIDTH),
-		26     => to_signed(-12288,
-			DATA_WIDTH),
-		27     => to_signed(-10240,
-			DATA_WIDTH),
-		28     => to_signed(-8192,
-			DATA_WIDTH),
-		29     => to_signed(-6144,
-			DATA_WIDTH),
-		30     => to_signed(-4096,
-			DATA_WIDTH),
-		others => to_signed(0,
-			DATA_WIDTH)
-	);
-
-	constant square : lut_type := (
-		0      => to_signed(32767,
-			DATA_WIDTH),
-		1      => to_signed(32767,
-			DATA_WIDTH),
-		2      => to_signed(32767,
-			DATA_WIDTH),
-		3      => to_signed(32767,
-			DATA_WIDTH),
-		4      => to_signed(32767,
-			DATA_WIDTH),
-		5      => to_signed(32767,
-			DATA_WIDTH),
-		6      => to_signed(32767,
-			DATA_WIDTH),
-		7      => to_signed(32767,
-			DATA_WIDTH),
-		8      => to_signed(32767,
-			DATA_WIDTH),
-		9      => to_signed(32767,
-			DATA_WIDTH),
-		10     => to_signed(32767,
-			DATA_WIDTH),
-		11     => to_signed(32767,
-			DATA_WIDTH),
-		12     => to_signed(32767,
-			DATA_WIDTH),
-		13     => to_signed(32767,
-			DATA_WIDTH),
-		14     => to_signed(32767,
-			DATA_WIDTH),
-		15     => to_signed(32767,
-			DATA_WIDTH),
-		16     => to_signed(-32767,
-			DATA_WIDTH),
-		17     => to_signed(-32767,
-			DATA_WIDTH),
-		18     => to_signed(-32767,
-			DATA_WIDTH),
-		19     => to_signed(-32767,
-			DATA_WIDTH),
-		20     => to_signed(-32767,
-			DATA_WIDTH),
-		21     => to_signed(-32767,
-			DATA_WIDTH),
-		22     => to_signed(-32767,
-			DATA_WIDTH),
-		23     => to_signed(-32767,
-			DATA_WIDTH),
-		24     => to_signed(-32767,
-			DATA_WIDTH),
-		25     => to_signed(-32767,
-			DATA_WIDTH),
-		26     => to_signed(-32767,
-			DATA_WIDTH),
-		27     => to_signed(-32767,
-			DATA_WIDTH),
-		28     => to_signed(-32767,
-			DATA_WIDTH),
-		29     => to_signed(-32767,
-			DATA_WIDTH),
-		30     => to_signed(-32767,
-			DATA_WIDTH),
-		others => to_signed(0,
-			DATA_WIDTH)
-	);
-
+	type lut_type is array (0 to (2 ** (PHASE_WIDTH - 2)) - 1) of signed(DATA_WIDTH - 1 downto 0);
+	signal addr   : unsigned(PHASE_WIDTH - 1 downto 0);
 	constant sine : lut_type := (
 		0      => to_signed(0,
 			DATA_WIDTH),
-		1      => to_signed(6393,
+		1      => to_signed(810,
 			DATA_WIDTH),
-		2      => to_signed(12539,
+		2      => to_signed(1620,
 			DATA_WIDTH),
-		3      => to_signed(18204,
+		3      => to_signed(2429,
 			DATA_WIDTH),
-		4      => to_signed(23170,
+		4      => to_signed(3237,
 			DATA_WIDTH),
-		5      => to_signed(27245,
+		5      => to_signed(4042,
 			DATA_WIDTH),
-		6      => to_signed(30273,
+		6      => to_signed(4845,
 			DATA_WIDTH),
-		7      => to_signed(32137,
+		7      => to_signed(5646,
 			DATA_WIDTH),
-		8      => to_signed(32767,
+		8      => to_signed(6442,
 			DATA_WIDTH),
-		9      => to_signed(32137,
+		9      => to_signed(7235,
 			DATA_WIDTH),
-		10     => to_signed(30273,
+		10     => to_signed(8023,
 			DATA_WIDTH),
-		11     => to_signed(27245,
+		11     => to_signed(8806,
 			DATA_WIDTH),
-		12     => to_signed(23170,
+		12     => to_signed(9584,
 			DATA_WIDTH),
-		13     => to_signed(18204,
+		13     => to_signed(10357,
 			DATA_WIDTH),
-		14     => to_signed(12539,
+		14     => to_signed(11122,
 			DATA_WIDTH),
-		15     => to_signed(6393,
+		15     => to_signed(11881,
 			DATA_WIDTH),
-		16     => to_signed(0,
+		16     => to_signed(12633,
 			DATA_WIDTH),
-		17     => to_signed(-6393,
+		17     => to_signed(13377,
 			DATA_WIDTH),
-		18     => to_signed(-12539,
+		18     => to_signed(14113,
 			DATA_WIDTH),
-		19     => to_signed(-18204,
+		19     => to_signed(14840,
 			DATA_WIDTH),
-		20     => to_signed(-23170,
+		20     => to_signed(15558,
 			DATA_WIDTH),
-		21     => to_signed(-27245,
+		21     => to_signed(16266,
 			DATA_WIDTH),
-		22     => to_signed(-30273,
+		22     => to_signed(16965,
 			DATA_WIDTH),
-		23     => to_signed(-32137,
+		23     => to_signed(17653,
 			DATA_WIDTH),
-		24     => to_signed(-32767,
+		24     => to_signed(18331,
 			DATA_WIDTH),
-		25     => to_signed(-32137,
+		25     => to_signed(18997,
 			DATA_WIDTH),
-		26     => to_signed(-30273,
+		26     => to_signed(19651,
 			DATA_WIDTH),
-		27     => to_signed(-27245,
+		27     => to_signed(20294,
 			DATA_WIDTH),
-		28     => to_signed(-23170,
+		28     => to_signed(20924,
 			DATA_WIDTH),
-		29     => to_signed(-18204,
+		29     => to_signed(21541,
 			DATA_WIDTH),
-		30     => to_signed(-12539,
+		30     => to_signed(22145,
+			DATA_WIDTH),
+		31     => to_signed(22736,
+			DATA_WIDTH),
+		32     => to_signed(23313,
+			DATA_WIDTH),
+		33     => to_signed(23875,
+			DATA_WIDTH),
+		34     => to_signed(24423,
+			DATA_WIDTH),
+		35     => to_signed(24956,
+			DATA_WIDTH),
+		36     => to_signed(25473,
+			DATA_WIDTH),
+		37     => to_signed(25975,
+			DATA_WIDTH),
+		38     => to_signed(26461,
+			DATA_WIDTH),
+		39     => to_signed(26931,
+			DATA_WIDTH),
+		40     => to_signed(27385,
+			DATA_WIDTH),
+		41     => to_signed(27821,
+			DATA_WIDTH),
+		42     => to_signed(28241,
+			DATA_WIDTH),
+		43     => to_signed(28643,
+			DATA_WIDTH),
+		44     => to_signed(29028,
+			DATA_WIDTH),
+		45     => to_signed(29395,
+			DATA_WIDTH),
+		46     => to_signed(29744,
+			DATA_WIDTH),
+		47     => to_signed(30075,
+			DATA_WIDTH),
+		48     => to_signed(30388,
+			DATA_WIDTH),
+		49     => to_signed(30682,
+			DATA_WIDTH),
+		50     => to_signed(30957,
+			DATA_WIDTH),
+		51     => to_signed(31213,
+			DATA_WIDTH),
+		52     => to_signed(31450,
+			DATA_WIDTH),
+		53     => to_signed(31668,
+			DATA_WIDTH),
+		54     => to_signed(31866,
+			DATA_WIDTH),
+		55     => to_signed(32045,
+			DATA_WIDTH),
+		56     => to_signed(32205,
+			DATA_WIDTH),
+		57     => to_signed(32344,
+			DATA_WIDTH),
+		58     => to_signed(32464,
+			DATA_WIDTH),
+		59     => to_signed(32564,
+			DATA_WIDTH),
+		60     => to_signed(32644,
+			DATA_WIDTH),
+		61     => to_signed(32704,
+			DATA_WIDTH),
+		62     => to_signed(32744,
+			DATA_WIDTH),
+		63     => to_signed(32764,
 			DATA_WIDTH),
 		others => to_signed(0,
 			DATA_WIDTH)
 	);
 
---	component dds_synthesizer
---		generic(
---			ftw_width : integer
---		);
---		port(
---			clk_i   : in  std_logic;
---			rst_i   : in  std_logic;
---			ftw_i   : in  std_logic_vector(ftw_width - 1 downto 0);
---			phase_i : in  std_logic_vector(PHASE_WIDTH - 1 downto 0);
---			phase_o : out std_logic_vector(PHASE_WIDTH - 1 downto 0);
---			ampl_o  : out std_logic_vector(AMPL_WIDTH - 1 downto 0)
---		);
---	end component;
 begin
-	--	dds_synth : dds_synthesizer
-	--		generic map(
-	--			ftw_width => DATA_WIDTH
-	--		)
-	--		port map(
-	--			clk_i   => CLK_I,
-	--			rst_i   => RST_I,
-	--			ftw_i   => user_mem(0),
-	--			phase_i => user_mem(1),
-	--			phase_o => user_mem(2),
-	--			ampl_o  => user_mem(3)
-	--		);
-
 	process(CLK_I)
 	begin
 
@@ -291,7 +196,7 @@ begin
 			--Check for reset
 			if (RST_I = '1') then
 				DAT_O       <= (others => '0');
-				user_mem(0) <= x"0FFF";
+				user_mem(0) <= x"0020";
 				user_mem(1) <= (others => '0');
 			--Check for strobe
 			elsif (STB_I = '1') then
@@ -317,14 +222,38 @@ begin
 		if (rising_edge(DSP_CLK_I)) then
 			--Check for reset
 			if (RST_I = '1') then
-				addr <= (others => '0');
+				addr        <= (others => '0');
+				user_mem(2) <= (others => '0');
+				user_mem(3) <= (others => '0');
 			else
-				CH_A_O <= std_logic_vector(sine(to_integer(addr)));
-				CH_B_O <= std_logic_vector(ramp(to_integer(addr)));
-				addr   <= addr + frequency_control_word;
+				case (addr(PHASE_WIDTH - 1 downto PHASE_WIDTH - 2)) is
+					when "00"   => user_mem(2) <= std_logic_vector((sine(to_integer(addr(PHASE_WIDTH - 3 downto 0)))));
+					when "01"   => user_mem(2) <= std_logic_vector((sine((2 ** (PHASE_WIDTH - 2) - 1) - to_integer(addr(PHASE_WIDTH - 3 downto 0)))));
+					when "10"   => user_mem(2) <= std_logic_vector(-(sine(to_integer(addr(PHASE_WIDTH - 3 downto 0)))));
+					when "11"   => user_mem(2) <= std_logic_vector(-(sine((2 ** (PHASE_WIDTH - 2) - 1) - to_integer(addr(PHASE_WIDTH - 3 downto 0)))));
+					when others => user_mem(2) <= (others => '0');
+				end case;
+				--				
+				case (addr(PHASE_WIDTH - 1 downto PHASE_WIDTH - 2)) is
+					when "11"   => user_mem(3) <= std_logic_vector((sine(to_integer(addr(PHASE_WIDTH - 3 downto 0)))));
+					when "00"   => user_mem(3) <= std_logic_vector((sine((2 ** (PHASE_WIDTH - 2) - 1) - to_integer(addr(PHASE_WIDTH - 3 downto 0)))));
+					when "01"   => user_mem(3) <= std_logic_vector(-(sine(to_integer(addr(PHASE_WIDTH - 3 downto 0)))));
+					when "10"   => user_mem(3) <= std_logic_vector(-(sine((2 ** (PHASE_WIDTH - 2) - 1) - to_integer(addr(PHASE_WIDTH - 3 downto 0)))));
+					when others => user_mem(3) <= (others => '0');
+				end case;
+				--					
+				--					user_mem(3) <= std_logic_vector(-sine(to_integer(addr(PHASE_WIDTH - 2 downto 0))));
+				--				else
+				--					
+				--					user_mem(3) <= std_logic_vector(sine(to_integer(addr(PHASE_WIDTH - 2 downto 0))));
+				--				end if;
+				addr <= addr + unsigned(user_mem(0)(PHASE_WIDTH - 1 downto 0));
 			end if;
 		end if;
 	end process;
+
+	CH_A_O <= user_mem(2);
+	CH_B_O <= user_mem(3);
 
 end Behavioral;
 

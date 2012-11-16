@@ -15,10 +15,10 @@ entity dac3283_serializer is
 		CLK_I      : in  STD_LOGIC;
 		RST_I      : in  STD_LOGIC;
 		--Signal Channel Inputs
+		DSP_CLK_I  : in  STD_LOGIC;
 		CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
 		CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
 		-- DAC interface
-		DAC_CLK_I  : in  STD_LOGIC;
 		DAC_DCLK_P : out STD_LOGIC;
 		DAC_DCLK_N : out STD_LOGIC;
 		DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
@@ -32,208 +32,6 @@ entity dac3283_serializer is
 end entity dac3283_serializer;
 
 architecture RTL of dac3283_serializer is
-	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of signed(DATA_WIDTH - 1 downto 0);
-	constant ramp : ram_type := (
-		0      => to_signed(0,
-			DATA_WIDTH),
-		1      => to_signed(2048,
-			DATA_WIDTH),
-		2      => to_signed(4096,
-			DATA_WIDTH),
-		3      => to_signed(6144,
-			DATA_WIDTH),
-		4      => to_signed(8192,
-			DATA_WIDTH),
-		5      => to_signed(10240,
-			DATA_WIDTH),
-		6      => to_signed(12288,
-			DATA_WIDTH),
-		7      => to_signed(14336,
-			DATA_WIDTH),
-		8      => to_signed(16384,
-			DATA_WIDTH),
-		9      => to_signed(18431,
-			DATA_WIDTH),
-		10     => to_signed(20479,
-			DATA_WIDTH),
-		11     => to_signed(22527,
-			DATA_WIDTH),
-		12     => to_signed(24575,
-			DATA_WIDTH),
-		13     => to_signed(26623,
-			DATA_WIDTH),
-		14     => to_signed(28671,
-			DATA_WIDTH),
-		15     => to_signed(30719,
-			DATA_WIDTH),
-		16     => to_signed(-32767,
-			DATA_WIDTH),
-		17     => to_signed(-30719,
-			DATA_WIDTH),
-		18     => to_signed(-28671,
-			DATA_WIDTH),
-		19     => to_signed(-26623,
-			DATA_WIDTH),
-		20     => to_signed(-24575,
-			DATA_WIDTH),
-		21     => to_signed(-22527,
-			DATA_WIDTH),
-		22     => to_signed(-20479,
-			DATA_WIDTH),
-		23     => to_signed(-18431,
-			DATA_WIDTH),
-		24     => to_signed(-16384,
-			DATA_WIDTH),
-		25     => to_signed(-14336,
-			DATA_WIDTH),
-		26     => to_signed(-12288,
-			DATA_WIDTH),
-		27     => to_signed(-10240,
-			DATA_WIDTH),
-		28     => to_signed(-8192,
-			DATA_WIDTH),
-		29     => to_signed(-6144,
-			DATA_WIDTH),
-		30     => to_signed(-4096,
-			DATA_WIDTH),
-		others => to_signed(0,
-			DATA_WIDTH)
-	);
-
-	constant square : ram_type := (
-		0      => to_signed(32767,
-			DATA_WIDTH),
-		1      => to_signed(32767,
-			DATA_WIDTH),
-		2      => to_signed(32767,
-			DATA_WIDTH),
-		3      => to_signed(32767,
-			DATA_WIDTH),
-		4      => to_signed(32767,
-			DATA_WIDTH),
-		5      => to_signed(32767,
-			DATA_WIDTH),
-		6      => to_signed(32767,
-			DATA_WIDTH),
-		7      => to_signed(32767,
-			DATA_WIDTH),
-		8      => to_signed(32767,
-			DATA_WIDTH),
-		9      => to_signed(32767,
-			DATA_WIDTH),
-		10     => to_signed(32767,
-			DATA_WIDTH),
-		11     => to_signed(32767,
-			DATA_WIDTH),
-		12     => to_signed(32767,
-			DATA_WIDTH),
-		13     => to_signed(32767,
-			DATA_WIDTH),
-		14     => to_signed(32767,
-			DATA_WIDTH),
-		15     => to_signed(32767,
-			DATA_WIDTH),
-		16     => to_signed(-32767,
-			DATA_WIDTH),
-		17     => to_signed(-32767,
-			DATA_WIDTH),
-		18     => to_signed(-32767,
-			DATA_WIDTH),
-		19     => to_signed(-32767,
-			DATA_WIDTH),
-		20     => to_signed(-32767,
-			DATA_WIDTH),
-		21     => to_signed(-32767,
-			DATA_WIDTH),
-		22     => to_signed(-32767,
-			DATA_WIDTH),
-		23     => to_signed(-32767,
-			DATA_WIDTH),
-		24     => to_signed(-32767,
-			DATA_WIDTH),
-		25     => to_signed(-32767,
-			DATA_WIDTH),
-		26     => to_signed(-32767,
-			DATA_WIDTH),
-		27     => to_signed(-32767,
-			DATA_WIDTH),
-		28     => to_signed(-32767,
-			DATA_WIDTH),
-		29     => to_signed(-32767,
-			DATA_WIDTH),
-		30     => to_signed(-32767,
-			DATA_WIDTH),
-		others => to_signed(0,
-			DATA_WIDTH)
-	);
-
-	constant sine : ram_type := (
-		0      => to_signed(0,
-			DATA_WIDTH),
-		1      => to_signed(6393,
-			DATA_WIDTH),
-		2      => to_signed(12539,
-			DATA_WIDTH),
-		3      => to_signed(18204,
-			DATA_WIDTH),
-		4      => to_signed(23170,
-			DATA_WIDTH),
-		5      => to_signed(27245,
-			DATA_WIDTH),
-		6      => to_signed(30273,
-			DATA_WIDTH),
-		7      => to_signed(32137,
-			DATA_WIDTH),
-		8      => to_signed(32767,
-			DATA_WIDTH),
-		9      => to_signed(32137,
-			DATA_WIDTH),
-		10     => to_signed(30273,
-			DATA_WIDTH),
-		11     => to_signed(27245,
-			DATA_WIDTH),
-		12     => to_signed(23170,
-			DATA_WIDTH),
-		13     => to_signed(18204,
-			DATA_WIDTH),
-		14     => to_signed(12539,
-			DATA_WIDTH),
-		15     => to_signed(6393,
-			DATA_WIDTH),
-		16     => to_signed(0,
-			DATA_WIDTH),
-		17     => to_signed(-6393,
-			DATA_WIDTH),
-		18     => to_signed(-12539,
-			DATA_WIDTH),
-		19     => to_signed(-18204,
-			DATA_WIDTH),
-		20     => to_signed(-23170,
-			DATA_WIDTH),
-		21     => to_signed(-27245,
-			DATA_WIDTH),
-		22     => to_signed(-30273,
-			DATA_WIDTH),
-		23     => to_signed(-32137,
-			DATA_WIDTH),
-		24     => to_signed(-32767,
-			DATA_WIDTH),
-		25     => to_signed(-32137,
-			DATA_WIDTH),
-		26     => to_signed(-30273,
-			DATA_WIDTH),
-		27     => to_signed(-27245,
-			DATA_WIDTH),
-		28     => to_signed(-23170,
-			DATA_WIDTH),
-		29     => to_signed(-18204,
-			DATA_WIDTH),
-		30     => to_signed(-12539,
-			DATA_WIDTH),
-		others => to_signed(0,
-			DATA_WIDTH)
-	);
-	constant frequency_control_word : natural := 4;
 
 	signal dac_clk_X4 : std_logic;
 	signal clk_fb     : std_logic;
@@ -242,8 +40,6 @@ architecture RTL of dac3283_serializer is
 	signal io_clk        : std_logic;
 	signal serdesstrobe  : std_logic;
 	signal bufpll_locked : std_logic;
-
-	signal addr : unsigned(ADDR_WIDTH - 1 downto 0);
 
 	signal tx_en        : std_logic;
 	signal sample_count : unsigned(2 downto 0);
@@ -262,21 +58,19 @@ begin
 
 	----------------------------SET UP CLOCKING AND PLLs----------------------------
 
-	process(DAC_CLK_I)
+	process(DSP_CLK_I)
 	begin
 		--Perform Clock Rising Edge operations
-		if (rising_edge(DAC_CLK_I)) then
+		if (rising_edge(DSP_CLK_I)) then
 			--Check for reset
 			if (RST_I = '1') then
 				sample_count <= (others => '0');
 				frame_count  <= (others => '0');
-				addr         <= (others => '0');
 				frame        <= '0';
 				tx_en        <= '0';
 			elsif (bufpll_locked = '1') then
-				i    <= std_logic_vector(sine(to_integer(addr)));
-				q    <= CH_A_I; --std_logic_vector(ramp(to_integer(addr)));
-				addr <= addr + frequency_control_word;
+				i    <= CH_A_I;
+				q    <= CH_B_I;
 
 				if (sample_count = 7) then
 					frame       <= '1';
@@ -336,7 +130,7 @@ begin
 			CLKOUT5  => open,
 			LOCKED   => pll_locked,     -- 1-bit output: PLL_BASE lock status output
 			CLKFBIN  => clk_fb,         -- 1-bit input: Feedback clock input
-			CLKIN    => DAC_CLK_I,      -- 1-bit input: Clock input
+			CLKIN    => DSP_CLK_I,      -- 1-bit input: Clock input
 			RST      => RST_I           -- 1-bit input: Reset input
 		);
 
@@ -349,7 +143,7 @@ begin
 			IOCLK        => io_clk,     -- 1-bit output: Output I/O clock
 			LOCK         => bufpll_locked, -- 1-bit output: Synchronized LOCK output
 			SERDESSTROBE => serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
-			GCLK         => DAC_CLK_I,  -- 1-bit input: BUFG clock input
+			GCLK         => DSP_CLK_I,  -- 1-bit input: BUFG clock input
 			LOCKED       => pll_locked, -- 1-bit input: LOCKED input from PLL
 			PLLIN        => DAC_CLK_X4  -- 1-bit input: Clock input from PLL
 		);
@@ -375,7 +169,7 @@ begin
 			TQ        => open,          -- 1-bit output: 3-state output to pad or IODELAY2
 			CLK0      => io_clk,        -- 1-bit input: I/O clock input
 			CLK1      => '0',           -- 1-bit input: Secondary I/O clock input
-			CLKDIV    => DAC_CLK_I,     -- 1-bit input: Logic domain clock input
+			CLKDIV    => DSP_CLK_I,     -- 1-bit input: Logic domain clock input
 			-- D1 - D4: 1-bit (each) input: Parallel data inputs
 			D1        => '1',
 			D2        => '0',
@@ -470,12 +264,12 @@ begin
 				TQ        => open,      -- 1-bit output: 3-state output to pad or IODELAY2
 				CLK0      => io_clk,    -- 1-bit input: I/O clock input
 				CLK1      => '0',       -- 1-bit input: Secondary I/O clock input
-				CLKDIV    => DAC_CLK_I, -- 1-bit input: Logic domain clock input
+				CLKDIV    => DSP_CLK_I, -- 1-bit input: Logic domain clock input
 				-- D1 - D4: 1-bit (each) input: Parallel data inputs
-				D1        => i(pin_count + 8),
-				D2        => i(pin_count),
-				D3        => q(pin_count + 8),
-				D4        => q(pin_count),
+				D1        => q(pin_count + 8),
+				D2        => q(pin_count),
+				D3        => i(pin_count + 8),
+				D4        => i(pin_count),
 				IOCE      => serdesstrobe, -- 1-bit input: Data strobe input
 				OCE       => tx_en,     -- 1-bit input: Clock enable input
 				RST       => '0',       -- 1-bit input: Asynchrnous reset input
@@ -531,7 +325,7 @@ begin
 			TQ        => open,          -- 1-bit output: 3-state output to pad or IODELAY2
 			CLK0      => io_clk,        -- 1-bit input: I/O clock input
 			CLK1      => '0',           -- 1-bit input: Secondary I/O clock input
-			CLKDIV    => DAC_CLK_I,     -- 1-bit input: Logic domain clock input
+			CLKDIV    => DSP_CLK_I,     -- 1-bit input: Logic domain clock input
 			-- D1 - D4: 1-bit (each) input: Parallel data inputs
 			D1        => frame,
 			D2        => frame,

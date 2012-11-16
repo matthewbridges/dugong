@@ -113,7 +113,7 @@ begin
 				if (reading) then
 					user_mem(mem_adr)(SPI_DATA_WIDTH - 1 downto 0) <= read_data;
 				else
-					user_mem(mem_adr)(DATA_WIDTH) <= '0';
+--					user_mem(mem_adr)(DATA_WIDTH) <= '0';
 				end if;
 				mem_ack <= true;
 			else
