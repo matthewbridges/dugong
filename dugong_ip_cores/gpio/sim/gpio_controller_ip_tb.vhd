@@ -102,25 +102,25 @@ BEGIN
 
 		-- insert stimulus here 
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"004" & x"0000000F";
+		WB_I <= "111" & x"004" & x"0000000F"; --Write to GPIO output
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000";
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"004" & x"000000FF";
+		WB_I <= "101" & x"004" & x"000000FF"; --Read back GPIO output
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000";
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"001" & x"0000000F";
+		WB_I <= "101" & x"001" & x"0000000F"; --Read High Address
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000";
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"F04" & x"0000000F";
+		WB_I <= "111" & x"F04" & x"0000000F"; --Write to Address not in Range
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000";
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait;
 	end process;
 
