@@ -84,20 +84,17 @@ begin
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
-			--System Control Inputs		
 			CLK_I => CLK_I,
 			RST_I => RST_I,
-			--Slave to WB
 			WB_I  => WB_I,
 			WB_O  => WB_O,
-			--Wishbone Slave Lines (inverted)
-			DAT_I => dat_i,
-			DAT_O => dat_o,
-			ADR_I => adr_i,
-			STB_I => stb_i,
-			WE_I  => we_i,
+			DAT_I => DAT_I,
+			DAT_O => DAT_O,
+			ADR_I => ADR_I,
+			STB_I => STB_I,
+			WE_I  => WE_I,
 			CYC_I => open,
-			ACK_O => ack_o
+			ACK_O => ACK_O
 		);
 
 	user_logic : gpio_controller

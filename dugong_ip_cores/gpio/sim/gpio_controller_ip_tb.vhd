@@ -33,13 +33,6 @@ USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
 ENTITY gpio_controller_ip_tb IS
-	generic(
-		DATA_WIDTH      : NATURAL               := 16;
-		ADDR_WIDTH      : NATURAL               := 12;
-		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-		CORE_DATA_WIDTH : NATURAL               := 16;
-		CORE_ADDR_WIDTH : NATURAL               := 4
-	);
 END gpio_controller_ip_tb;
 
 ARCHITECTURE behavior OF gpio_controller_ip_tb IS
@@ -48,11 +41,11 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 
 	COMPONENT gpio_controller_ip
 		generic(
-			DATA_WIDTH      : NATURAL               := 16;
+			DATA_WIDTH      : NATURAL               := 32;
 			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 4
+			CORE_ADDR_WIDTH : NATURAL               := 3
 		);
 		port(
 			--System Control Inputs
@@ -67,13 +60,13 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 	END COMPONENT;
 
 	--Inputs
-	signal CLK_I : std_logic                                              := '0';
-	signal RST_I : std_logic                                              := '1';
-	signal WB_I  : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0) := (others => '0');
+	signal CLK_I : std_logic                     := '0';
+	signal RST_I : std_logic                     := '1';
+	signal WB_I  : std_logic_vector(46 downto 0) := (others => '0');
 
 	--Outputs
-	signal WB_O : std_logic_vector(DATA_WIDTH downto 0);
-	signal GPIO : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
+	signal WB_O : std_logic_vector(32 downto 0);
+	signal GPIO : std_logic_vector(15 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
@@ -81,7 +74,8 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : gpio_controller_ip PORT MAP(
+	uut : gpio_controller_ip
+		port map(
 			CLK_I => CLK_I,
 			RST_I => RST_I,
 			WB_I  => WB_I,
@@ -108,25 +102,25 @@ BEGIN
 
 		-- insert stimulus here 
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"008" & x"000F";
-		wait until rising_edge(WB_O(16));
+		WB_I <= "111" & x"004" & x"0000000F";
+		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"0000";
+		WB_I <= "000" & x"000" & x"00000000";
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"008" & x"00FF";
-		wait until rising_edge(WB_O(16));
+		WB_I <= "101" & x"004" & x"000000FF";
+		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"0000";
+		WB_I <= "000" & x"000" & x"00000000";
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"003" & x"000F";
-		wait until rising_edge(WB_O(16));
+		WB_I <= "101" & x"001" & x"0000000F";
+		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"0000";
+		WB_I <= "000" & x"000" & x"00000000";
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"108" & x"000F";
-		wait until rising_edge(WB_O(16));
+		WB_I <= "111" & x"F04" & x"0000000F";
+		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"0000";
+		WB_I <= "000" & x"000" & x"00000000";
 		wait;
 	end process;
 
