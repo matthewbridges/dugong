@@ -46,8 +46,7 @@ ARCHITECTURE behavior OF system_controller_tb IS
 	signal SYS_RST   : std_logic := '1';
 
 	--Outputs
-	signal SYS_CLK_P_o    : std_logic;
-	signal SYS_CLK_N_o    : std_logic;
+	signal SYS_CLK_o      : std_logic;
 	signal SYS_PWR_ON     : std_logic;
 	signal SYS_PLL_Locked : std_logic;
 	signal CLK_123MHZ     : std_logic;
@@ -68,8 +67,7 @@ BEGIN
 		port map(
 			SYS_CLK_P      => SYS_CLK_P,
 			SYS_CLK_N      => SYS_CLK_N,
-			SYS_CLK_P_o    => SYS_CLK_P_o,
-			SYS_CLK_N_o    => SYS_CLK_N_o,
+			SYS_CLK_o      => SYS_CLK_o,
 			SYS_RST        => SYS_RST,
 			SYS_PWR_ON     => SYS_PWR_ON,
 			SYS_PLL_Locked => SYS_PLL_Locked,
@@ -79,7 +77,9 @@ BEGIN
 			CLK_983MHZ     => CLK_983MHZ,
 			CLK_15MHZ      => CLK_15MHZ,
 			CLK_15MHZ_n    => CLK_15MHZ_n,
-			RST_O          => RST_O
+			RST_O          => RST_O,
+			WB_I           => WB_I,
+			WB_O           => WB_O
 		);
 
 	-- Clock process definitions
@@ -98,7 +98,7 @@ BEGIN
 	begin
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
-		
+
 		SYS_RST <= '0';
 
 		wait for SYS_CLK_period * 10;
