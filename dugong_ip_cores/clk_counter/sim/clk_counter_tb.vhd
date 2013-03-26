@@ -38,50 +38,52 @@ END clk_counter_tb;
 ARCHITECTURE behavior OF clk_counter_tb IS
 
 	-- Component Declaration for the Unit Under Test (UUT)
-
-	COMPONENT clk_counter
-		PORT(
-			CLK_I     : IN  std_logic;
-			RST_I     : IN  std_logic;
---			DAT_I     : IN  std_logic_vector(15 downto 0);
-			DAT_O     : OUT std_logic_vector(15 downto 0);
-			ADR_I     : IN  std_logic_vector(3 downto 0);
-			STB_I     : IN  std_logic;
---			WE_I      : IN  std_logic;
-			ACK_O     : OUT std_logic;
-			TEST_CLOCKS : IN  std_logic_vector(3 downto 0)
+	component clk_counter
+		generic(
+			DATA_WIDTH : natural                       := 32;
+			ADDR_WIDTH : natural                       := 2;
+			MASTER_CNT : std_logic_vector(26 downto 0) := "111" & x"52FFFF"
 		);
-	END COMPONENT;
+		port(
+			CLK_I       : in  STD_LOGIC;
+			RST_I       : in  STD_LOGIC;
+			DAT_O       : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I       : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_I       : in  STD_LOGIC;
+			ACK_O       : out STD_LOGIC;
+			TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** ADDR_WIDTH) - 1 downto 0)
+		);
+	end component clk_counter;
 
 	--Inputs
-	signal CLK_I     : std_logic                     := '0';
-	signal RST_I     : std_logic                     := '1';
---	signal DAT_I     : std_logic_vector(15 downto 0) := (others => '0');
-	signal ADR_I     : std_logic_vector(3 downto 0)  := "1001";
-	signal STB_I     : std_logic                     := '1';
---	signal WE_I      : std_logic                     := '0';
-	signal TEST_CLOCKS : std_logic_vector(3 downto 0)  := (others => '0');
+	signal CLK_I       : std_logic                    := '0';
+	signal RST_I       : std_logic                    := '1';
+	signal ADR_I       : std_logic_vector(1 downto 0) := "01";
+	signal STB_I       : std_logic                    := '1';
+	signal TEST_CLOCKS : std_logic_vector(3 downto 0) := (others => '0');
 
 	--Outputs
-	signal DAT_O : std_logic_vector(15 downto 0);
+	signal DAT_O : std_logic_vector(31 downto 0);
 	signal ACK_O : std_logic;
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
-	constant CLK_A_period : time := 5 ns;
+	constant CLK_A_period : time := 1 ns;
 
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : clk_counter PORT MAP(
-			CLK_I     => CLK_I,
-			RST_I     => RST_I,
---			DAT_I     => DAT_I,
-			DAT_O     => DAT_O,
-			ADR_I     => ADR_I,
-			STB_I     => STB_I,
---			WE_I      => WE_I,
-			ACK_O     => ACK_O,
+	uut : clk_counter
+		generic map(
+			MASTER_CNT => "000" & x"000032"
+		)
+		port map(
+			CLK_I       => CLK_I,
+			RST_I       => RST_I,
+			DAT_O       => DAT_O,
+			ADR_I       => ADR_I,
+			STB_I       => STB_I,
+			ACK_O       => ACK_O,
 			TEST_CLOCKS => TEST_CLOCKS
 		);
 
@@ -90,14 +92,14 @@ BEGIN
 	begin
 		CLK_I <= '0';
 		wait for CLK_I_period / 2;
-		CLK_I <= '1';		
+		CLK_I <= '1';
 		wait for CLK_I_period / 2;
 	end process;
-	
+
 	-- Clock process definitions
 	CLK_A_process : process
 	begin
-		TEST_CLOCKS(0) <= '0';		
+		TEST_CLOCKS(0) <= '0';
 		TEST_CLOCKS(1) <= '0';
 		TEST_CLOCKS(2) <= '0';
 		TEST_CLOCKS(3) <= '0';
@@ -114,7 +116,7 @@ BEGIN
 	begin
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
-		
+
 		RST_I <= '0';
 
 		wait for CLK_I_period * 10;

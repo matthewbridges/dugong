@@ -4,8 +4,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity clk_counter is
 	generic(
-		DATA_WIDTH : natural := 32;
-		ADDR_WIDTH : natural := 2
+		DATA_WIDTH : natural                       := 32;
+		ADDR_WIDTH : natural                       := 2;
+		MASTER_CNT : std_logic_vector(26 downto 0) := x"752FFFF" --x"7530000" - '1'  --Subtract 1 to account for signal propogation
 	);
 	port(
 		--System Control Inputs
@@ -55,10 +56,10 @@ begin
 			else
 				if (read_count = '1') then
 					if (count_valid(0) = '1') then --(count_valid = x"F")
-						user_mem(0) <= final_count(0)(23 downto 0) & final_count(0)(31 downto 24);
-						user_mem(1) <= final_count(1)(23 downto 0) & final_count(1)(31 downto 24);
-						user_mem(2) <= final_count(2)(23 downto 0) & final_count(2)(31 downto 24);
-						user_mem(3) <= final_count(3)(23 downto 0) & final_count(3)(31 downto 24);
+						user_mem(0) <= final_count(0); --(23 downto 0) & final_count(0)(31 downto 24);
+						user_mem(1) <= final_count(1); --(23 downto 0) & final_count(1)(31 downto 24);
+						user_mem(2) <= final_count(2); --(23 downto 0) & final_count(2)(31 downto 24);
+						user_mem(3) <= final_count(3); --(23 downto 0) & final_count(3)(31 downto 24);
 						rst_count   <= '1';
 						read_count  <= '0';
 					end if;
@@ -66,7 +67,7 @@ begin
 					if (rst_count = '1') then
 						master_count <= (others => '0');
 						rst_count    <= '0';
-					elsif (master_count < x"752FFFF") then --x"7530000" - '1'  --Subtract 1 to account for signal propogation
+					elsif (master_count < (unsigned(MASTER_CNT) - 1)) then --x"7530000" - '1'  --Subtract 1 to account for signal propogation
 						master_count <= master_count + 1;
 					else
 						read_count <= '1';

@@ -4,7 +4,8 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
-use work.dcomponents.all;
+library RHINO_DUGONG;
+use RHINO_DUGONG.dcomponents.all;
 
 ENTITY spi_master_ip_tb IS
 END spi_master_ip_tb;
@@ -12,7 +13,7 @@ END spi_master_ip_tb;
 ARCHITECTURE behavior OF spi_master_ip_tb IS
 
 	-- Component Declaration
-	COMPONENT spi_master_ip
+	component spi_master_ip
 		generic(
 			DATA_WIDTH      : NATURAL               := 32;
 			ADDR_WIDTH      : NATURAL               := 12;
@@ -24,31 +25,28 @@ ARCHITECTURE behavior OF spi_master_ip_tb IS
 			REVERSE_BITS    : boolean               := false
 		);
 		port(
-			--System Control Inputs
 			CLK_I     : in  STD_LOGIC;
 			RST_I     : in  STD_LOGIC;
-			--Slave to WB
 			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			--Serial Peripheral Interface
 			SPI_CLK_I : in  STD_LOGIC;
 			SPI_CE    : in  STD_LOGIC;
 			SPI_MOSI  : out STD_LOGIC;
 			SPI_MISO  : in  STD_LOGIC;
 			SPI_N_SS  : out STD_LOGIC
 		);
-	END COMPONENT;
+	end component spi_master_ip;
 
 	--Inputs
 	signal CLK_I     : std_logic                     := '0';
 	signal RST_I     : std_logic                     := '1';
-	signal WB_I      : STD_LOGIC_VECTOR(30 downto 0) := (others => '0');
+	signal WB_I      : STD_LOGIC_VECTOR(46 downto 0) := (others => '0');
 	signal SPI_CLK_I : std_logic                     := '0';
 	signal SPI_CE    : std_logic                     := '0';
 	signal SPI_MISO  : std_logic                     := '1';
 
 	--Outputs
-	signal WB_O     : STD_LOGIC_VECTOR(16 downto 0);
+	signal WB_O     : STD_LOGIC_VECTOR(32 downto 0);
 	signal SPI_MOSI : std_logic;
 	signal SPI_N_SS : std_logic;
 
@@ -60,49 +58,46 @@ BEGIN
 
 	-- Component Instantiation
 	uut : spi_master_ip
---		GENERIC MAP(
---			DATA_WIDTH      => 16,
---			ADDR_WIDTH      => 12,
---			BASE_ADDR       => x"C00",
---			CORE_ADDR_WIDTH => 6,
---			DEFAULT_DATA    => (
---				0 => x"000010070",      --0xXXX & XXPV & 0xAADD
---				1 => x"000010101",
---				2 => x"000000200",
---				3 => x"000010310",
---				4 => x"0000104FF",
---				5 => x"000000500",
---				6 => x"000000600",
---				7 => x"000000700",
---				8 => x"000010800",
---				9 => x"000010980",
---				10 => x"000010A00",
---				11 => x"000010B80",
---				12 => x"000010C00",
---				13 => x"000010D80",
---				14 => x"000010E00",
---				15 => x"000010F80",
---				16 => x"000011000",
---				17 => x"000011124",
---				18 => x"000011202",
---				19 => x"000001300",
---				20 => x"000001400",
---				21 => x"000001500",
---				22 => x"000001600",
---				23 => x"000011704",
---				24 => x"000011883",
---				25 => x"000001900",
---				26 => x"000001A00",
---				27 => x"000001B00",
---				28 => x"000001C00",
---				29 => x"000001D00",
---				30 => x"000011E24",
---				31 => x"000011F12",
---				128 => x"000000080",
---				others => x"000000000"
---			)
---		)
-		PORT MAP(
+		generic map(
+			CORE_ADDR_WIDTH => 6,
+			DEFAULT_DATA    => (
+				0 => x"000010070",      --0xXXX & XXPV & 0xAADD
+				1 => x"000010121",
+				2 => x"000000200",
+				3 => x"000010310",
+				4 => x"0000104FF",
+				5 => x"000000500",
+				6 => x"000000600",
+				7 => x"000000700",
+				8 => x"000010800",
+				9 => x"000010980",
+				10 => x"000010A00",
+				11 => x"000010B80",
+				12 => x"000010C00",
+				13 => x"000010D80",
+				14 => x"000010E00",
+				15 => x"000010F80",
+				16 => x"000011000",
+				17 => x"000011124",
+				18 => x"000011202",
+				19 => x"000001300",
+				20 => x"000001400",
+				21 => x"000001500",
+				22 => x"000001600",
+				23 => x"000011704",
+				24 => x"000011883",
+				25 => x"000001900",
+				26 => x"000001A00",
+				27 => x"000001B00",
+				28 => x"000001C00",
+				29 => x"000001D00",
+				30 => x"000011E24",
+				31 => x"000011F12",
+				128 => x"000000080",
+				others => x"000000000"
+			)
+		)
+		port map(
 			CLK_I     => CLK_I,
 			RST_I     => RST_I,
 			WB_I      => WB_I,

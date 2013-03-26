@@ -28,7 +28,8 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
-use work.dcomponents.all;
+library RHINO_DUGONG;
+use RHINO_DUGONG.dcomponents.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values

@@ -39,7 +39,7 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 
 	-- Component Declaration for the Unit Under Test (UUT)
 
-	COMPONENT gpio_controller_ip
+	component gpio_controller_ip
 		generic(
 			DATA_WIDTH      : NATURAL               := 32;
 			ADDR_WIDTH      : NATURAL               := 12;
@@ -48,16 +48,13 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 			CORE_ADDR_WIDTH : NATURAL               := 3
 		);
 		port(
-			--System Control Inputs
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
-			--Slave to WB
 			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			--GPIO Interface
 			GPIO  : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
-	END COMPONENT;
+	end component gpio_controller_ip;
 
 	--Inputs
 	signal CLK_I : std_logic                     := '0';
