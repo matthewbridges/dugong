@@ -20,7 +20,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use work.sine_lut_pkg.all;
 
 entity dds_core is
 	generic(

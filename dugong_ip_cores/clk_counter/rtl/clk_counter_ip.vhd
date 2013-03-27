@@ -54,8 +54,9 @@ architecture Behavioral of clk_counter_ip is
 
 	component clk_counter is
 		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 3
+			DATA_WIDTH : natural                       := 32;
+			ADDR_WIDTH : natural                       := 2;
+			MASTER_CNT : std_logic_vector(26 downto 0) := "111" & x"530000"
 		);
 		port(
 			--System Control Inputs
@@ -66,11 +67,11 @@ architecture Behavioral of clk_counter_ip is
 			DAT_O       : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			ADR_I       : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			STB_I       : in  STD_LOGIC;
-			--WE_I        : in  STD_LOGIC;
-			--CYC_I       : in   STD_LOGIC;
+			--WE_I  : in  STD_LOGIC;
+			--CYC_I : in   STD_LOGIC;
 			ACK_O       : out STD_LOGIC;
 			--Test Clocks
-			TEST_CLOCKS : in  STD_LOGIC_VECTOR(3 downto 0)
+			TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** ADDR_WIDTH) - 1 downto 0)
 		);
 	end component;
 
