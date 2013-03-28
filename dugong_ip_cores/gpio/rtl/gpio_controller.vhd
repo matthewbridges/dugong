@@ -45,9 +45,10 @@ entity gpio_controller is
 end gpio_controller;
 
 architecture Behavioral of gpio_controller is
+	--Core user memory architecture
 	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 5) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal user_mem : ram_type;
-	signal mem_adr  : integer;
+	signal mem_adr  : integer := 0;
 
 begin
 	process(CLK_I)
@@ -70,8 +71,8 @@ begin
 			ACK_O <= STB_I;
 		end if;
 	end process;
-
-	mem_adr <= to_integer(unsigned(ADR_I) - 4);
+	--Core Memory Address --> equals IP Address(core_addr_width-1:0) - 4
+	mem_adr <= to_integer(unsigned(ADR_I));
 
 	GPIO <= user_mem(0);
 

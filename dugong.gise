@@ -22,81 +22,9 @@
   <sourceproject xmlns="http://www.xilinx.com/XMLSchema" xil_pn:fileType="FILE_XISE" xil_pn:name="dugong.xise"/>
 
   <files xmlns="http://www.xilinx.com/XMLSchema">
-    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="clk_counter_tb_stx_beh.prj"/>
-    <file xil_pn:branch="BehavioralSim" xil_pn:fileType="FILE_ISIM_EXE" xil_pn:name="gpio_controller_ip_tb_isim_beh.exe"/>
-    <file xil_pn:fileType="FILE_ISIM_MISC" xil_pn:name="gpio_controller_ip_tb_isim_beh.wdb"/>
-    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="gpio_controller_ip_tb_stx_beh.prj"/>
-    <file xil_pn:branch="BehavioralSim" xil_pn:fileType="FILE_CMD" xil_pn:name="isim.cmd"/>
-    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="spi_master_ip_tb_stx_beh.prj"/>
-    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="spi_master_tb_stx_beh.prj"/>
-    <file xil_pn:branch="BehavioralSim" xil_pn:fileType="FILE_INI" xil_pn:name="xilinxsim.ini"/>
+    <file xil_pn:fileType="FILE_NCD" xil_pn:name="rhino_top_guide.ncd" xil_pn:origination="imported"/>
   </files>
 
-  <transforms xmlns="http://www.xilinx.com/XMLSchema">
-    <transform xil_pn:end_ts="1364307731" xil_pn:name="TRAN_copyInitialToAbstractSimulation" xil_pn:start_ts="1364307731">
-      <status xil_pn:value="SuccessfullyRun"/>
-    </transform>
-    <transform xil_pn:end_ts="1364311761" xil_pn:in_ck="-2139337590025799489" xil_pn:name="TRAN_copyAbstractToPostAbstractSimulation" xil_pn:start_ts="1364311761">
-      <status xil_pn:value="SuccessfullyRun"/>
-      <status xil_pn:value="ReadyToRun"/>
-      <outfile xil_pn:name="RHINO_DUGONG/dcomponents.vhd"/>
-      <outfile xil_pn:name="RHINO_DUGONG/system_controller.vhd"/>
-      <outfile xil_pn:name="RHINO_DUGONG/wb_m.vhd"/>
-      <outfile xil_pn:name="RHINO_DUGONG/wb_s.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/clk_counter/rtl/clk_counter.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/clk_counter/rtl/clk_counter_ip.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/clk_counter/sim/clk_counter_tb.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/gpio/rtl/gpio_controller.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/gpio/rtl/gpio_controller_ip.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/gpio/sim/gpio_controller_ip_tb.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/spi_master/rtl/spi_master.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/spi_master/rtl/spi_master_ip.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/spi_master/sim/spi_master_ip_tb.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/spi_master/sim/spi_master_tb.vhd"/>
-    </transform>
-    <transform xil_pn:end_ts="1364311769" xil_pn:name="TRAN_xawsToSimhdl" xil_pn:prop_ck="-6035065084965309020" xil_pn:start_ts="1364311769">
-      <status xil_pn:value="SuccessfullyRun"/>
-      <status xil_pn:value="ReadyToRun"/>
-    </transform>
-    <transform xil_pn:end_ts="1364311769" xil_pn:name="TRAN_schematicsToHdlSim" xil_pn:prop_ck="7156234724495839778" xil_pn:start_ts="1364311769">
-      <status xil_pn:value="SuccessfullyRun"/>
-      <status xil_pn:value="ReadyToRun"/>
-    </transform>
-    <transform xil_pn:end_ts="1364307734" xil_pn:name="TRAN_regenerateCoresSim" xil_pn:prop_ck="-2843908594219659169" xil_pn:start_ts="1364307734">
-      <status xil_pn:value="SuccessfullyRun"/>
-      <status xil_pn:value="ReadyToRun"/>
-    </transform>
-    <transform xil_pn:end_ts="1364311769" xil_pn:in_ck="-2139337590025799489" xil_pn:name="TRAN_copyPostAbstractToPreSimulation" xil_pn:start_ts="1364311769">
-      <status xil_pn:value="SuccessfullyRun"/>
-      <status xil_pn:value="ReadyToRun"/>
-      <outfile xil_pn:name="RHINO_DUGONG/dcomponents.vhd"/>
-      <outfile xil_pn:name="RHINO_DUGONG/system_controller.vhd"/>
-      <outfile xil_pn:name="RHINO_DUGONG/wb_m.vhd"/>
-      <outfile xil_pn:name="RHINO_DUGONG/wb_s.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/clk_counter/rtl/clk_counter.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/clk_counter/rtl/clk_counter_ip.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/clk_counter/sim/clk_counter_tb.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/gpio/rtl/gpio_controller.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/gpio/rtl/gpio_controller_ip.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/gpio/sim/gpio_controller_ip_tb.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/spi_master/rtl/spi_master.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/spi_master/rtl/spi_master_ip.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/spi_master/sim/spi_master_ip_tb.vhd"/>
-      <outfile xil_pn:name="dugong_ip_cores/spi_master/sim/spi_master_tb.vhd"/>
-    </transform>
-    <transform xil_pn:end_ts="1364311772" xil_pn:in_ck="-2139337590025799489" xil_pn:name="TRAN_ISimulateBehavioralModelRunFuse" xil_pn:prop_ck="-2327382381434364376" xil_pn:start_ts="1364311769">
-      <status xil_pn:value="FailedRun"/>
-      <status xil_pn:value="ReadyToRun"/>
-    </transform>
-    <transform xil_pn:end_ts="1364309778" xil_pn:in_ck="7769856423818979438" xil_pn:name="TRAN_ISimulateBehavioralModel" xil_pn:prop_ck="3209866495710971703" xil_pn:start_ts="1364309778">
-      <status xil_pn:value="AbortedRun"/>
-      <status xil_pn:value="ReadyToRun"/>
-      <status xil_pn:value="OutOfDateForProperties"/>
-      <status xil_pn:value="OutOfDateForPredecessor"/>
-      <status xil_pn:value="OutOfDateForced"/>
-      <outfile xil_pn:name="gpio_controller_ip_tb_isim_beh.wdb"/>
-      <outfile xil_pn:name="isim.cmd"/>
-    </transform>
-  </transforms>
+  <transforms xmlns="http://www.xilinx.com/XMLSchema"/>
 
 </generated_project>

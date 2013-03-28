@@ -26,8 +26,8 @@ use RHINO_DUGONG.dcomponents.all;
 
 entity spi_m is
 	generic(
-		DATA_WIDTH     : natural := 16;
-		ADDR_WIDTH     : natural := 2
+		DATA_WIDTH : natural := 16;
+		ADDR_WIDTH : natural := 3
 	);
 	port(
 		--System Control Inputs
@@ -41,7 +41,7 @@ entity spi_m is
 		WE_I      : in  STD_LOGIC;
 		--		CYC_I : in   STD_LOGIC;
 		ACK_O     : out STD_LOGIC;
-		--Serial Peripheral Interface
+		--SPI Interface
 		SPI_CLK_I : in  STD_LOGIC;
 		SPI_CE    : in  STD_LOGIC;
 		SPI_MOSI  : out STD_LOGIC;
@@ -51,20 +51,23 @@ entity spi_m is
 end spi_m;
 
 architecture Behavioral of spi_m is
-	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
+	--Core user memory architecture
+	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 5) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal user_mem : ram_type;
-	signal mem_adr  : integer;
+	signal mem_adr  : integer := 0;
+	--Dual-port signaling
+	signal mem_stb  : boolean;
+	signal mem_ack  : boolean;
+	--Dual-port lock
+	signal lock     : std_logic;
 
-	signal mem_stb : boolean;
-	signal mem_ack : boolean;
-
+	--SPI Specific Signals	
 	signal idle     : boolean;
 	signal shifting : boolean;
 
-	signal write_pending : std_logic;
-	signal write_data    : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal read_data     : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal transfer_bit  : integer;
+	signal write_data   : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal read_data    : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal transfer_bit : integer;
 
 	signal count : unsigned(DATA_WIDTH - 1 downto 0);
 
@@ -76,32 +79,53 @@ begin
 		if (rising_edge(CLK_I)) then
 			--Check for reset
 			if (RST_I = '1') then
-				DAT_O         <= (others => '0');
-				write_pending <= '0';
-			--Check for strobe
-			elsif (STB_I = '1') then
-				DAT_O <= user_mem(mem_adr);
-				--Check for write
-				if (WE_I = '1') then
-					case mem_adr is
-						when 0 =>
-							user_mem(mem_adr) <= DAT_I;
-							write_pending     <= '1';
-						when others => null;
-					end case;
-				end if;
-			elsif (mem_stb) then
-				user_mem(1)   <= read_data;
-				user_mem(2)   <= write_data;
-				user_mem(3)   <= std_logic_vector(count);
-				mem_ack       <= true;
-				write_pending <= '0';
+				ACK_O       <= '0';
+				user_mem(3) <= std_logic_vector(count);
+				mem_ack     <= false;
+				lock        <= '0';
+
 			else
-				mem_ack <= false;
+				DAT_O   <= user_mem(mem_adr);
+				mem_ack <= mem_stb;
+				--Check for internal strobe	
+				if (mem_stb) then
+					user_mem(1) <= read_data;
+					user_mem(2) <= write_data;
+					user_mem(3) <= std_logic_vector(count);
+					lock        <= '0';
+				else
+					--Check for external strobe
+					if (STB_I = '1') then
+						case mem_adr is
+							--Lockable memory
+							when 0 =>
+								if (lock = '0') then
+									--Check for write
+									if (WE_I = '1') then
+										user_mem(mem_adr) <= DAT_I;
+										lock              <= '1';
+									end if;
+									ACK_O <= '1';
+								end if;
+							--Read-only memory
+							when 1 | 2 | 3 =>
+								ACK_O <= '1';
+							--Not Lockable, read/write memory
+							when others =>
+								--Check for write
+								if (WE_I = '1') then
+									user_mem(mem_adr) <= DAT_I;
+								end if;
+								ACK_O <= '1';
+						end case;
+					else
+						ACK_O <= '0';
+					end if;
+				end if;
 			end if;
-			ACK_O <= STB_I and not write_pending;
 		end if;
 	end process;
+	--Core Memory Address --> equals IP Address(core_addr_width-1:0) - 4
 	mem_adr <= to_integer(unsigned(ADR_I));
 
 	--SPI Instruction generation process
@@ -119,7 +143,7 @@ begin
 			-- IDLE STATE
 			elsif (idle) then
 				transfer_bit <= DATA_WIDTH - 1;
-				if (SPI_CE = '1' and write_pending = '1') then
+				if (SPI_CE = '1' and lock = '1') then
 					write_data <= user_mem(0);
 					count      <= count + 1;
 					idle       <= false;
@@ -146,37 +170,6 @@ begin
 			end if;
 		end if;
 	end process;
-
-	--	--SPI Shifter Process
-	--	process(SPI_CLK_I)
-	--	begin
-	--		--Perform Rising Edge operations
-	--		if (rising_edge(SPI_CLK_I)) then
-	--			if (RST_I = '1') then
-	--				shifting_done <= false;
-	--				read          <= false;
-	--				transfer_bit  <= DATA_WIDTH - 1;
-	--				SPI_MOSI      <= '0';
-	--				SPI_N_SS      <= '1';
-	--			elsif (idle) then
-	--				shifting_done <= false;
-	--				transfer_bit  <= DATA_WIDTH - 1;
-	--			elsif (shifting) then
-	--				if (transfer_bit < 0) then
-	--					shifting_done <= true;
-	--					read          <= false;
-	--					SPI_MOSI      <= '0';
-	--					SPI_N_SS      <= '1';
-	--				else
-	--					read     <= true;
-	--					SPI_MOSI <= write_data(transfer_bit);
-	--					SPI_N_SS <= '0';
-	--				end if;
-	--				--Decrement Transfer bit;
-	--				transfer_bit <= transfer_bit - 1;
-	--			end if;
-	--		end if;
-	--	end process;
 
 	--SPI Shifter Process
 	process(SPI_CLK_I)

@@ -90,26 +90,49 @@ BEGIN
 	end process;
 
 	-- Stimulus process
-	stim_proc : process
+	wb_stim_proc : process
 	begin
-		-- hold reset state for 100 ns.
-		wait for 100 ns;
+		-- hold reset state for 500 ns.
+		wait for 500 ns;
+
 		RST_I <= '0';
+
 		wait for CLK_I_period * 10;
 
-		-- insert stimulus here 
+		-- Standard IP Core Tests
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"000" & x"00000000"; --Read Base Address
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"001" & x"00000000"; --Read High Address
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+
+
 		wait until rising_edge(CLK_I);
 		WB_I <= "111" & x"004" & x"0000000F"; --Write to GPIO output
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"004" & x"000000FF"; --Read back GPIO output
+		WB_I <= "101" & x"004" & x"00000000"; --Read back GPIO output
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"001" & x"0000000F"; --Read High Address
+		WB_I <= "111" & x"004" & x"000000FF"; --Write to GPIO output
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+
+		---------------------------------------
+		--- Displays Bug | x0007 cropping up at strange times
+		---------------------------------------
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"000" & x"0000000F"; --Read High Address
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"00000000"; --NULL

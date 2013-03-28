@@ -58,8 +58,8 @@ architecture Behavioral of spi_m_ip is
 
 	component spi_m is
 		generic(
-			DATA_WIDTH     : natural := 16;
-			ADDR_WIDTH     : natural := 2
+			DATA_WIDTH : natural := 16;
+			ADDR_WIDTH : natural := 3
 		);
 		port(
 			--System Control Inputs
@@ -111,20 +111,21 @@ begin
 	user_logic : spi_m
 		generic map(
 			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH - 1
+			ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
 			--System Control Inputs
-			CLK_I => CLK_I,
-			RST_I => RST_I,
+			CLK_I     => CLK_I,
+			RST_I     => RST_I,
 			--Wishbone Slave Lines
-			DAT_I => dat_i,
-			DAT_O => dat_o,
-			ADR_I => adr_i(CORE_ADDR_WIDTH - 2 downto 0),
-			STB_I => stb_i,
-			WE_I  => we_i,
+			DAT_I     => dat_i,
+			DAT_O     => dat_o,
+			ADR_I     => adr_i,
+			STB_I     => stb_i,
+			WE_I      => we_i,
 			--	CYC_I =>
-			ACK_O => ack_o,
+			ACK_O     => ack_o,
+			--SPI Interface
 			SPI_CLK_I => SPI_CLK_I,
 			SPI_CE    => SPI_CE,
 			SPI_MOSI  => SPI_MOSI,

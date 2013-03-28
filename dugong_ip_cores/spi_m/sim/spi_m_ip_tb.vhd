@@ -40,7 +40,7 @@ ARCHITECTURE behavior OF spi_m_ip_tb IS
 	signal WB_I      : STD_LOGIC_VECTOR(46 downto 0) := (others => '0');
 	signal SPI_CLK_I : std_logic                     := '0';
 	signal SPI_CE    : std_logic                     := '0';
-	signal SPI_MISO  : std_logic                     := '1';
+	signal SPI_MISO  : std_logic                     := '0';
 
 	--Outputs
 	signal WB_O     : STD_LOGIC_VECTOR(32 downto 0);
@@ -86,36 +86,74 @@ BEGIN
 	end process;
 
 	-- Stimulus process
-	stim_proc : process
+	wb_stim_proc : process
 	begin
-		-- hold reset state for 100 ns.
-		wait for 100 ns;
+		-- hold reset state for 500 ns.
+		wait for 500 ns;
+
 		RST_I <= '0';
+
 		wait for CLK_I_period * 10;
+
+		-- Standard IP Core Tests
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"000" & x"00000000"; --Read Base Address
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"001" & x"00000000"; --Read High Address
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+
+		--SPI Specific Tests
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"007" & x"00000000"; --Read from SPI count--ADDR x7
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "111" & x"004" & x"0000000F"; --Write to x000F to SPI output--ADDR x4
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"005" & x"00000000"; --Read from SPI input--ADDR x5
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "111" & x"004" & x"000000FF"; --Write to x00FF to SPI output--ADDR x4
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"005" & x"00000000"; --Read from SPI input--ADDR x5
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"006" & x"00000000"; --Read from SPI input--ADDR x6
+		wait until rising_edge(WB_O(32));
+
+		wait;
+	end process;
+
+	-- Stimulus process
+	spi_stim_proc : process
+	begin
+		-- hold reset state for 500 ns.
+		wait for 800 ns;
 
 		SPI_CE <= '1';
 
-		-- insert stimulus here 
-		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"004" & x"0000000F"; --Write to SPI output
-		wait until rising_edge(WB_O(32));
-		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000"; --NULL
-		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"004" & x"000000FF"; --Write to SPI output
-		wait until rising_edge(WB_O(32));
-		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000"; --NULL
-		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"004" & x"00000FFF"; --Write to SPI output
-		wait until rising_edge(WB_O(32));
-		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000"; --NULL
-		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"005" & x"0000000F"; --Read last SPI input
-		wait until rising_edge(WB_O(32));
-		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until falling_edge(SPI_N_SS);
+		wait for SPI_CLK_I_period * 8;
+		SPI_MISO <= '1';
+		wait for SPI_CLK_I_period * 8;
+		SPI_MISO <= '0';
+
 		wait;
 	end process;
 

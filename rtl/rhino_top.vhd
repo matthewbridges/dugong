@@ -56,37 +56,37 @@ entity rhino_top is
 
 		--FMC150 CTRL interface
 		FMC150_CLK     : in  STD_LOGIC;
-		SPI_SCLK_O     : out STD_LOGIC;
-		SPI_MOSI_O     : out STD_LOGIC;
-		ADC_MISO_I     : in  STD_LOGIC;
-		ADC_N_SS_O     : out STD_LOGIC;
-		CDC_MISO_I     : in  STD_LOGIC;
-		CDC_N_SS_O     : out STD_LOGIC;
-		DAC_MISO_I     : in  STD_LOGIC;
-		DAC_N_SS_O     : out STD_LOGIC;
-		ADC_RST        : out STD_LOGIC;
-		CDC_REF_EN     : out STD_LOGIC;
-		CDC_N_RST      : out STD_LOGIC;
-		CDC_N_PD       : out STD_LOGIC;
+		--		SPI_SCLK_O     : out STD_LOGIC;
+		--		SPI_MOSI_O     : out STD_LOGIC;
+		--		ADC_MISO_I     : in  STD_LOGIC;
+		--		ADC_N_SS_O     : out STD_LOGIC;
+		--		CDC_MISO_I     : in  STD_LOGIC;
+		--		CDC_N_SS_O     : out STD_LOGIC;
+		--		DAC_MISO_I     : in  STD_LOGIC;
+		--		DAC_N_SS_O     : out STD_LOGIC;
+		--		ADC_RST        : out STD_LOGIC;
+		--		CDC_REF_EN     : out STD_LOGIC;
+		--		CDC_N_RST      : out STD_LOGIC;
+		--		CDC_N_PD       : out STD_LOGIC;
 		CDC_PLL_STATUS : in  STD_LOGIC;
 
-		-- FMC150 ADC interface
-		ADC_DCLK_P     : in  STD_LOGIC;
-		ADC_DCLK_N     : in  STD_LOGIC;
-		ADC_DATA_A_P   : in  STD_LOGIC_VECTOR(6 downto 0);
-		ADC_DATA_A_N   : in  STD_LOGIC_VECTOR(6 downto 0);
-		ADC_DATA_B_P   : in  STD_LOGIC_VECTOR(6 downto 0);
-		ADC_DATA_B_N   : in  STD_LOGIC_VECTOR(6 downto 0);
-
-		-- FMC150 DAC interface		
-		DAC_DCLK_P     : out STD_LOGIC;
-		DAC_DCLK_N     : out STD_LOGIC;
-		DAC_DATA_P     : out STD_LOGIC_VECTOR(7 downto 0);
-		DAC_DATA_N     : out STD_LOGIC_VECTOR(7 downto 0);
-		FRAME_P        : out STD_LOGIC;
-		FRAME_N        : out STD_LOGIC;
-		TXENABLE       : out STD_LOGIC;
-
+		--		-- FMC150 ADC interface
+		--		ADC_DCLK_P     : in  STD_LOGIC;
+		--		ADC_DCLK_N     : in  STD_LOGIC;
+		--		ADC_DATA_A_P   : in  STD_LOGIC_VECTOR(6 downto 0);
+		--		ADC_DATA_A_N   : in  STD_LOGIC_VECTOR(6 downto 0);
+		--		ADC_DATA_B_P   : in  STD_LOGIC_VECTOR(6 downto 0);
+		--		ADC_DATA_B_N   : in  STD_LOGIC_VECTOR(6 downto 0);
+		--
+		--		-- FMC150 DAC interface		
+		--		DAC_DCLK_P     : out STD_LOGIC;
+		--		DAC_DCLK_N     : out STD_LOGIC;
+		--		DAC_DATA_P     : out STD_LOGIC_VECTOR(7 downto 0);
+		--		DAC_DATA_N     : out STD_LOGIC_VECTOR(7 downto 0);
+		--		FRAME_P        : out STD_LOGIC;
+		--		FRAME_N        : out STD_LOGIC;
+		--		TXENABLE       : out STD_LOGIC;
+		--
 		-- Debug
 		DEBUG          : out STD_LOGIC_VECTOR(31 downto 0)
 	);
@@ -103,24 +103,8 @@ architecture Behavioral of rhino_top is
 
 	signal test_clocks : std_logic_vector(3 downto 0);
 
-	signal ch_a : std_logic_vector(15 downto 0);
-	signal ch_b : std_logic_vector(15 downto 0);
-
-	component dugong
-		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 12
-		);
-		port(
-			--System Control Inputs
-			CLK_I   : in  STD_LOGIC;
-			CLK_I_n : in  STD_LOGIC;
-			RST_I   : in  STD_LOGIC;
-			--Master to WB
-			WB_I    : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			WB_O    : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0)
-		);
-	end component;
+	--	signal ch_a : std_logic_vector(15 downto 0);
+	--	signal ch_b : std_logic_vector(15 downto 0);
 
 	COMPONENT clk_counter_ip
 		generic(
@@ -162,108 +146,108 @@ architecture Behavioral of rhino_top is
 		);
 	end component;
 
-	COMPONENT dds_core_ip
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3
-		);
-		port(
-			--System Control Inputs
-			CLK_I     : in  STD_LOGIC;
-			RST_I     : in  STD_LOGIC;
-			--Slave to WB
-			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			--Signal Channel Outputs
-			DSP_CLK_I : in  STD_LOGIC;
-			CH_A_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			CH_B_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
-		);
-	END COMPONENT;
-
-	COMPONENT dac3283_serializer
-		PORT(
-			--System Control Inputs
-			CLK_I      : in  STD_LOGIC;
-			RST_I      : in  STD_LOGIC;
-			--Signal Channel Inputs
-			DSP_CLK_I  : in  STD_LOGIC;
-			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
-			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
-			-- DAC interface
-			DAC_DCLK_P : out STD_LOGIC;
-			DAC_DCLK_N : out STD_LOGIC;
-			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
-			DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
-			FRAME_P    : out STD_LOGIC;
-			FRAME_N    : out STD_LOGIC;
-			TXENABLE   : out STD_LOGIC;
-			-- Debug
-			DEBUG      : out STD_LOGIC_VECTOR(15 downto 0)
-		);
-	END COMPONENT;
-
-	COMPONENT ads62p49_parellelizer
-		GENERIC(
-			DATA_WIDTH : natural := 16;
-			ADDR_WIDTH : natural := 5
-		);
-		PORT(
-			--System Control Inputs
-			CLK_I        : in  STD_LOGIC;
-			RST_I        : in  STD_LOGIC;
-			--Signal Channel Inputs
-			DSP_CLK_I    : in  STD_LOGIC;
-			CH_A_O       : out STD_LOGIC_VECTOR(15 downto 0);
-			CH_B_O       : out STD_LOGIC_VECTOR(15 downto 0);
-			-- FMC150 ADC interface
-			ADC_DCLK_P   : in  STD_LOGIC;
-			ADC_DCLK_N   : in  STD_LOGIC;
-			ADC_DATA_A_P : in  STD_LOGIC_VECTOR(6 downto 0);
-			ADC_DATA_A_N : in  STD_LOGIC_VECTOR(6 downto 0);
-			ADC_DATA_B_P : in  STD_LOGIC_VECTOR(6 downto 0);
-			ADC_DATA_B_N : in  STD_LOGIC_VECTOR(6 downto 0);
-			-- Debug
-			DEBUG        : out STD_LOGIC_VECTOR(15 downto 0)
-		);
-	END COMPONENT;
-
-	component fmc150_controller_ip
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 8;
-			CORE_ADDR_WIDTH : NATURAL               := 9
-		);
-		port(
-			--System Control Inputs
-			CLK_I          : in  STD_LOGIC;
-			RST_I          : in  STD_LOGIC;
-			--Slave to WB
-			WB_I           : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O           : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			--Serial Peripheral Interface
-			SPI_SCLK_O     : out STD_LOGIC;
-			SPI_MOSI_O     : out STD_LOGIC;
-			ADC_MISO_I     : in  STD_LOGIC;
-			ADC_N_SS_O     : out STD_LOGIC;
-			CDC_MISO_I     : in  STD_LOGIC;
-			CDC_N_SS_O     : out STD_LOGIC;
-			DAC_MISO_I     : in  STD_LOGIC;
-			DAC_N_SS_O     : out STD_LOGIC;
-			ADC_RST        : out STD_LOGIC;
-			CDC_REF_EN     : out STD_LOGIC;
-			CDC_N_RST      : out STD_LOGIC;
-			CDC_N_PD       : out STD_LOGIC;
-			CDC_PLL_STATUS : in  STD_LOGIC;
-			-- Debug
-			DEBUG          : out STD_LOGIC_VECTOR(15 downto 0)
-		);
-	end component;
+--	COMPONENT dds_core_ip
+--		generic(
+--			DATA_WIDTH      : NATURAL               := 32;
+--			ADDR_WIDTH      : NATURAL               := 12;
+--			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+--			CORE_DATA_WIDTH : NATURAL               := 16;
+--			CORE_ADDR_WIDTH : NATURAL               := 3
+--		);
+--		port(
+--			--System Control Inputs
+--			CLK_I     : in  STD_LOGIC;
+--			RST_I     : in  STD_LOGIC;
+--			--Slave to WB
+--			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+--			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+--			--Signal Channel Outputs
+--			DSP_CLK_I : in  STD_LOGIC;
+--			CH_A_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+--			CH_B_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+--		);
+--	END COMPONENT;
+--
+--	component fmc150_controller_ip
+--		generic(
+--			DATA_WIDTH      : NATURAL               := 32;
+--			ADDR_WIDTH      : NATURAL               := 12;
+--			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+--			CORE_DATA_WIDTH : NATURAL               := 8;
+--			CORE_ADDR_WIDTH : NATURAL               := 9
+--		);
+--		port(
+--			--System Control Inputs
+--			CLK_I          : in  STD_LOGIC;
+--			RST_I          : in  STD_LOGIC;
+--			--Slave to WB
+--			WB_I           : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+--			WB_O           : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+--			--Serial Peripheral Interface
+--			SPI_SCLK_O     : out STD_LOGIC;
+--			SPI_MOSI_O     : out STD_LOGIC;
+--			ADC_MISO_I     : in  STD_LOGIC;
+--			ADC_N_SS_O     : out STD_LOGIC;
+--			CDC_MISO_I     : in  STD_LOGIC;
+--			CDC_N_SS_O     : out STD_LOGIC;
+--			DAC_MISO_I     : in  STD_LOGIC;
+--			DAC_N_SS_O     : out STD_LOGIC;
+--			ADC_RST        : out STD_LOGIC;
+--			CDC_REF_EN     : out STD_LOGIC;
+--			CDC_N_RST      : out STD_LOGIC;
+--			CDC_N_PD       : out STD_LOGIC;
+--			CDC_PLL_STATUS : in  STD_LOGIC;
+--			-- Debug
+--			DEBUG          : out STD_LOGIC_VECTOR(15 downto 0)
+--		);
+--	end component;
+--
+--	COMPONENT dac3283_serializer
+--		PORT(
+--			--System Control Inputs
+--			CLK_I      : in  STD_LOGIC;
+--			RST_I      : in  STD_LOGIC;
+--			--Signal Channel Inputs
+--			DSP_CLK_I  : in  STD_LOGIC;
+--			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+--			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+--			-- DAC interface
+--			DAC_DCLK_P : out STD_LOGIC;
+--			DAC_DCLK_N : out STD_LOGIC;
+--			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
+--			DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
+--			FRAME_P    : out STD_LOGIC;
+--			FRAME_N    : out STD_LOGIC;
+--			TXENABLE   : out STD_LOGIC;
+--			-- Debug
+--			DEBUG      : out STD_LOGIC_VECTOR(15 downto 0)
+--		);
+--	END COMPONENT;
+--
+--	COMPONENT ads62p49_parellelizer
+--		GENERIC(
+--			DATA_WIDTH : natural := 16;
+--			ADDR_WIDTH : natural := 5
+--		);
+--		PORT(
+--			--System Control Inputs
+--			CLK_I        : in  STD_LOGIC;
+--			RST_I        : in  STD_LOGIC;
+--			--Signal Channel Inputs
+--			DSP_CLK_I    : in  STD_LOGIC;
+--			CH_A_O       : out STD_LOGIC_VECTOR(15 downto 0);
+--			CH_B_O       : out STD_LOGIC_VECTOR(15 downto 0);
+--			-- FMC150 ADC interface
+--			ADC_DCLK_P   : in  STD_LOGIC;
+--			ADC_DCLK_N   : in  STD_LOGIC;
+--			ADC_DATA_A_P : in  STD_LOGIC_VECTOR(6 downto 0);
+--			ADC_DATA_A_N : in  STD_LOGIC_VECTOR(6 downto 0);
+--			ADC_DATA_B_P : in  STD_LOGIC_VECTOR(6 downto 0);
+--			ADC_DATA_B_N : in  STD_LOGIC_VECTOR(6 downto 0);
+--			-- Debug
+--			DEBUG        : out STD_LOGIC_VECTOR(15 downto 0)
+--		);
+--	END COMPONENT;
 
 begin
 	Sys_Con : system_controller
@@ -355,95 +339,110 @@ begin
 			GPIO  => GPIO
 		);
 
-	DDS : dds_core_ip
+	Debug_32 : gpio_controller_ip
 		GENERIC MAP(
-			BASE_ADDR       => x"700",
-			CORE_DATA_WIDTH => 16
-		)
-		PORT MAP(
-			CLK_I     => sys_con_clk,
-			RST_I     => sys_con_rst,
-			WB_I      => wb_ms,
-			WB_O      => wb_sm,
-			DSP_CLK_I => dsp_clk_246MHZ,
-			CH_A_O    => ch_a,
-			CH_B_O    => open
-		);
-
-	FMC150_CTRL : fmc150_controller_ip
-		generic map(
 			DATA_WIDTH      => DATA_WIDTH,
 			ADDR_WIDTH      => ADDR_WIDTH,
-			BASE_ADDR       => x"A00",
-			CORE_DATA_WIDTH => 8
+			BASE_ADDR       => x"F10",
+			CORE_DATA_WIDTH => 32
 		)
-		port map(
-			--System Control Inputs
-			CLK_I          => sys_con_clk,
-			RST_I          => sys_con_rst,
-			WB_I           => wb_ms,
-			WB_O           => wb_sm,
-			--Serial Peripheral Interface
-			SPI_SCLK_O     => SPI_SCLK_O,
-			SPI_MOSI_O     => SPI_MOSI_O,
-			ADC_MISO_I     => ADC_MISO_I,
-			ADC_N_SS_O     => ADC_N_SS_O,
-			CDC_MISO_I     => CDC_MISO_I,
-			CDC_N_SS_O     => CDC_N_SS_O,
-			DAC_MISO_I     => DAC_MISO_I,
-			DAC_N_SS_O     => DAC_N_SS_O,
-			ADC_RST        => ADC_RST,
-			CDC_REF_EN     => CDC_REF_EN,
-			CDC_N_RST      => CDC_N_RST,
-			CDC_N_PD       => CDC_N_PD,
-			CDC_PLL_STATUS => CDC_PLL_STATUS,
-			DEBUG          => DEBUG(15 downto 0)
-		);
-
-	FMC150_DAC : dac3283_serializer
 		PORT MAP(
-			--System Control Inputs
-			CLK_I      => sys_con_clk,
-			RST_I      => sys_con_rst,
-			--Signal Channel Inputs
-			DSP_CLK_I  => dsp_clk_246MHZ,
-			CH_A_I     => ch_a,
-			CH_B_I     => ch_b,
-			-- DAC interface
-			DAC_DCLK_P => DAC_DCLK_P,
-			DAC_DCLK_N => DAC_DCLK_N,
-			DAC_DATA_P => DAC_DATA_P,
-			DAC_DATA_N => DAC_DATA_N,
-			FRAME_P    => FRAME_P,
-			FRAME_N    => FRAME_N,
-			TXENABLE   => TXENABLE,
-			-- Debug
-			DEBUG      => open          --DEBUG(15 downto 0)
+			CLK_I => sys_con_clk,
+			RST_I => sys_con_rst,
+			WB_I  => wb_ms,
+			WB_O  => wb_sm,
+			GPIO  => DEBUG
 		);
 
-	FMC150_ADC : ads62p49_parellelizer
-		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH
-		)
-		port map(
-			--System Control Inputs
-			CLK_I        => sys_con_clk,
-			RST_I        => sys_con_rst,
-			--Signal Channel Inputs
-			DSP_CLK_I    => dsp_clk_246MHZ,
-			CH_A_O       => open,
-			CH_B_O       => ch_b,
-			-- FMC150 ADC interface
-			ADC_DCLK_P   => ADC_DCLK_P,
-			ADC_DCLK_N   => ADC_DCLK_N,
-			ADC_DATA_A_P => ADC_DATA_A_P,
-			ADC_DATA_A_N => ADC_DATA_A_N,
-			ADC_DATA_B_P => ADC_DATA_B_P,
-			ADC_DATA_B_N => ADC_DATA_B_N,
-			-- Debug
-			DEBUG        => DEBUG(31 downto 16)
-		);
+	--	DDS : dds_core_ip
+	--		GENERIC MAP(
+	--			BASE_ADDR       => x"700",
+	--			CORE_DATA_WIDTH => 16
+	--		)
+	--		PORT MAP(
+	--			CLK_I     => sys_con_clk,
+	--			RST_I     => sys_con_rst,
+	--			WB_I      => wb_ms,
+	--			WB_O      => wb_sm,
+	--			DSP_CLK_I => dsp_clk_246MHZ,
+	--			CH_A_O    => ch_a,
+	--			CH_B_O    => open
+	--		);
+	--
+	--	FMC150_CTRL : fmc150_controller_ip
+	--		generic map(
+	--			DATA_WIDTH      => DATA_WIDTH,
+	--			ADDR_WIDTH      => ADDR_WIDTH,
+	--			BASE_ADDR       => x"A00",
+	--			CORE_DATA_WIDTH => 8
+	--		)
+	--		port map(
+	--			--System Control Inputs
+	--			CLK_I          => sys_con_clk,
+	--			RST_I          => sys_con_rst,
+	--			WB_I           => wb_ms,
+	--			WB_O           => wb_sm,
+	--			--Serial Peripheral Interface
+	--			SPI_SCLK_O     => SPI_SCLK_O,
+	--			SPI_MOSI_O     => SPI_MOSI_O,
+	--			ADC_MISO_I     => ADC_MISO_I,
+	--			ADC_N_SS_O     => ADC_N_SS_O,
+	--			CDC_MISO_I     => CDC_MISO_I,
+	--			CDC_N_SS_O     => CDC_N_SS_O,
+	--			DAC_MISO_I     => DAC_MISO_I,
+	--			DAC_N_SS_O     => DAC_N_SS_O,
+	--			ADC_RST        => ADC_RST,
+	--			CDC_REF_EN     => CDC_REF_EN,
+	--			CDC_N_RST      => CDC_N_RST,
+	--			CDC_N_PD       => CDC_N_PD,
+	--			CDC_PLL_STATUS => CDC_PLL_STATUS,
+	--			DEBUG          => open      --DEBUG(15 downto 0)
+	--		);
+	--
+	--	FMC150_DAC : dac3283_serializer
+	--		PORT MAP(
+	--			--System Control Inputs
+	--			CLK_I      => sys_con_clk,
+	--			RST_I      => sys_con_rst,
+	--			--Signal Channel Inputs
+	--			DSP_CLK_I  => dsp_clk_246MHZ,
+	--			CH_A_I     => ch_a,
+	--			CH_B_I     => ch_b,
+	--			-- DAC interface
+	--			DAC_DCLK_P => DAC_DCLK_P,
+	--			DAC_DCLK_N => DAC_DCLK_N,
+	--			DAC_DATA_P => DAC_DATA_P,
+	--			DAC_DATA_N => DAC_DATA_N,
+	--			FRAME_P    => FRAME_P,
+	--			FRAME_N    => FRAME_N,
+	--			TXENABLE   => TXENABLE,
+	--			-- Debug
+	--			DEBUG      => open          --DEBUG(15 downto 0)
+	--		);
+	--
+	--	FMC150_ADC : ads62p49_parellelizer
+	--		generic map(
+	--			DATA_WIDTH => DATA_WIDTH,
+	--			ADDR_WIDTH => ADDR_WIDTH
+	--		)
+	--		port map(
+	--			--System Control Inputs
+	--			CLK_I        => sys_con_clk,
+	--			RST_I        => sys_con_rst,
+	--			--Signal Channel Inputs
+	--			DSP_CLK_I    => dsp_clk_246MHZ,
+	--			CH_A_O       => open,
+	--			CH_B_O       => ch_b,
+	--			-- FMC150 ADC interface
+	--			ADC_DCLK_P   => ADC_DCLK_P,
+	--			ADC_DCLK_N   => ADC_DCLK_N,
+	--			ADC_DATA_A_P => ADC_DATA_A_P,
+	--			ADC_DATA_A_N => ADC_DATA_A_N,
+	--			ADC_DATA_B_P => ADC_DATA_B_P,
+	--			ADC_DATA_B_N => ADC_DATA_B_N,
+	--			-- Debug
+	--			DEBUG        => DEBUG(31 downto 16)
+	--		);
 
 	SYS_STATUS <= CDC_PLL_STATUS;
 

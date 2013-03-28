@@ -57,23 +57,26 @@ end wb_s;
 
 architecture Behavioral of wb_s is
 	--WB Inputs
-	alias dat_ms : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_I(DATA_WIDTH - 1 downto 0);
-	alias adr_ms : std_logic_vector(ADDR_WIDTH - 1 downto 0) is WB_I(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
-	alias stb_ms : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH);
-	alias we_ms  : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 1);
-	alias cyc_ms : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 2);
+	alias dat_ms  : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_I(DATA_WIDTH - 1 downto 0);
+	alias adr_ms  : std_logic_vector(ADDR_WIDTH - 1 downto 0) is WB_I(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
+	alias stb_ms  : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH);
+	alias we_ms   : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 1);
+	alias cyc_ms  : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 2);
 	--WB Outputs
 	signal dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal ack_sm : std_logic;
 
 	signal core_sel     : boolean;
---	signal core_mem_sel : boolean;
-	signal core_adr : unsigned(CORE_ADDR_WIDTH - 1 downto 0);
+	signal core_mem_sel : boolean;
+	signal core_adr     : unsigned(CORE_ADDR_WIDTH - 1 downto 0);
 
 	type ram_type is array (0 to 3) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal core_mem : ram_type;
 
 begin
+	------------------------------------
+	--------- Recode this entire process
+	------------------------------------
 	process(CLK_I)
 	begin
 
@@ -81,14 +84,14 @@ begin
 		if (rising_edge(CLK_I)) then
 			--Check for reset
 			if (RST_I = '1') then
-				dat_sm      <= (others => '0');
-				ack_sm      <= '0';
-				core_mem(0)(ADDR_WIDTH - 1 downto 0) <= std_logic_vector(BASE_ADDR);--For 12 bit addressing
-				core_mem(0)(31 downto ADDR_WIDTH) <= (others=>'0');
+				dat_sm                               <= (others => '0');
+				ack_sm                               <= '0';
+				core_mem(0)(ADDR_WIDTH - 1 downto 0) <= std_logic_vector(BASE_ADDR); --For 12 bit addressing
+				core_mem(0)(31 downto ADDR_WIDTH)    <= (others => '0');
 				core_mem(1)(ADDR_WIDTH - 1 downto 0) <= std_logic_vector(BASE_ADDR + (2 ** CORE_ADDR_WIDTH) - 1); --For 12 bit addressing
-				core_mem(1)(31 downto ADDR_WIDTH) <= (others=>'0');
-				core_mem(2) <= "10101010101010101010101010101010"; --Test Signal
-				core_mem(3) <= "01010101010101010101010101010101"; --Test Signal
+				core_mem(1)(31 downto ADDR_WIDTH)    <= (others => '0');
+				core_mem(2)                          <= "10101010101010101010101010101010"; --Test Signal
+				core_mem(3)                          <= "01010101010101010101010101010101"; --Test Signal
 
 			elsif (core_sel and (core_adr < 4)) then
 				--Check for strobe
@@ -107,16 +110,15 @@ begin
 	end process;
 
 	core_sel     <= (adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH) = std_logic_vector(BASE_ADDR(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH)));
---	core_mem_sel <= (adr_ms(CORE_ADDR_WIDTH - 1 downto 3) = "0"); --ISSUE here
-	core_adr <= unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0));
-	
+	core_adr     <= unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0));
+	core_mem_sel <= (core_adr < 4);
 
 	process(core_sel, core_adr, DAT_O, ACK_O, dat_sm, ack_sm, stb_ms, cyc_ms)
 	begin
 		if (core_sel) then
 			if (core_adr < 4) then
 				--WB Output Ports
-				WB_O <= (ack_sm & dat_sm);
+				WB_O  <= (ack_sm & dat_sm);
 				--WB Input Ports
 				STB_I <= '0';
 				CYC_I <= '0';
@@ -125,12 +127,12 @@ begin
 				WB_O(DATA_WIDTH downto CORE_DATA_WIDTH) <= (DATA_WIDTH => ACK_O, others => '0');
 				WB_O(CORE_DATA_WIDTH - 1 downto 0)      <= DAT_O;
 				--WB Input Ports
-				STB_I <= stb_ms;
-				CYC_I <= cyc_ms;
+				STB_I                                   <= stb_ms;
+				CYC_I                                   <= cyc_ms;
 			end if;
 		else
 			--WB Output Ports
-			WB_O <= (others => 'Z');
+			WB_O  <= (others => 'Z');
 			--WB Input Ports
 			CYC_I <= '0';
 			STB_I <= '0';
@@ -139,7 +141,7 @@ begin
 
 	--WB Input Ports
 	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);
-	ADR_I <= std_logic_vector(core_adr);
+	ADR_I <= (others => '0') when core_mem_sel else std_logic_vector(core_adr - 4);
 	WE_I  <= we_ms;
 end Behavioral;
 
