@@ -139,7 +139,7 @@ begin
 
 	--WB Input Ports
 	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);
-	ADR_I <= std_logic_vector(core_adr - 4);
+	ADR_I <= std_logic_vector(core_adr);
 	WE_I  <= we_ms;
 end Behavioral;
 

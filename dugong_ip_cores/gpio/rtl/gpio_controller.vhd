@@ -25,7 +25,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity gpio_controller is
 	generic(
 		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 2
+		ADDR_WIDTH : natural := 3
 	);
 	port(
 		--System Control Inputs
@@ -35,7 +35,7 @@ entity gpio_controller is
 		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-		STB_I : in  STD_LOGIC;		
+		STB_I : in  STD_LOGIC;
 		WE_I  : in  STD_LOGIC;
 		--CYC_I : in   STD_LOGIC;
 		ACK_O : out STD_LOGIC;
@@ -45,10 +45,10 @@ entity gpio_controller is
 end gpio_controller;
 
 architecture Behavioral of gpio_controller is
-	type ram_type is array (0 to (2 **ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
+	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 5) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal user_mem : ram_type;
-	signal mem_adr : integer;
-	
+	signal mem_adr  : integer;
+
 begin
 	process(CLK_I)
 	begin
@@ -57,7 +57,7 @@ begin
 		if (rising_edge(CLK_I)) then
 			--Check for reset
 			if (RST_I = '1') then
-				DAT_O      <= (others => '0');
+				DAT_O       <= (others => '0');
 				user_mem(0) <= (others => '0');
 			--Check for strobe
 			elsif (STB_I = '1') then
@@ -70,10 +70,10 @@ begin
 			ACK_O <= STB_I;
 		end if;
 	end process;
-	
-	mem_adr <= to_integer(unsigned(ADR_I));
 
-	GPIO  <= user_mem(0);
+	mem_adr <= to_integer(unsigned(ADR_I) - 4);
+
+	GPIO <= user_mem(0);
 
 end Behavioral;
 
