@@ -65,7 +65,7 @@ architecture RTL of system_controller is
 	signal dcm_clkin      : std_logic;
 	signal dcm_clkout     : std_logic;
 	signal dcm_locked     : std_logic;
-	signal dcm1_locked     : std_logic;
+	--signal dcm1_locked     : std_logic;
 	--PLL Signals
 	signal pll_rst        : std_logic;
 	signal pll_locked     : std_logic;
@@ -104,7 +104,7 @@ begin
 			I  => SYS_CLK_P,
 			IB => SYS_CLK_N
 		);
-		
+
 	-- Input divider
 	SYS_CLK_BUFIO2 : BUFIO2
 		generic map(
@@ -188,8 +188,8 @@ begin
 			CLKOUT1  => clkout1,
 			CLKOUT2  => clkout2,
 			CLKOUT3  => clkout3,
-			CLKOUT4  => open,--clkout4,
-			CLKOUT5  => open, --clkout5,
+			CLKOUT4  => clkout4,
+			CLKOUT5  => clkout5,
 			LOCKED   => pll_locked,
 			CLKFBIN  => clkfbout,
 			CLKIN    => dcm_clkout,
@@ -229,32 +229,31 @@ begin
 
 	CLK_983MHZ <= clkout3_b;
 
-
-	-- GIGE GTX  Clock Generator
-	GTX_CLK_DCM_CLKGEN : DCM_CLKGEN
-		generic map(
-			CLKFXDV_DIVIDE  => 2,
-			CLKFX_DIVIDE    => 4,
-			CLKFX_MD_MAX    => 0.0,
-			CLKFX_MULTIPLY  => 25,
-			CLKIN_PERIOD    => 10.00,
-			SPREAD_SPECTRUM => "NONE",
-			STARTUP_WAIT    => FALSE
-		)
-		port map(
-			CLKFX     => clkout4,
-			CLKFX180  => clkout5,
-			CLKFXDV   => open,
-			LOCKED    => dcm1_locked,
-			PROGDONE  => open,
-			STATUS    => open,
-			CLKIN     => dcm_clkin,
-			FREEZEDCM => '0',
-			PROGCLK   => '0',
-			PROGDATA  => '0',
-			PROGEN    => '0',
-			RST       => SYS_RST
-		);
+	--	-- GIGE GTX  Clock Generator
+	--	GTX_CLK_DCM_CLKGEN : DCM_CLKGEN
+	--		generic map(
+	--			CLKFXDV_DIVIDE  => 2,
+	--			CLKFX_DIVIDE    => 4,
+	--			CLKFX_MD_MAX    => 0.0,
+	--			CLKFX_MULTIPLY  => 25,
+	--			CLKIN_PERIOD    => 10.00,
+	--			SPREAD_SPECTRUM => "NONE",
+	--			STARTUP_WAIT    => FALSE
+	--		)
+	--		port map(
+	--			CLKFX     => clkout4,
+	--			CLKFX180  => clkout5,
+	--			CLKFXDV   => open,
+	--			LOCKED    => dcm1_locked,
+	--			PROGDONE  => open,
+	--			STATUS    => open,
+	--			CLKIN     => dcm_clkin,
+	--			FREEZEDCM => '0',
+	--			PROGCLK   => '0',
+	--			PROGDATA  => '0',
+	--			PROGEN    => '0',
+	--			RST       => SYS_RST
+	--		);
 
 	clkout4_buf : BUFG
 		port map(
@@ -309,16 +308,16 @@ begin
 			BASE_ADDR  => BASE_ADDR
 		)
 		port map(
-			CLK_I       => clkout0_b,
+			CLK_I       => clkout0_b,--sys_clk_b,
 			RST_I       => sys_not_locked,
 			WB_I        => WB_I,
 			WB_O        => WB_O,
 			TEST_CLOCKS => test_clocks
 		);
 
-	test_clocks(0) <= sys_clk_b;
-	test_clocks(1) <= clkout2_b;
-	test_clocks(2) <= clkout3_b;
-	test_clocks(3) <= clkout4_b;
+	test_clocks(0) <= clkout0_b;
+	test_clocks(1) <= clkout1_b;
+	test_clocks(2) <= clkout3_b;        -- 983 MHz
+	test_clocks(3) <= clkout4_b;        --  15 MHz
 
 end architecture RTL;
