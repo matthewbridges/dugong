@@ -136,7 +136,7 @@ BEGIN
 		wait until rising_edge(CLK_I);
 		WB_I <= "101" & x"006" & x"00000000"; --Read from SPI input--ADDR x6
 		wait until rising_edge(WB_O(32));
-
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait;
 	end process;
 

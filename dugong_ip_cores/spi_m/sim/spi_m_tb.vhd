@@ -189,6 +189,7 @@ BEGIN
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
 		DAT_I <= x"0000";
+		ADR_I <= "000";
 		
 		wait;
 	end process;
