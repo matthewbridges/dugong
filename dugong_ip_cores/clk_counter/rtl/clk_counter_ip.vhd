@@ -26,11 +26,12 @@ use RHINO_DUGONG.dcomponents.ALL;
 
 entity clk_counter_ip is
 	generic(
-		DATA_WIDTH      : NATURAL               := 32;
-		ADDR_WIDTH      : NATURAL               := 12;
-		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-		CORE_DATA_WIDTH : NATURAL               := 32;
-		CORE_ADDR_WIDTH : NATURAL               := 3
+		DATA_WIDTH      : NATURAL                       := 32;
+		ADDR_WIDTH      : NATURAL                       := 12;
+		BASE_ADDR       : UNSIGNED(11 downto 0)         := x"000";
+		CORE_DATA_WIDTH : NATURAL                       := 32;
+		CORE_ADDR_WIDTH : NATURAL                       := 3;
+		MASTER_CNT      : std_logic_vector(31 downto 0) := x"07530000"
 	);
 	port(
 		--System Control Inputs
@@ -40,7 +41,7 @@ entity clk_counter_ip is
 		WB_I        : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 		WB_O        : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--Test Clocks
-		TEST_CLOCKS : in  STD_LOGIC_VECTOR(3 downto 0)
+		TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** CORE_ADDR_WIDTH) - 6 downto 0)
 	);
 end clk_counter_ip;
 
@@ -52,28 +53,24 @@ architecture Behavioral of clk_counter_ip is
 	signal we_i  : STD_LOGIC;
 	signal ack_o : STD_LOGIC;
 
-	component clk_counter is
+	component clk_counter
 		generic(
 			DATA_WIDTH : natural                       := 32;
-			ADDR_WIDTH : natural                       := 2;
-			MASTER_CNT : std_logic_vector(26 downto 0) := "111" & x"530000"
+			ADDR_WIDTH : natural                       := 3;
+			MASTER_CNT : std_logic_vector(31 downto 0) := x"07530000"
 		);
 		port(
-			--System Control Inputs
 			CLK_I       : in  STD_LOGIC;
 			RST_I       : in  STD_LOGIC;
-			--Wishbone Slave Lines
-			--DAT_I       : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_I       : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O       : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			ADR_I       : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			STB_I       : in  STD_LOGIC;
-			--WE_I  : in  STD_LOGIC;
-			--CYC_I : in   STD_LOGIC;
+			WE_I        : in  STD_LOGIC;
 			ACK_O       : out STD_LOGIC;
-			--Test Clocks
-			TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** ADDR_WIDTH) - 1 downto 0)
+			TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** ADDR_WIDTH) - 6 downto 0)
 		);
-	end component;
+	end component clk_counter;
 
 begin
 	bus_logic : wb_s
@@ -104,24 +101,23 @@ begin
 	user_logic : clk_counter
 		generic map(
 			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH - 1
+			ADDR_WIDTH => CORE_ADDR_WIDTH,
+			MASTER_CNT => MASTER_CNT
 		)
 		port map(
 			--System Control Inputs
 			CLK_I       => CLK_I,
 			RST_I       => RST_I,
 			--Wishbone Slave Lines
-			--DAT_I => dat_i(CORE_DATA_WIDTH - 1 downto 0),
-
-			DAT_O       => dat_o(CORE_DATA_WIDTH - 1 downto 0),
-			ADR_I       => adr_i(CORE_ADDR_WIDTH - 2 downto 0),
+			DAT_I       => dat_i,
+			DAT_O       => dat_o,
+			ADR_I       => adr_i,
 			STB_I       => stb_i,
-			--WE_I  => we_i,
-			--CYC_I =>
+			WE_I        => we_i,
+			--	CYC_I =>
 			ACK_O       => ack_o,
-			--Test Clocks
+			--Test Clock Signals
 			TEST_CLOCKS => TEST_CLOCKS
 		);
-
 end Behavioral;
 

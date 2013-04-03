@@ -48,11 +48,11 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 			CORE_ADDR_WIDTH : NATURAL               := 3
 		);
 		port(
-			CLK_I : in  STD_LOGIC;
-			RST_I : in  STD_LOGIC;
-			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			GPIO  : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+			CLK_I : in    STD_LOGIC;
+			RST_I : in    STD_LOGIC;
+			WB_I  : in    STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_O  : out   STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			GPIO  : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
 	end component gpio_controller_ip;
 
@@ -61,9 +61,11 @@ ARCHITECTURE behavior OF gpio_controller_ip_tb IS
 	signal RST_I : std_logic                     := '1';
 	signal WB_I  : std_logic_vector(46 downto 0) := (others => '0');
 
+	--BiDirs
+	signal GPIO : std_logic_vector(15 downto 0) := (others => 'Z');
+
 	--Outputs
 	signal WB_O : std_logic_vector(32 downto 0);
-	signal GPIO : std_logic_vector(15 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
@@ -113,17 +115,40 @@ BEGIN
 
 
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"004" & x"0000000F"; --Write to GPIO output
+		WB_I <= "101" & x"006" & x"00000000"; --Read from GPIO_OE
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait until rising_edge(CLK_I);
-		WB_I <= "101" & x"004" & x"00000000"; --Read back GPIO output
+		WB_I <= "111" & x"004" & x"0000000F"; --Write x000F to GPIO_OUT
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"00000000"; --NULL
 		wait until rising_edge(CLK_I);
-		WB_I <= "111" & x"004" & x"000000FF"; --Write to GPIO output
+		WB_I <= "101" & x"005" & x"00000000"; --Read from GPIO_IN
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		GPIO <= x"FF00";
+		wait until rising_edge(CLK_I);
+		GPIO(7 downto 0) <= (others => 'Z');
+		WB_I             <= "111" & x"006" & x"000000FF"; --Write x00FF to GPIO_OE
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "101" & x"005" & x"00000000"; --Read from GPIO_IN 
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		wait until rising_edge(CLK_I);
+		WB_I <= "111" & x"004" & x"00000000"; --Write x0000 to GPIO_OUT
+		wait until rising_edge(WB_O(32));
+		wait until rising_edge(CLK_I);
+		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		GPIO(15 downto 0) <= (others => 'Z');
+		wait until rising_edge(CLK_I);
+		WB_I             <= "111" & x"006" & x"00000000"; --Write x00FF to GPIO_OE
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"00000000"; --NULL
