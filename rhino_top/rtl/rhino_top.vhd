@@ -32,6 +32,9 @@ use UNISIM.VComponents.all;
 library RHINO_DUGONG;
 use RHINO_DUGONG.dcomponents.ALL;
 
+library dugong_ip_cores;
+use dugong_ip_cores.dcores.ALL;
+
 entity rhino_top is
 	generic(
 		DATA_WIDTH : natural := 32;
@@ -39,23 +42,23 @@ entity rhino_top is
 	);
 	port(
 		--System Control Inputs
-		SYS_CLK_P      : in  STD_LOGIC;
-		SYS_CLK_N      : in  STD_LOGIC;
-		SYS_RST        : in  STD_LOGIC;
+		SYS_CLK_P      : in    STD_LOGIC;
+		SYS_CLK_N      : in    STD_LOGIC;
+		SYS_RST        : in    STD_LOGIC;
 		--System Control Outputs
-		SYS_CLK_o      : out STD_LOGIC;
-		SYS_PWR_ON     : out STD_LOGIC;
-		SYS_PLL_Locked : out STD_LOGIC;
-		SYS_STATUS     : out STD_LOGIC;
+		SYS_CLK_o      : out   STD_LOGIC;
+		SYS_PWR_ON     : out   STD_LOGIC;
+		SYS_PLL_Locked : out   STD_LOGIC;
+		SYS_STATUS     : out   STD_LOGIC;
 
 		--GPIO Interface
-		GPIO           : out STD_LOGIC_VECTOR(15 downto 0);
+		GPIO           : inout STD_LOGIC_VECTOR(15 downto 0);
 
 		--LED Interface
-		LED            : out STD_LOGIC_VECTOR(7 downto 0);
+		LED            : inout STD_LOGIC_VECTOR(7 downto 0);
 
 		--FMC150 CTRL interface
-		FMC150_CLK     : in  STD_LOGIC;
+		FMC150_CLK     : in    STD_LOGIC;
 		--		SPI_SCLK_O     : out STD_LOGIC;
 		--		SPI_MOSI_O     : out STD_LOGIC;
 		--		ADC_MISO_I     : in  STD_LOGIC;
@@ -68,7 +71,7 @@ entity rhino_top is
 		--		CDC_REF_EN     : out STD_LOGIC;
 		--		CDC_N_RST      : out STD_LOGIC;
 		--		CDC_N_PD       : out STD_LOGIC;
-		CDC_PLL_STATUS : in  STD_LOGIC;
+		CDC_PLL_STATUS : in    STD_LOGIC;
 
 		--		-- FMC150 ADC interface
 		--		ADC_DCLK_P     : in  STD_LOGIC;
@@ -88,174 +91,28 @@ entity rhino_top is
 		--		TXENABLE       : out STD_LOGIC;
 		--
 		-- Debug
-		DEBUG          : out STD_LOGIC_VECTOR(31 downto 0)
+		DEBUG          : inout STD_LOGIC_VECTOR(31 downto 0)
 	);
 end rhino_top;
 
 architecture Behavioral of rhino_top is
-	signal sys_con_clk    : std_logic;
-	signal sys_con_clk_n  : std_logic;
-	signal dsp_clk_246MHZ : std_logic;
-	signal dsp_clk_983MHZ : std_logic;
-	signal sys_con_rst    : std_logic;
-	signal wb_ms          : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-	signal wb_sm          : std_logic_vector(DATA_WIDTH downto 0);
+	signal sys_con_clk     : std_logic;
+	signal sys_con_clk_n   : std_logic;
+	signal dsp_clk_246MHZ  : std_logic;
+	signal dsp_clk_983MHZ  : std_logic;
+	signal spi_clk_15MHz   : std_logic;
+	signal spi_clk_15MHz_n : std_logic;
+	signal sys_con_rst     : std_logic;
+	signal wb_ms           : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+	signal wb_sm           : std_logic_vector(DATA_WIDTH downto 0);
 
-	signal test_clocks : std_logic_vector(3 downto 0);
+	signal test_clocks : std_logic_vector(2 downto 0);
 
-	--	signal ch_a : std_logic_vector(15 downto 0);
-	--	signal ch_b : std_logic_vector(15 downto 0);
-
-	COMPONENT clk_counter_ip
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 32;
-			CORE_ADDR_WIDTH : NATURAL               := 3
-		);
-		port(
-			--System Control Inputs
-			CLK_I       : in  STD_LOGIC;
-			RST_I       : in  STD_LOGIC;
-			--Slave to WB
-			WB_I        : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O        : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			--Test Clocks
-			TEST_CLOCKS : in  STD_LOGIC_VECTOR(3 downto 0)
-		);
-	END COMPONENT;
-
-	component gpio_controller_ip
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 4
-		);
-		port(
-			--System Control Inputs
-			CLK_I : in  STD_LOGIC;
-			RST_I : in  STD_LOGIC;
-			--Slave to WB
-			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			--GPIO Interface
-			GPIO  : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
-		);
-	end component;
-
---	COMPONENT dds_core_ip
---		generic(
---			DATA_WIDTH      : NATURAL               := 32;
---			ADDR_WIDTH      : NATURAL               := 12;
---			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
---			CORE_DATA_WIDTH : NATURAL               := 16;
---			CORE_ADDR_WIDTH : NATURAL               := 3
---		);
---		port(
---			--System Control Inputs
---			CLK_I     : in  STD_LOGIC;
---			RST_I     : in  STD_LOGIC;
---			--Slave to WB
---			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
---			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
---			--Signal Channel Outputs
---			DSP_CLK_I : in  STD_LOGIC;
---			CH_A_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
---			CH_B_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
---		);
---	END COMPONENT;
---
---	component fmc150_controller_ip
---		generic(
---			DATA_WIDTH      : NATURAL               := 32;
---			ADDR_WIDTH      : NATURAL               := 12;
---			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
---			CORE_DATA_WIDTH : NATURAL               := 8;
---			CORE_ADDR_WIDTH : NATURAL               := 9
---		);
---		port(
---			--System Control Inputs
---			CLK_I          : in  STD_LOGIC;
---			RST_I          : in  STD_LOGIC;
---			--Slave to WB
---			WB_I           : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
---			WB_O           : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
---			--Serial Peripheral Interface
---			SPI_SCLK_O     : out STD_LOGIC;
---			SPI_MOSI_O     : out STD_LOGIC;
---			ADC_MISO_I     : in  STD_LOGIC;
---			ADC_N_SS_O     : out STD_LOGIC;
---			CDC_MISO_I     : in  STD_LOGIC;
---			CDC_N_SS_O     : out STD_LOGIC;
---			DAC_MISO_I     : in  STD_LOGIC;
---			DAC_N_SS_O     : out STD_LOGIC;
---			ADC_RST        : out STD_LOGIC;
---			CDC_REF_EN     : out STD_LOGIC;
---			CDC_N_RST      : out STD_LOGIC;
---			CDC_N_PD       : out STD_LOGIC;
---			CDC_PLL_STATUS : in  STD_LOGIC;
---			-- Debug
---			DEBUG          : out STD_LOGIC_VECTOR(15 downto 0)
---		);
---	end component;
---
---	COMPONENT dac3283_serializer
---		PORT(
---			--System Control Inputs
---			CLK_I      : in  STD_LOGIC;
---			RST_I      : in  STD_LOGIC;
---			--Signal Channel Inputs
---			DSP_CLK_I  : in  STD_LOGIC;
---			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
---			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
---			-- DAC interface
---			DAC_DCLK_P : out STD_LOGIC;
---			DAC_DCLK_N : out STD_LOGIC;
---			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
---			DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
---			FRAME_P    : out STD_LOGIC;
---			FRAME_N    : out STD_LOGIC;
---			TXENABLE   : out STD_LOGIC;
---			-- Debug
---			DEBUG      : out STD_LOGIC_VECTOR(15 downto 0)
---		);
---	END COMPONENT;
---
---	COMPONENT ads62p49_parellelizer
---		GENERIC(
---			DATA_WIDTH : natural := 16;
---			ADDR_WIDTH : natural := 5
---		);
---		PORT(
---			--System Control Inputs
---			CLK_I        : in  STD_LOGIC;
---			RST_I        : in  STD_LOGIC;
---			--Signal Channel Inputs
---			DSP_CLK_I    : in  STD_LOGIC;
---			CH_A_O       : out STD_LOGIC_VECTOR(15 downto 0);
---			CH_B_O       : out STD_LOGIC_VECTOR(15 downto 0);
---			-- FMC150 ADC interface
---			ADC_DCLK_P   : in  STD_LOGIC;
---			ADC_DCLK_N   : in  STD_LOGIC;
---			ADC_DATA_A_P : in  STD_LOGIC_VECTOR(6 downto 0);
---			ADC_DATA_A_N : in  STD_LOGIC_VECTOR(6 downto 0);
---			ADC_DATA_B_P : in  STD_LOGIC_VECTOR(6 downto 0);
---			ADC_DATA_B_N : in  STD_LOGIC_VECTOR(6 downto 0);
---			-- Debug
---			DEBUG        : out STD_LOGIC_VECTOR(15 downto 0)
---		);
---	END COMPONENT;
+--	signal ch_a : std_logic_vector(15 downto 0);
+--	signal ch_b : std_logic_vector(15 downto 0);
 
 begin
 	Sys_Con : system_controller
-		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH,
-			BASE_ADDR  => x"E08"
-		)
 		port map(
 			--System Clock Differential Inputs 100MHz			
 			SYS_CLK_P      => SYS_CLK_P,
@@ -272,12 +129,9 @@ begin
 			CLK_123MHZ_n   => sys_con_clk_n,
 			CLK_246MHZ     => dsp_clk_246MHZ,
 			CLK_983MHZ     => dsp_clk_983MHZ,
-			CLK_15MHZ      => open,
-			CLK_15MHZ_n    => open,
-			RST_O          => sys_con_rst,
-			--Slave to WB
-			WB_I           => wb_ms,
-			WB_O           => wb_sm
+			CLK_15MHZ      => spi_clk_15MHz,
+			CLK_15MHZ_n    => spi_clk_15MHz_n,
+			RST_O          => sys_con_rst
 		);
 
 	Central_Control_Unit : dugong
@@ -307,7 +161,7 @@ begin
 			TEST_CLOCKS => test_clocks
 		);
 
-	test_clocks(3 downto 0) <= FMC150_CLK & dsp_clk_983MHZ & dsp_clk_246MHZ & sys_con_clk;
+	test_clocks(2 downto 0) <= FMC150_CLK & dsp_clk_983MHZ & dsp_clk_246MHZ;
 
 	LEDs_8 : gpio_controller_ip
 		GENERIC MAP(
