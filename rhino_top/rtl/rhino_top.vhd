@@ -29,11 +29,11 @@ use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.VComponents.all;
 
-library RHINO_DUGONG;
-use RHINO_DUGONG.dcomponents.ALL;
+library DUGONG;
+use DUGONG.dcomponents.ALL;
 
-library dugong_ip_cores;
-use dugong_ip_cores.dcores.ALL;
+library DUGONG_IP_CORES;
+use DUGONG_IP_CORES.dcores.ALL;
 
 entity rhino_top is
 	generic(
@@ -134,7 +134,7 @@ begin
 			RST_O          => sys_con_rst
 		);
 
-	Central_Control_Unit : dugong
+	Central_Control_Unit : dugong_controller
 		GENERIC MAP(
 			DATA_WIDTH => DATA_WIDTH,
 			ADDR_WIDTH => ADDR_WIDTH

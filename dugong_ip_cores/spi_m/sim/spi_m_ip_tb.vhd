@@ -4,8 +4,8 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
-library dugong_ip_cores;
-use dugong_ip_cores.dcores.ALL;
+library DUGONG_IP_CORES;
+use DUGONG_IP_CORES.dcores.ALL;
 
 ENTITY spi_m_ip_tb IS
 END spi_m_ip_tb;

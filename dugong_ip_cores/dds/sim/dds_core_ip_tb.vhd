@@ -4,6 +4,9 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
+library DUGONG_IP_CORES;
+use DUGONG_IP_CORES.dcores.ALL;
+
 ENTITY dds_core_ip_tb IS
 END dds_core_ip_tb;
 
@@ -19,25 +22,6 @@ ARCHITECTURE behavior OF dds_core_ip_tb IS
 			DAT_I : in STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
 		);
 	end component file_sink;
-
-	-- Component Declaration
-	component dds_core_ip
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3);
-		port(
-			CLK_I     : in  STD_LOGIC;
-			RST_I     : in  STD_LOGIC;
-			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			DSP_CLK_I : in  STD_LOGIC;
-			CH_A_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			CH_B_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
-		);
-	end component dds_core_ip;
 
 	signal CLK_I     : STD_LOGIC;
 	signal RST_I     : STD_LOGIC := '1';

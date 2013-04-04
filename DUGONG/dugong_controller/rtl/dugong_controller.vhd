@@ -29,7 +29,7 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity dugong is
+entity dugong_controller is
 	generic(
 		DATA_WIDTH : natural := 32;
 		ADDR_WIDTH : natural := 12
@@ -43,9 +43,9 @@ entity dugong is
 		WB_I    : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		WB_O    : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0)
 	);
-end dugong;
+end dugong_controller;
 
-architecture Behavioral of dugong is
+architecture Behavioral of dugong_controller is
 	--WB Master Lines
 	signal dat_i : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal dat_o : std_logic_vector(DATA_WIDTH - 1 downto 0);

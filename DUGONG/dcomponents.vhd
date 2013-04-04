@@ -75,7 +75,7 @@ package dcomponents is
 		);
 	end component;
 
-	component dugong
+	component dugong_controller
 		generic(
 			DATA_WIDTH : natural := 32;
 			ADDR_WIDTH : natural := 12

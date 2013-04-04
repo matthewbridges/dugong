@@ -21,8 +21,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-library dugong_ip_cores;
-use dugong_ip_cores.dcores.ALL;
+library DUGONG_IP_CORES;
+use DUGONG_IP_CORES.dcores.ALL;
 
 entity dds_core_ip is
 	generic(
@@ -54,10 +54,11 @@ architecture Behavioral of dds_core_ip is
 	signal we_i  : STD_LOGIC;
 	signal ack_o : STD_LOGIC;
 
-	component dds_core is
+	component dds_core
 		generic(
-			DATA_WIDTH : natural := 16;
-			ADDR_WIDTH : natural := 2
+			DATA_WIDTH  : natural := 16;
+			ADDR_WIDTH  : natural := 2;
+			PHASE_WIDTH : natural := 8
 		);
 		port(
 			--System Control Inputs
@@ -71,12 +72,12 @@ architecture Behavioral of dds_core_ip is
 			WE_I      : in  STD_LOGIC;
 			--		CYC_I : in   STD_LOGIC;
 			ACK_O     : out STD_LOGIC;
-			--Signal Channel Outputs
+			--Signal Channel Inputs
 			DSP_CLK_I : in  STD_LOGIC;
-			CH_A_O    : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			CH_B_O    : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+			CH_A_O    : out STD_LOGIC_VECTOR(15 downto 0);
+			CH_B_O    : out STD_LOGIC_VECTOR(15 downto 0)
 		);
-	end component;
+	end component dds_core;
 
 begin
 	bus_logic : wb_s
