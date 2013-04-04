@@ -11,7 +11,7 @@ entity system_controller is
 		ADDR_WIDTH      : NATURAL               := 12;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 		CORE_DATA_WIDTH : NATURAL               := 32;
-		CORE_ADDR_WIDTH : NATURAL               := 3
+		CORE_ADDR_WIDTH : NATURAL               := 4
 	);
 	port(
 		--System Clock Differential Inputs 100MHz
@@ -39,13 +39,14 @@ entity system_controller is
 end entity system_controller;
 
 architecture RTL of system_controller is
-	COMPONENT clk_counter_ip
+	component clk_counter_ip
 		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 32;
-			CORE_ADDR_WIDTH : NATURAL               := 3
+			DATA_WIDTH      : NATURAL                       := 32;
+			ADDR_WIDTH      : NATURAL                       := 12;
+			BASE_ADDR       : UNSIGNED(11 downto 0)         := x"000";
+			CORE_DATA_WIDTH : NATURAL                       := 32;
+			CORE_ADDR_WIDTH : NATURAL                       := 3;
+			MASTER_CNT      : std_logic_vector(31 downto 0) := x"07530000"
 		);
 		port(
 			--System Control Inputs
@@ -55,9 +56,9 @@ architecture RTL of system_controller is
 			WB_I        : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O        : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			--Test Clocks
-			TEST_CLOCKS : in  STD_LOGIC_VECTOR(3 downto 0)
+			TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** CORE_ADDR_WIDTH) - 6 downto 0)
 		);
-	END COMPONENT;
+	end component;
 
 	--Input Buffering
 	signal sys_clk_b      : std_logic;
@@ -87,7 +88,7 @@ architecture RTL of system_controller is
 	-- Status Signal
 	signal sys_not_locked : std_logic;
 	-- Clock Monitoring
-	signal test_clocks    : std_logic_vector(3 downto 0);
+	signal test_clocks    : std_logic_vector((2 ** CORE_ADDR_WIDTH) - 6 downto 0);
 
 begin
 	-- Initial Test Signal
@@ -229,32 +230,6 @@ begin
 
 	CLK_983MHZ <= clkout3_b;
 
-	--	-- GIGE GTX  Clock Generator
-	--	GTX_CLK_DCM_CLKGEN : DCM_CLKGEN
-	--		generic map(
-	--			CLKFXDV_DIVIDE  => 2,
-	--			CLKFX_DIVIDE    => 4,
-	--			CLKFX_MD_MAX    => 0.0,
-	--			CLKFX_MULTIPLY  => 25,
-	--			CLKIN_PERIOD    => 10.00,
-	--			SPREAD_SPECTRUM => "NONE",
-	--			STARTUP_WAIT    => FALSE
-	--		)
-	--		port map(
-	--			CLKFX     => clkout4,
-	--			CLKFX180  => clkout5,
-	--			CLKFXDV   => open,
-	--			LOCKED    => dcm1_locked,
-	--			PROGDONE  => open,
-	--			STATUS    => open,
-	--			CLKIN     => dcm_clkin,
-	--			FREEZEDCM => '0',
-	--			PROGCLK   => '0',
-	--			PROGDATA  => '0',
-	--			PROGEN    => '0',
-	--			RST       => SYS_RST
-	--		);
-
 	clkout4_buf : BUFG
 		port map(
 			O => clkout4_b,
@@ -303,12 +278,14 @@ begin
 	-- Clock Counter for Debugging
 	Clock_Counter : clk_counter_ip
 		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH,
-			BASE_ADDR  => BASE_ADDR
+			DATA_WIDTH      => DATA_WIDTH,
+			ADDR_WIDTH      => ADDR_WIDTH,
+			BASE_ADDR       => BASE_ADDR,
+			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
+			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
-			CLK_I       => clkout0_b,--sys_clk_b,
+			CLK_I       => clkout0_b,
 			RST_I       => sys_not_locked,
 			WB_I        => WB_I,
 			WB_O        => WB_O,
@@ -317,7 +294,10 @@ begin
 
 	test_clocks(0) <= clkout0_b;
 	test_clocks(1) <= clkout1_b;
-	test_clocks(2) <= clkout3_b;        -- 983 MHz
-	test_clocks(3) <= clkout4_b;        --  15 MHz
+	test_clocks(2) <= clkout2_b;
+	test_clocks(3) <= clkout3_b;
+	test_clocks(4) <= clkout4_b;
+	test_clocks(5) <= clkout5_b;
+	test_clocks(6) <= sys_clk_b;
 
 end architecture RTL;

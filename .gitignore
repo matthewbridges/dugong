@@ -37,8 +37,9 @@ pepExtractor.prj
 impact.xsl
 impact_impact.xwbt
 
-*.xise
 *.gise
+*.ise
+iseconfig
 
 #################
 ## Eclipse

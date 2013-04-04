@@ -62,7 +62,7 @@ package dcomponents is
 			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 			CORE_DATA_WIDTH : NATURAL               := 32;
-			CORE_ADDR_WIDTH : NATURAL               := 3
+			CORE_ADDR_WIDTH : NATURAL               := 4
 		);
 		port(
 			--System Clock Differential Inputs 100MHz

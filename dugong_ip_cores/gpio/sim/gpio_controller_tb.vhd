@@ -2,15 +2,15 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   07:49:27 10/16/2012
+-- Create Date:   17:07:48 04/02/2013
 -- Design Name:   
--- Module Name:   /home/mbridges/Projects/Dugong/spi_master_tb.vhd
--- Project Name:  Dugong
+-- Module Name:   C:/Users/Matthew Bridges/projects/dugong/dugong_ip_cores/gpio/sim/gpio_controller_tb.vhd
+-- Project Name:  dugong
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
 -- 
--- VHDL Test Bench Created by ISE for module: spi_master
+-- VHDL Test Bench Created by ISE for module: gpio_controller
 -- 
 -- Dependencies:
 -- 
@@ -28,81 +28,67 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
-library RHINO_DUGONG;
-use RHINO_DUGONG.dcomponents.ALL;
-
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
 
-ENTITY spi_m_tb IS
-END spi_m_tb;
+ENTITY gpio_controller_tb IS
+END gpio_controller_tb;
 
-ARCHITECTURE behavior OF spi_m_tb IS
+ARCHITECTURE behavior OF gpio_controller_tb IS
 
 	-- Component Declaration for the Unit Under Test (UUT)
 
-	component spi_m
+	component gpio_controller
 		generic(
 			DATA_WIDTH : natural := 16;
 			ADDR_WIDTH : natural := 3
 		);
 		port(
-			CLK_I     : in  STD_LOGIC;
-			RST_I     : in  STD_LOGIC;
-			DAT_I     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			STB_I     : in  STD_LOGIC;
-			WE_I      : in  STD_LOGIC;
-			ACK_O     : out STD_LOGIC;
-			SPI_CLK_I : in  STD_LOGIC;
-			SPI_CE    : in  STD_LOGIC;
-			SPI_MOSI  : out STD_LOGIC;
-			SPI_MISO  : in  STD_LOGIC;
-			SPI_N_SS  : out STD_LOGIC
+			CLK_I : in    STD_LOGIC;
+			RST_I : in    STD_LOGIC;
+			DAT_I : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I : in    STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_I : in    STD_LOGIC;
+			WE_I  : in    STD_LOGIC;
+			ACK_O : out   STD_LOGIC;
+			GPIO  : inout STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
 		);
-	end component spi_m;
+	end component gpio_controller;
 
 	--Inputs
-	signal CLK_I     : std_logic                     := '0';
-	signal RST_I     : std_logic                     := '1';
-	signal DAT_I     : std_logic_vector(15 downto 0) := (others => '0');
-	signal ADR_I     : std_logic_vector(2 downto 0)  := (others => '0');
-	signal STB_I     : std_logic                     := '0';
-	signal WE_I      : std_logic                     := '0';
-	signal SPI_CLK_I : std_logic                     := '0';
-	signal SPI_CE    : std_logic                     := '0';
-	signal SPI_MISO  : std_logic                     := '0';
+	signal CLK_I : std_logic                     := '0';
+	signal RST_I : std_logic                     := '1';
+	signal DAT_I : std_logic_vector(15 downto 0) := (others => '0');
+	signal ADR_I : std_logic_vector(2 downto 0)  := (others => '0');
+	signal STB_I : std_logic                     := '0';
+	signal WE_I  : std_logic                     := '0';
+
+	--BiDirs
+	signal GPIO : std_logic_vector(15 downto 0) := (others => 'Z');
 
 	--Outputs
-	signal DAT_O    : std_logic_vector(15 downto 0);
-	signal ACK_O    : std_logic;
-	signal SPI_MOSI : std_logic;
-	signal SPI_N_SS : std_logic;
+	signal DAT_O : std_logic_vector(15 downto 0);
+	signal ACK_O : std_logic;
 
 	-- Clock period definitions
-	constant CLK_I_period     : time := 10 ns;
-	constant SPI_CLK_I_period : time := 320 ns;
+	constant CLK_I_period : time := 10 ns;
 
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
-	uut : spi_m
+	uut : gpio_controller
 		port map(
-			CLK_I     => CLK_I,
-			RST_I     => RST_I,
-			DAT_I     => DAT_I,
-			DAT_O     => DAT_O,
-			ADR_I     => ADR_I,
-			STB_I     => STB_I,
-			WE_I      => WE_I,
-			ACK_O     => ACK_O,
-			SPI_CLK_I => SPI_CLK_I,
-			SPI_CE    => SPI_CE,
-			SPI_MOSI  => SPI_MOSI,
-			SPI_MISO  => SPI_MISO,
-			SPI_N_SS  => SPI_N_SS
+			CLK_I => CLK_I,
+			RST_I => RST_I,
+			DAT_I => DAT_I,
+			DAT_O => DAT_O,
+			ADR_I => ADR_I,
+			STB_I => STB_I,
+			WE_I  => WE_I,
+			ACK_O => ACK_O,
+			GPIO  => GPIO
 		);
 
 	-- Clock process definitions
@@ -112,15 +98,6 @@ BEGIN
 		wait for CLK_I_period / 2;
 		CLK_I <= '1';
 		wait for CLK_I_period / 2;
-	end process;
-
-	-- Clock process definitions
-	SPI_CLK_I_process : process
-	begin
-		SPI_CLK_I <= '0';
-		wait for SPI_CLK_I_period / 2;
-		SPI_CLK_I <= '1';
-		wait for SPI_CLK_I_period / 2;
 	end process;
 
 	-- Stimulus process
@@ -135,8 +112,8 @@ BEGIN
 
 		-- insert stimulus here
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"0000";               --Read from SPI count 
-		ADR_I <= "011";                 --ADDR x3
+		DAT_I <= x"0000";               --Read from GPIO_OE 
+		ADR_I <= "010";                 --ADDR x3
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -144,7 +121,7 @@ BEGIN
 		STB_I <= '0';                   --NULL
 		DAT_I <= x"0000";
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"000F";               --Write to x000F to SPI output
+		DAT_I <= x"000F";               --Write x000F to GPIO_OUT
 		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '1';                   --Write
 		STB_I <= '1';                   --Strobe
@@ -154,7 +131,28 @@ BEGIN
 		WE_I  <= '0';
 		DAT_I <= x"0000";
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"0000";               --Read from SPI input 
+		DAT_I <= x"0000";               --Read from GPIO_IN 
+		ADR_I <= "001";                 --ADDR x1
+		WE_I  <= '0';                   --Read
+		STB_I <= '1';                   --Strobe
+		wait until rising_edge(ACK_O);
+		wait until rising_edge(CLK_I);
+		STB_I <= '0';                   --NULL
+		DAT_I <= x"0000";
+		GPIO  <= x"FF00";
+		wait until rising_edge(CLK_I);
+		GPIO(7 downto 0) <= (others => 'Z');
+		DAT_I            <= x"00FF";    --Write x00FF to GPIO_OE
+		ADR_I            <= "010";      --ADDR x0
+		WE_I             <= '1';        --Write
+		STB_I            <= '1';        --Strobe
+		wait until rising_edge(ACK_O);
+		wait until rising_edge(CLK_I);
+		STB_I <= '0';                   --NULL
+		WE_I  <= '0';
+		DAT_I <= x"0000";
+		wait until rising_edge(CLK_I);
+		DAT_I <= x"0000";               --Read from GPIO_IN 
 		ADR_I <= "001";                 --ADDR x1
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
@@ -163,50 +161,17 @@ BEGIN
 		STB_I <= '0';                   --NULL
 		DAT_I <= x"0000";
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"00FF";               --Write to x00FF to SPI output
+		DAT_I <= x"0000";               --Write x0000 to GPIO_OUT
 		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '1';                   --Write
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
-		DAT_I <= x"0000";
-		wait until rising_edge(CLK_I);
-		DAT_I <= x"0000";               --Read from SPI input 
-		ADR_I <= "001";                 --ADDR x1
-		WE_I  <= '0';                   --Read
-		STB_I <= '1';                   --Strobe
-		wait until rising_edge(ACK_O);
-		wait until rising_edge(CLK_I);
-		STB_I <= '0';                   --NULL
-		DAT_I <= x"0000";
-		wait until rising_edge(CLK_I);
-		DAT_I <= x"0000";               --Read from SPI input 
-		ADR_I <= "010";                 --ADDR x2
-		WE_I  <= '0';                   --Read
-		STB_I <= '1';                   --Strobe
-		wait until rising_edge(ACK_O);
-		wait until rising_edge(CLK_I);
-		STB_I <= '0';                   --NULL
+		WE_I  <= '0';
 		DAT_I <= x"0000";
 		ADR_I <= "000";
-		wait;
-	end process;
-
-	-- Stimulus process
-	spi_stim_proc : process
-	begin
-		-- hold reset state for 500 ns.
-		wait for 800 ns;
-
-		SPI_CE <= '1';
-
-		wait until falling_edge(SPI_N_SS);
-		wait for SPI_CLK_I_period * 8;
-		SPI_MISO <= '1';
-		wait for SPI_CLK_I_period * 8;
-		SPI_MISO <= '0';
-
+		GPIO  <= x"0000";
 		wait;
 	end process;
 

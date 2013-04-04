@@ -113,7 +113,7 @@ begin
 	core_adr     <= unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0));
 	core_mem_sel <= '1' when (core_adr < 4) else '0';
 
-	process(core_sel, core_adr, DAT_O, ACK_O, dat_sm, ack_sm)
+	process(core_sel, core_mem_sel, DAT_O, ACK_O, dat_sm, ack_sm)
 	begin
 		if (core_sel = '1') then
 			if (core_mem_sel = '1') then
