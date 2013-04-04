@@ -53,7 +53,7 @@ begin
 			--Check for reset
 			if (RST_I = '1') then
 				ACK_O       <= '0';
-				user_mem(0) <= MASTER_CNT;
+				user_mem((2 ** ADDR_WIDTH) - 5) <= MASTER_CNT;
 				mem_ack     <= false;
 			--				lock        <= '0';
 
@@ -62,9 +62,9 @@ begin
 				mem_ack <= mem_stb;
 				--Check for internal strobe	
 				if (mem_stb) then
-					user_mem(1) <= std_logic_vector(count(0));
-					user_mem(2) <= std_logic_vector(count(1));
-					user_mem(3) <= std_logic_vector(count(2));
+					user_mem(0) <= std_logic_vector(count(0));
+					user_mem(1) <= std_logic_vector(count(1));
+					user_mem(2) <= std_logic_vector(count(2));
 				--					lock        <= '0';
 				else
 					--Check for external strobe
@@ -81,7 +81,7 @@ begin
 							--									ACK_O <= '1';
 							--								end if;
 							--Read-only memory
-							when 1 | 2 | 3 =>
+							when 0 | 1 | 2 =>
 								ACK_O <= '1';
 							--Not Lockable, read/write memory
 							when others =>
@@ -111,9 +111,9 @@ begin
 			else
 				-- RESET STATE
 				if (rst_count = '1') then
-					master_count <= unsigned(user_mem(0)) - 1; --Signal Propagation Bug
-					if (count_valid = "000") then
-						rst_count <= '0';
+					master_count <= unsigned(user_mem((2 ** ADDR_WIDTH) - 5)) - 1; --Signal Propagation Bug
+					if (count_valid(0) = '0') then --WHAT IF NO CLOCK SIGNAL?
+						rst_count  <= '0';
 						read_count <= '0';
 					end if;
 				-- READING STATE
@@ -122,7 +122,7 @@ begin
 					if (mem_stb and mem_ack) then
 						mem_stb   <= false;
 						rst_count <= '1';
-					elsif (count_valid = "111") then
+					elsif (count_valid(0) = '1') then --WHAT IF NO CLOCK SIGNAL?
 						mem_stb <= true;
 					end if;
 				-- COUNTING STATE
@@ -145,7 +145,7 @@ begin
 					count(clk_number)       <= x"00000000";
 					count_valid(clk_number) <= '0';
 				elsif (read_count = '1') then
-					count_valid(clk_number) <= '1';  --WHAT IF NO CLOCK SIGNAL?
+					count_valid(clk_number) <= '1';
 				-- COUNTING STATE
 				else
 					count(clk_number) <= count(clk_number) + 1;

@@ -28,8 +28,8 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
-library RHINO_DUGONG;
-use RHINO_DUGONG.dcomponents.ALL;
+library dugong_ip_cores;
+use dugong_ip_cores.dcores.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -97,7 +97,7 @@ BEGIN
 	-- Instantiate the Unit Under Test (UUT)
 	uut : spi_master
 		generic map(
-			ADDR_WIDTH => 5,
+			ADDR_WIDTH   => 5,
 			DEFAULT_DATA => (
 				0 => x"000010070",      --0xXXX & XXPV & 0xAADD
 				1 => x"000010101",

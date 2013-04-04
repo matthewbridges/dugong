@@ -4,35 +4,13 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
-library RHINO_DUGONG;
-use RHINO_DUGONG.dcomponents.all;
+library dugong_ip_cores;
+use dugong_ip_cores.dcores.ALL;
 
 ENTITY spi_m_ip_tb IS
 END spi_m_ip_tb;
 
 ARCHITECTURE behavior OF spi_m_ip_tb IS
-
-	-- Component Declaration
-	component spi_m_ip
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3
-		);
-		port(
-			CLK_I     : in  STD_LOGIC;
-			RST_I     : in  STD_LOGIC;
-			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			SPI_CLK_I : in  STD_LOGIC;
-			SPI_CE    : in  STD_LOGIC;
-			SPI_MOSI  : out STD_LOGIC;
-			SPI_MISO  : in  STD_LOGIC;
-			SPI_N_SS  : out STD_LOGIC
-		);
-	end component spi_m_ip;
 
 	--Inputs
 	signal CLK_I     : std_logic                     := '0';

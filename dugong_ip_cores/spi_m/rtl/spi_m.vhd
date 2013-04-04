@@ -21,9 +21,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-library RHINO_DUGONG;
-use RHINO_DUGONG.dcomponents.all;
-
 entity spi_m is
 	generic(
 		DATA_WIDTH : natural := 16;

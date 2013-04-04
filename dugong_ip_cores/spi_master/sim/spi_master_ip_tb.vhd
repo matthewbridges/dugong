@@ -4,8 +4,8 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
-library RHINO_DUGONG;
-use RHINO_DUGONG.dcomponents.all;
+library dugong_ip_cores;
+use dugong_ip_cores.dcores.ALL;
 
 ENTITY spi_master_ip_tb IS
 END spi_master_ip_tb;

@@ -30,31 +30,15 @@ USE ieee.std_logic_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
-USE ieee.numeric_std.ALL;
+-- USE ieee.numeric_std.ALL;
+
+library dugong_ip_cores;
+use dugong_ip_cores.dcores.ALL;
 
 ENTITY gpio_controller_ip_tb IS
 END gpio_controller_ip_tb;
 
 ARCHITECTURE behavior OF gpio_controller_ip_tb IS
-
-	-- Component Declaration for the Unit Under Test (UUT)
-
-	component gpio_controller_ip
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3
-		);
-		port(
-			CLK_I : in    STD_LOGIC;
-			RST_I : in    STD_LOGIC;
-			WB_I  : in    STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O  : out   STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			GPIO  : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
-		);
-	end component gpio_controller_ip;
 
 	--Inputs
 	signal CLK_I : std_logic                     := '0';
@@ -145,10 +129,10 @@ BEGIN
 		WB_I <= "111" & x"004" & x"00000000"; --Write x0000 to GPIO_OUT
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
-		WB_I <= "000" & x"000" & x"00000000"; --NULL
+		WB_I              <= "000" & x"000" & x"00000000"; --NULL
 		GPIO(15 downto 0) <= (others => 'Z');
 		wait until rising_edge(CLK_I);
-		WB_I             <= "111" & x"006" & x"00000000"; --Write x00FF to GPIO_OE
+		WB_I <= "111" & x"006" & x"00000000"; --Write x00FF to GPIO_OE
 		wait until rising_edge(WB_O(32));
 		wait until rising_edge(CLK_I);
 		WB_I <= "000" & x"000" & x"00000000"; --NULL

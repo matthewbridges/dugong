@@ -130,7 +130,7 @@ BEGIN
 		-- insert stimulus here
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Master Count 
-		ADR_I <= "000";                 --ADDR x0
+		ADR_I <= "011";                 --ADDR x3
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -139,7 +139,7 @@ BEGIN
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "001";                 --ADDR x0
+		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -148,7 +148,7 @@ BEGIN
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"0000002F";           --Write to x000F to Master Count
-		ADR_I <= "000";                 --ADDR x0
+		ADR_I <= "011";                 --ADDR x3
 		WE_I  <= '1';                   --Write
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -158,7 +158,7 @@ BEGIN
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "001";                 --ADDR x0
+		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -167,7 +167,7 @@ BEGIN
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "001";                 --ADDR x0
+		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -176,7 +176,7 @@ BEGIN
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "001";                 --ADDR x0
+		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -188,7 +188,7 @@ BEGIN
 
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "001";                 --ADDR x0
+		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -197,7 +197,7 @@ BEGIN
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "001";                 --ADDR x0
+		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);
@@ -206,7 +206,7 @@ BEGIN
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "001";                 --ADDR x0
+		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
 		wait until rising_edge(ACK_O);

@@ -31,7 +31,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity wb_m is
 	generic(
-		DATA_WIDTH : natural := 16;
+		DATA_WIDTH : natural := 32;
 		ADDR_WIDTH : natural := 12
 	);
 	port(
