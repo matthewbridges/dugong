@@ -39,6 +39,13 @@ impact_impact.xwbt
 
 *.gise
 *.ise
+*.ngc
+*.ngr
+*.prj
+*.syr
+*.xst
+*.xrpt
+*.xml
 iseconfig
 
 #################

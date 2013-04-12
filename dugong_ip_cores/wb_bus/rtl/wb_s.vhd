@@ -19,15 +19,10 @@
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
 use IEEE.NUMERIC_STD.ALL;
 
--- Uncomment the following library declaration if instantiating
--- any Xilinx primitives in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+library DUGONG_IP_CORES;
+use DUGONG_IP_CORES.dcores.ALL;
 
 entity wb_s is
 	generic(
@@ -66,75 +61,61 @@ architecture Behavioral of wb_s is
 	signal dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal ack_sm : std_logic;
 
-	signal core_sel     : std_logic;
-	signal core_mem_sel : std_logic;
-	signal core_adr     : unsigned(CORE_ADDR_WIDTH - 1 downto 0);
+	--Addressing Architecture
+	signal core_addr : unsigned(CORE_ADDR_WIDTH - 1 downto 0) := (others => '0');
+	signal core_sel  : std_logic;
+	signal user_sel  : std_logic;
 
+	--User memory architecture
 	type ram_type is array (0 to 3) of std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal core_mem : ram_type;
+	signal core_mem : ram_type                 := (others => (others => '0'));
+	signal stb      : std_logic_vector(0 to 3) := (others => '0');
+	signal ack      : std_logic_vector(0 to 3) := (others => '0');
 
 begin
-	------------------------------------
-	--------- Recode this entire process
-	------------------------------------
-	process(CLK_I)
+
+	--Core Address --> equals IP Address(core_addr_width-1:0)
+	core_addr <= unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0));
+	core_sel  <= '1' when (adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH) = std_logic_vector(BASE_ADDR(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH))) else '0';
+	user_sel  <= core_sel when core_addr > 3 else '0';
+
+	--Generate Bus registers
+	bus_registers : for addr in 0 to 3 generate
 	begin
+		--Check for valid addr
+		stb(addr) <= (stb_ms and core_sel) when core_addr = addr else '0';
 
-		--Perform Clock Rising Edge operations
-		if (rising_edge(CLK_I)) then
-			--Check for reset
-			if (RST_I = '1') then
-				dat_sm                               <= (others => '0');
-				ack_sm                               <= '0';
-				core_mem(0)(ADDR_WIDTH - 1 downto 0) <= std_logic_vector(BASE_ADDR); --For 12 bit addressing
-				core_mem(0)(31 downto ADDR_WIDTH)    <= (others => '0');
-				core_mem(1)(ADDR_WIDTH - 1 downto 0) <= std_logic_vector(BASE_ADDR + (2 ** CORE_ADDR_WIDTH) - 1); --For 12 bit addressing
-				core_mem(1)(31 downto ADDR_WIDTH)    <= (others => '0');
-				core_mem(2)                          <= "10101010101010101010101010101010"; --Test Signal
-				core_mem(3)                          <= "01010101010101010101010101010101"; --Test Signal
+		--WISHBONE Register
+		reg : wb_register
+			generic map(
+				DATA_WIDTH => DATA_WIDTH
+			)
+			port map(
+				CLK_I => CLK_I,
+				RST_I => RST_I,
+				DAT_I => dat_ms,
+				DAT_O => core_mem(addr),
+				WE_I  => we_ms,
+				STB_I => stb(addr),
+				ACK_O => ack(addr)
+			);
 
-			elsif ((core_sel and core_mem_sel) = '1') then
-				--Check for strobe
-				if (stb_ms = '1') then
-					dat_sm <= core_mem(to_integer(core_adr));
-					ack_sm <= '1';
-					--Check for write
-					if (we_ms = '1') then
-						core_mem(to_integer(core_adr)) <= dat_ms;
-					end if;
-				else
-					ack_sm <= '0';
-				end if;
-			end if;
-		end if;
-	end process;
+	end generate bus_registers;
 
-	core_sel     <= '1' when (adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH) = std_logic_vector(BASE_ADDR(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH))) else '0';
-	core_adr     <= unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0));
-	core_mem_sel <= '1' when (core_adr < 4) else '0';
+	--WB Output Ports
+	ack_sm                                        <= ACK_O when (user_sel = '1') else ack(to_integer(core_addr(1 downto 0)));
+	dat_sm(CORE_DATA_WIDTH - 1 downto 0)          <= DAT_O when (user_sel = '1') else core_mem(to_integer(core_addr(1 downto 0)))(CORE_DATA_WIDTH - 1 downto 0);
+	dat_sm(DATA_WIDTH - 1 downto CORE_DATA_WIDTH) <= (others => '0') when (user_sel = '1') else core_mem(to_integer(core_addr(1 downto 0)))(DATA_WIDTH - 1 downto CORE_DATA_WIDTH);
 
-	process(core_sel, core_mem_sel, DAT_O, ACK_O, dat_sm, ack_sm)
-	begin
-		if (core_sel = '1') then
-			if (core_mem_sel = '1') then
-				--WB Output Ports
-				WB_O <= (ack_sm & dat_sm);
-			else
-				--WB Output Ports
-				WB_O(DATA_WIDTH downto CORE_DATA_WIDTH) <= (DATA_WIDTH => ACK_O, others => '0');
-				WB_O(CORE_DATA_WIDTH - 1 downto 0)      <= DAT_O;
-			end if;
-		else
-			--WB Output Ports
-			WB_O <= (others => 'Z');
-		end if;
-	end process;
+	--Generate WB Output Port tri-state buffers for each line
+	WB_O <= ack_sm & dat_sm when core_sel = '1' else (others => 'Z');
 
 	--WB Input Ports
 	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);
-	ADR_I <= std_logic_vector(core_adr - 4) when core_mem_sel = '0' else (others => '0');
+	ADR_I <= std_logic_vector(core_addr - 4); -- when core_mem_sel = '0' else (others => '0');
 	WE_I  <= we_ms;
-	STB_I <= stb_ms and (core_sel and not core_mem_sel);
-	cyc_I <= cyc_ms and (core_sel and not core_mem_sel);
+	STB_I <= stb_ms and user_sel;
+	cyc_I <= cyc_ms and user_sel;
+
 end Behavioral;
 

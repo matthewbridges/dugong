@@ -48,23 +48,24 @@ entity gpio_controller is
 end gpio_controller;
 
 architecture Behavioral of gpio_controller is
-	--Core user memory architecture
+	signal user_addr : integer := 0;
+
+	--User memory architecture
 	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 5) of std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal user_mem : ram_type := (others => (others => '0'));
-	type array_type is array (0 to (2 ** ADDR_WIDTH) - 5) of std_logic;
-	signal stb     : array_type;        -- := (others => '0');
-	signal ack     : array_type;
-	signal mem_adr : integer := 0;
+	signal user_mem : ram_type                                     := (others => (others => '0'));
+	signal stb      : std_logic_vector(0 to (2 ** ADDR_WIDTH) - 5) := (others => '0');
+	signal ack      : std_logic_vector(0 to (2 ** ADDR_WIDTH) - 5) := (others => '0');
 
 begin
 
+	--User Memory Address --> equals IP Address(core_addr_width-1:0) - 4
+	user_addr <= to_integer(unsigned(ADR_I));
+
 	--Generate GPIO registers
-	user_core_registers : for addr in 0 to (2 ** ADDR_WIDTH) - 5 generate
-	--Check for valid addr
-	--stb(addr) <= STB_I when mem_adr = addr else '0';
-	--
+	user_registers : for addr in 0 to (2 ** ADDR_WIDTH) - 5 generate
 	begin
-		stb(addr) <= STB_I when mem_adr = addr else '0';
+		--Check for valid addr
+		stb(addr) <= STB_I when user_addr = addr else '0';
 
 		--WISHBONE Register
 		reg : wb_register
@@ -81,14 +82,12 @@ begin
 				ACK_O => ack(addr)
 			);
 
-	end generate user_core_registers;
+	end generate user_registers;
 
-	--Core Memory Address --> equals IP Address(core_addr_width-1:0) - 4
-	mem_adr <= to_integer(unsigned(ADR_I));
-	DAT_O   <= user_mem(mem_adr);
-	ACK_O <= ack(mem_adr);
+	DAT_O <= user_mem(user_addr);
+	ACK_O <= ack(user_addr);
 
-	--Generate GIO tri-state buffers for each gpio pin
+	--Generate GPIO tri-state buffers for each GPIO pin
 	gpio_tristate_buffers : for gpio_num in 0 to DATA_WIDTH - 1 generate
 		GPIO(gpio_num) <= user_mem(0)(gpio_num) when user_mem(2)(gpio_num) = '1' else 'Z';
 	end generate gpio_tristate_buffers;
