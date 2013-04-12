@@ -145,6 +145,25 @@ package dcores is
 			ACK_O : in  STD_LOGIC
 		);
 	end component;
+
+	component wb_register is
+		generic(
+			DATA_WIDTH : natural := 16
+		);
+		port(
+			--System Control Inputs:
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			--WISHBONE SLAVE interface:
+			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WE_I  : in  STD_LOGIC;
+			--SEL_I : in  STD_LOGIC_VECTOR(DATA_WIDTH / 8 - 1 downto 0);
+			STB_I : in  STD_LOGIC;
+			ACK_O : out STD_LOGIC
+		--CYC_I : in   STD_LOGIC;
+		);
+	end component;
 end package dcores;
 
 package body dcores is
