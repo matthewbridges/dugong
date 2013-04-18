@@ -45,7 +45,9 @@ impact_impact.xwbt
 *.syr
 *.xst
 *.xrpt
+*.xwbt
 *.xml
+*.mif
 iseconfig
 
 #################
