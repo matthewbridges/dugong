@@ -28,8 +28,8 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
-library dugong_ip_cores;
-use dugong_ip_cores.dcores.ALL;
+library DUGONG_IP_CORE_Lib;
+use DUGONG_IP_CORE_Lib.dcores.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values

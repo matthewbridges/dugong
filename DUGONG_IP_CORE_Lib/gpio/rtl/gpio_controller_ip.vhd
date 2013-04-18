@@ -21,8 +21,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-library DUGONG_IP_CORES;
-use DUGONG_IP_CORES.dcores.ALL;
+library DUGONG_IP_CORE_Lib;
+use DUGONG_IP_CORE_Lib.dcores.ALL;
 
 entity gpio_controller_ip is
 	generic(

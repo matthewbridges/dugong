@@ -29,11 +29,11 @@ use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.VComponents.all;
 
-library DUGONG;
-use DUGONG.dcomponents.ALL;
+library DUGONG_Lib;
+use DUGONG_Lib.dcomponents.ALL;
 
-library DUGONG_IP_CORES;
-use DUGONG_IP_CORES.dcores.ALL;
+library DUGONG_IP_CORE_Lib;
+use DUGONG_IP_CORE_Lib.dcores.ALL;
 
 entity rhino_top is
 	generic(

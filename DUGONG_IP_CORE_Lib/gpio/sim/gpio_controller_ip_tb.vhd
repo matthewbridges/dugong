@@ -32,8 +32,8 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 -- USE ieee.numeric_std.ALL;
 
-library DUGONG_IP_CORES;
-use DUGONG_IP_CORES.dcores.ALL;
+library DUGONG_IP_CORE_Lib;
+use DUGONG_IP_CORE_Lib.dcores.ALL;
 
 ENTITY gpio_controller_ip_tb IS
 END gpio_controller_ip_tb;

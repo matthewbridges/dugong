@@ -21,8 +21,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-library dugong_ip_cores;
-use dugong_ip_cores.dcores.ALL;
+library DUGONG_IP_CORE_Lib;
+use DUGONG_IP_CORE_Lib.dcores.ALL;
 
 entity spi_master is
 	generic(
