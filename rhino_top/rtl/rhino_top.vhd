@@ -37,8 +37,9 @@ use DUGONG_IP_CORES.dcores.ALL;
 
 entity rhino_top is
 	generic(
-		DATA_WIDTH : natural := 32;
-		ADDR_WIDTH : natural := 12
+		DATA_WIDTH      : natural := 32;
+		ADDR_WIDTH      : natural := 12;
+		NUMBER_OF_CORES : NATURAL := 4
 	);
 	port(
 		--System Control Inputs
@@ -104,7 +105,8 @@ architecture Behavioral of rhino_top is
 	signal spi_clk_15MHz_n : std_logic;
 	signal sys_con_rst     : std_logic;
 	signal wb_ms           : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-	signal wb_sm           : std_logic_vector(DATA_WIDTH downto 0);
+	signal wb_sm_bus       : std_logic_vector(DATA_WIDTH downto 0);
+	signal wb_sm           : WB_O_vector(NUMBER_OF_CORES - 1 downto 0);
 
 	signal test_clocks : std_logic_vector(2 downto 0);
 
@@ -143,8 +145,17 @@ begin
 			CLK_I   => sys_con_clk,
 			CLK_I_n => sys_con_clk_n,
 			RST_I   => sys_con_rst,
-			WB_I    => wb_sm,
+			WB_I    => wb_sm_bus,
 			WB_O    => wb_ms
+		);
+
+	WB_Intercon_1 : wb_intercon
+		generic map(
+			NUMBER_OF_CORES => NUMBER_OF_CORES
+		)
+		port map(
+			WB_O_bus => WB_sm_bus,
+			WB_O     => WB_sm
 		);
 
 	Clock_Counter : clk_counter_ip
@@ -157,7 +168,7 @@ begin
 			CLK_I       => sys_con_clk,
 			RST_I       => sys_con_rst,
 			WB_I        => wb_ms,
-			WB_O        => wb_sm,
+			WB_O        => wb_sm(0),
 			TEST_CLOCKS => test_clocks
 		);
 
@@ -174,7 +185,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm,
+			WB_O  => wb_sm(1),
 			GPIO  => LED
 		);
 
@@ -189,7 +200,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm,
+			WB_O  => wb_sm(2),
 			GPIO  => GPIO
 		);
 
@@ -204,7 +215,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm,
+			WB_O  => wb_sm(3),
 			GPIO  => DEBUG
 		);
 

@@ -89,6 +89,7 @@ begin
 
 	--Generate GPIO tri-state buffers for each GPIO pin
 	gpio_tristate_buffers : for gpio_num in 0 to DATA_WIDTH - 1 generate
+		--	GPIO(gpio_num) <= '1';
 		GPIO(gpio_num) <= user_mem(0)(gpio_num) when user_mem(2)(gpio_num) = '1' else 'Z';
 	end generate gpio_tristate_buffers;
 

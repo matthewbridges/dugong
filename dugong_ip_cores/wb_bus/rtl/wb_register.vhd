@@ -24,7 +24,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity wb_register is
 	generic(
-		DATA_WIDTH : natural := 16
+		DATA_WIDTH   : NATURAL                       := 16;
+		DEFAULT_DATA : STD_LOGIC_VECTOR(63 downto 0) := x"0000000000000000"
 	);
 	port(
 		--System Control Inputs:
@@ -42,7 +43,7 @@ entity wb_register is
 end wb_register;
 
 architecture Behavioral of wb_register is
-	signal Q : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal Q : std_logic_vector(DATA_WIDTH - 1 downto 0) := DEFAULT_DATA(DATA_WIDTH - 1 downto 0);
 
 begin
 	process(CLK_I)

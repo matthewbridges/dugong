@@ -103,12 +103,15 @@ begin
 	end generate bus_registers;
 
 	--WB Output Ports
-	ack_sm                                        <= ACK_O when (user_sel = '1') else ack(to_integer(core_addr(1 downto 0)));
-	dat_sm(CORE_DATA_WIDTH - 1 downto 0)          <= DAT_O when (user_sel = '1') else core_mem(to_integer(core_addr(1 downto 0)))(CORE_DATA_WIDTH - 1 downto 0);
-	dat_sm(DATA_WIDTH - 1 downto CORE_DATA_WIDTH) <= (others => '0') when (user_sel = '1') else core_mem(to_integer(core_addr(1 downto 0)))(DATA_WIDTH - 1 downto CORE_DATA_WIDTH);
+	ack_sm                               <= ACK_O when (user_sel = '1') else ack(to_integer(core_addr(1 downto 0)));
+	dat_sm(CORE_DATA_WIDTH - 1 downto 0) <= DAT_O when (user_sel = '1') else core_mem(to_integer(core_addr(1 downto 0)))(CORE_DATA_WIDTH - 1 downto 0);
+
+	data_reduction : if (CORE_DATA_WIDTH < DATA_WIDTH) generate
+		dat_sm(DATA_WIDTH - 1 downto CORE_DATA_WIDTH) <= (others => '0') when (user_sel = '1') else core_mem(to_integer(core_addr(1 downto 0)))(DATA_WIDTH - 1 downto CORE_DATA_WIDTH);
+	end generate data_reduction;
 
 	--Generate WB Output Port tri-state buffers for each line
-	WB_O <= ack_sm & dat_sm when core_sel = '1' else (others => 'Z');
+	WB_O <= ack_sm & dat_sm when core_sel = '1' else (others => '0');
 
 	--WB Input Ports
 	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);

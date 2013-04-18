@@ -7,6 +7,9 @@ package dcores is
 	type word_vector is array (natural range <>) of dword;
 	--	type SLV_2D is array (natural range <>, natural range <>) of std_logic;
 
+	subtype WB_O_type is std_logic_vector(32 downto 0);
+	type WB_O_vector is array (natural range <>) of WB_O_type;
+
 	component dds_core_ip
 		generic(
 			DATA_WIDTH      : NATURAL               := 32;
@@ -146,9 +149,21 @@ package dcores is
 		);
 	end component;
 
+	component wb_intercon is
+		generic(
+			NUMBER_OF_CORES : NATURAL := 4
+		);
+		port(
+			--Slave to WB
+			WB_O_bus : out WB_O_type;
+			WB_O     : in  WB_O_vector(NUMBER_OF_CORES - 1 downto 0)
+		);
+	end component;
+
 	component wb_register is
 		generic(
-			DATA_WIDTH : natural := 16
+			DATA_WIDTH   : NATURAL                       := 16;
+			DEFAULT_DATA : STD_LOGIC_VECTOR(63 downto 0) := x"0000000000000000"
 		);
 		port(
 			--System Control Inputs:

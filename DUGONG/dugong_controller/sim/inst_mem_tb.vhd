@@ -43,7 +43,7 @@ ARCHITECTURE behavior OF inst_mem_tb IS
 		PORT(
 			clka  : IN  STD_LOGIC;
 			addra : IN  STD_LOGIC_VECTOR(8 DOWNTO 0);
-			douta : OUT STD_LOGIC_VECTOR(63 DOWNTO 0)
+			douta : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
 		);
 	END COMPONENT;
 
@@ -52,7 +52,7 @@ ARCHITECTURE behavior OF inst_mem_tb IS
 	signal ADR_I : std_logic_vector(8 downto 0) := (others => '0');
 
 	--Outputs
-	signal DAT_O : std_logic_vector(63 downto 0);
+	signal DAT_O : std_logic_vector(47 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
