@@ -37,5 +37,5 @@ end wb_intercon;
 
 architecture Behavioral of wb_intercon is
 begin
-	WB_O_bus <= WB_O(0) or WB_O(1) or WB_O(2) or WB_O(3);
+	WB_O_bus <= WB_O(0) or WB_O(1) or WB_O(2) or WB_O(3) or WB_O(4);
 end Behavioral;

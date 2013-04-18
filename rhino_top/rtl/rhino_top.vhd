@@ -39,7 +39,7 @@ entity rhino_top is
 	generic(
 		DATA_WIDTH      : natural := 32;
 		ADDR_WIDTH      : natural := 12;
-		NUMBER_OF_CORES : NATURAL := 4
+		NUMBER_OF_CORES : NATURAL := 5
 	);
 	port(
 		--System Control Inputs
@@ -158,6 +158,18 @@ begin
 			WB_O     => WB_sm
 		);
 
+	GPMC_Shared_Mem : gpmc_interface_ip
+		generic map(DATA_WIDTH => DATA_WIDTH,
+			        ADDR_WIDTH => ADDR_WIDTH,
+			        BASE_ADDR  => x"000"
+		)
+		port map(
+			CLK_I => sys_con_clk,
+			RST_I => sys_con_rst,
+			WB_I  => wb_ms,
+			WB_O  => wb_sm(0)
+		);
+
 	Clock_Counter : clk_counter_ip
 		generic map(
 			DATA_WIDTH => DATA_WIDTH,
@@ -168,7 +180,7 @@ begin
 			CLK_I       => sys_con_clk,
 			RST_I       => sys_con_rst,
 			WB_I        => wb_ms,
-			WB_O        => wb_sm(0),
+			WB_O        => wb_sm(1),
 			TEST_CLOCKS => test_clocks
 		);
 
@@ -185,7 +197,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm(1),
+			WB_O  => wb_sm(2),
 			GPIO  => LED
 		);
 
@@ -200,7 +212,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm(2),
+			WB_O  => wb_sm(3),
 			GPIO  => GPIO
 		);
 
@@ -215,7 +227,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm(3),
+			WB_O  => wb_sm(4),
 			GPIO  => DEBUG
 		);
 

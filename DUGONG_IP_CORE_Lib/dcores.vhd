@@ -122,6 +122,22 @@ package dcores is
 			SPI_N_SS  : out STD_LOGIC
 		);
 	end component spi_master_ip;
+	
+	component gpmc_interface_ip
+		generic(
+			DATA_WIDTH      : NATURAL               := 32;
+			    ADDR_WIDTH      : NATURAL               := 12;
+			    BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+			    CORE_DATA_WIDTH : NATURAL               := 16;
+			    CORE_ADDR_WIDTH : NATURAL               := 10
+			    );
+		port(
+			CLK_I : in    STD_LOGIC;
+			 RST_I : in    STD_LOGIC;
+			 WB_I  : in    STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			 WB_O  : out   STD_LOGIC_VECTOR(DATA_WIDTH downto 0)
+			 );
+	end component gpmc_interface_ip;
 
 	component wb_s is
 		generic(
