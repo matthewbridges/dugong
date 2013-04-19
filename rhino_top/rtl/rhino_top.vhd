@@ -1,33 +1,34 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date:    18:32:38 08/30/2012 
--- Design Name: 
--- Module Name:    rhino_top - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
+---------------------------------------------------------------------------------------------------------------
+--                    
+--_____/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________      
+--\____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+-- \___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
+--  \___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
+--   \___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--    \___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--     \___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--      \___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--       \___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--        \                                                                                                \
+--         \==============  Reconfigurable Hardware Interface for computatioN and radiO  ===================\
+--          \============================  http://www.rhinoplatform.org  ====================================\
+--           \================================================================================================\
 --
--- Dependencies: 
+---------------------------------------------------------------------------------------------------------------
+-- Company:		UNIVERSITY OF CAPE TOWN
+-- Engineer: 	MATTHEW BRIDGES
 --
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
+-- Name:		RHINO TOP
+-- Type:		Top Level Module
+-- Description: This is the top level module joining all cores and controllers to ports and top level signals	
+--				The addressing of cores is also done in this module
 --
-----------------------------------------------------------------------------------
+-- Compliance:	DUGONG V0.0
+-- ID:			x0FFF
+---------------------------------------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
-use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx primitives in this code.
-library UNISIM;
-use UNISIM.VComponents.all;
 
 library DUGONG_Lib;
 use DUGONG_Lib.dcomponents.ALL;
@@ -39,7 +40,7 @@ entity rhino_top is
 	generic(
 		DATA_WIDTH      : natural := 32;
 		ADDR_WIDTH      : natural := 12;
-		NUMBER_OF_CORES : NATURAL := 5
+		NUMBER_OF_CORES : NATURAL := 6
 	);
 	port(
 		--System Control Inputs
@@ -158,10 +159,11 @@ begin
 			WB_O     => WB_sm
 		);
 
-	GPMC_Shared_Mem : gpmc_interface_ip
-		generic map(DATA_WIDTH => DATA_WIDTH,
-			        ADDR_WIDTH => ADDR_WIDTH,
-			        BASE_ADDR  => x"000"
+	Block_RAM_1 : bram_ip
+		generic map(
+			DATA_WIDTH => DATA_WIDTH,
+			ADDR_WIDTH => ADDR_WIDTH,
+			BASE_ADDR  => x"000"
 		)
 		port map(
 			CLK_I => sys_con_clk,
@@ -170,17 +172,30 @@ begin
 			WB_O  => wb_sm(0)
 		);
 
-	Clock_Counter : clk_counter_ip
+	ARM_FPGA_SHARED_MEM : gpmc_interface_ip
 		generic map(
 			DATA_WIDTH => DATA_WIDTH,
 			ADDR_WIDTH => ADDR_WIDTH,
 			BASE_ADDR  => x"E00"
 		)
 		port map(
+			CLK_I => sys_con_clk,
+			RST_I => sys_con_rst,
+			WB_I  => wb_ms,
+			WB_O  => wb_sm(1)
+		);
+
+	Clock_Counter : clk_counter_ip
+		generic map(
+			DATA_WIDTH => DATA_WIDTH,
+			ADDR_WIDTH => ADDR_WIDTH,
+			BASE_ADDR  => x"FF0"
+		)
+		port map(
 			CLK_I       => sys_con_clk,
 			RST_I       => sys_con_rst,
 			WB_I        => wb_ms,
-			WB_O        => wb_sm(1),
+			WB_O        => wb_sm(2),
 			TEST_CLOCKS => test_clocks
 		);
 
@@ -197,7 +212,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm(2),
+			WB_O  => wb_sm(3),
 			GPIO  => LED
 		);
 
@@ -212,7 +227,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm(3),
+			WB_O  => wb_sm(4),
 			GPIO  => GPIO
 		);
 
@@ -227,7 +242,7 @@ begin
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
 			WB_I  => wb_ms,
-			WB_O  => wb_sm(4),
+			WB_O  => wb_sm(5),
 			GPIO  => DEBUG
 		);
 

@@ -26,7 +26,7 @@ use DUGONG_IP_CORE_Lib.dcores.ALL;
 
 entity wb_intercon is
 	generic(
-		NUMBER_OF_CORES : NATURAL := 4
+		NUMBER_OF_CORES : NATURAL := 8
 	);
 	port(
 		--Slave to WB
@@ -37,5 +37,5 @@ end wb_intercon;
 
 architecture Behavioral of wb_intercon is
 begin
-	WB_O_bus <= WB_O(0) or WB_O(1) or WB_O(2) or WB_O(3) or WB_O(4);
+	WB_O_bus <= WB_O(0) or WB_O(1) or WB_O(2) or WB_O(3) or WB_O(4) or WB_O(5);
 end Behavioral;

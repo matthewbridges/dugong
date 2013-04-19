@@ -17,7 +17,7 @@
   <files>
     <file xil_pn:name="rtl/rhino_top.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="1"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="18"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="21"/>
     </file>
     <file xil_pn:name="sim/rhino_top_tb.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="2"/>
@@ -35,12 +35,12 @@
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/clk_counter/rtl/clk_counter.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="21"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="10"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="11"/>
       <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/clk_counter/rtl/clk_counter_ip.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="22"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="17"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="19"/>
       <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/dds/rtl/dds_core.vhd" xil_pn:type="FILE_VHDL">
@@ -55,22 +55,22 @@
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/gpio/rtl/gpio_controller.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="25"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="9"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="10"/>
       <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/gpio/rtl/gpio_controller_ip.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="26"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="16"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="18"/>
       <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/gpmc_interface/rtl/gpmc_interface.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="27"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="8"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="9"/>
       <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/gpmc_interface/rtl/gpmc_interface_ip.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="28"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="15"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="17"/>
       <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/spi_m/rtl/spi_m.vhd" xil_pn:type="FILE_VHDL">
@@ -85,7 +85,7 @@
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/wb_bus/rtl/wb_intercon.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="31"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="14"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="16"/>
       <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/wb_bus/rtl/wb_ram_sp.vhd" xil_pn:type="FILE_VHDL">
@@ -100,46 +100,63 @@
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/wb_bus/rtl/wb_s.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="34"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="7"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="8"/>
       <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_Lib/dcomponents.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="35"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="13"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="15"/>
       <library xil_pn:name="DUGONG_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_Lib/wb_bus/rtl/wb_m.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="36"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="4"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="5"/>
       <library xil_pn:name="DUGONG_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_Lib/system_controller/rtl/system_controller.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="37"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="11"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="13"/>
       <library xil_pn:name="DUGONG_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_Lib/dugong_controller/rtl/dugong_controller.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="38"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="12"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="14"/>
       <library xil_pn:name="DUGONG_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_Lib/dugong_controller/rtl/program_counter.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="39"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="5"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="6"/>
       <library xil_pn:name="DUGONG_Lib"/>
     </file>
     <file xil_pn:name="../DUGONG_Lib/dugong_controller/rtl/inst_mem/inst_mem.xco" xil_pn:type="FILE_COREGEN">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="40"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="6"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="7"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/gpmc_interface/rtl/gpmc_bram/gpmc_bram.xco" xil_pn:type="FILE_COREGEN">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="105"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="2"/>
     </file>
+    <file xil_pn:name="../DUGONG_IP_CORE_Lib/bram/rtl/bram.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="91"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="12"/>
+      <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
+    </file>
+    <file xil_pn:name="../DUGONG_IP_CORE_Lib/bram/rtl/bram_ip.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="92"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="20"/>
+      <library xil_pn:name="DUGONG_IP_CORE_Lib"/>
+    </file>
+    <file xil_pn:name="../DUGONG_IP_CORE_Lib/bram/rtl/bram_sp/bram_sp.xco" xil_pn:type="FILE_COREGEN">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="93"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="4"/>
+    </file>
     <file xil_pn:name="../DUGONG_Lib/dugong_controller/rtl/inst_mem/inst_mem.xise" xil_pn:type="FILE_COREGENISE">
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
     </file>
     <file xil_pn:name="../DUGONG_IP_CORE_Lib/gpmc_interface/rtl/gpmc_bram/gpmc_bram.xise" xil_pn:type="FILE_COREGENISE">
+      <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
+    </file>
+    <file xil_pn:name="../DUGONG_IP_CORE_Lib/bram/rtl/bram_sp/bram_sp.xise" xil_pn:type="FILE_COREGENISE">
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
     </file>
   </files>
