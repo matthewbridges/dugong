@@ -79,7 +79,18 @@ begin
 	--For code syntactics
 	we(0) <= WE_I;
 
-	ACK_O <= STB_I;
-
+	process(CLK_I)
+	begin
+		--Perform Clock Rising Edge operations
+		if (rising_edge(CLK_I)) then
+			--Check for reset
+			if (RST_I = '1') then
+				ACK_O <= '0';
+			else
+				ACK_O <= STB_I;
+			end if;
+		end if;
+	end process;
 end Behavioral;
+
 	
