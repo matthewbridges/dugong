@@ -53,6 +53,15 @@ entity rhino_top is
 		SYS_PLL_Locked : out   STD_LOGIC;
 		SYS_STATUS     : out   STD_LOGIC;
 
+		--GPMC Interface
+		GPMC_CLK       : in    STD_LOGIC;
+		GPMC_D         : inout STD_LOGIC_VECTOR(15 downto 0);
+		--		GPMC_A        : in    STD_LOGIC_VECTOR(10 downto 1);
+		GPMC_nCS       : in    STD_LOGIC;
+		GPMC_nWE       : in    STD_LOGIC;
+		GPMC_nOE       : in    STD_LOGIC;
+		GPMC_nADV_ALE  : in    STD_LOGIC;
+
 		--GPIO Interface
 		GPIO           : inout STD_LOGIC_VECTOR(15 downto 0);
 
@@ -60,7 +69,7 @@ entity rhino_top is
 		LED            : inout STD_LOGIC_VECTOR(7 downto 0);
 
 		--FMC150 CTRL interface
-		FMC150_CLK     : in    STD_LOGIC;
+		--    FMC150_CLK     : in    STD_LOGIC;
 		--		SPI_SCLK_O     : out STD_LOGIC;
 		--		SPI_MOSI_O     : out STD_LOGIC;
 		--		ADC_MISO_I     : in  STD_LOGIC;
@@ -179,10 +188,16 @@ begin
 			BASE_ADDR  => x"E00"
 		)
 		port map(
-			CLK_I => sys_con_clk,
-			RST_I => sys_con_rst,
-			WB_I  => wb_ms,
-			WB_O  => wb_sm(1)
+			CLK_I         => sys_con_clk,
+			RST_I         => sys_con_rst,
+			WB_I          => wb_ms,
+			WB_O          => wb_sm(1),
+			GPMC_CLK      => GPMC_CLK,
+			GPMC_D        => GPMC_D,
+			GPMC_nCS      => GPMC_nCS,
+			GPMC_nWE      => GPMC_nWE,
+			GPMC_nOE      => GPMC_nOE,
+			GPMC_nADV_ALE => GPMC_nADV_ALE
 		);
 
 	Clock_Counter : clk_counter_ip
@@ -199,7 +214,7 @@ begin
 			TEST_CLOCKS => test_clocks
 		);
 
-	test_clocks(2 downto 0) <= FMC150_CLK & dsp_clk_983MHZ & dsp_clk_246MHZ;
+	test_clocks(2 downto 0) <= spi_clk_15MHz & dsp_clk_983MHZ & dsp_clk_246MHZ;
 
 	LEDs_8 : gpio_controller_ip
 		GENERIC MAP(

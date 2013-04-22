@@ -60,6 +60,17 @@ xst/
 _ngo/
 _xmsgs/
 
+# other
+*.asy
+*.cgp
+*.cgc
+*.log
+*.mif
+*.ncf
+*.sym
+*.tcl
+*.txt
+*.vho
 #################
 ## Eclipse
 #################

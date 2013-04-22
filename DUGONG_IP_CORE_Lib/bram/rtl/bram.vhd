@@ -50,7 +50,7 @@ entity bram is
 end bram;
 
 architecture Behavioral of bram is
-	signal we : std_logic_vector(0 downto 0);
+	signal wea : std_logic_vector(0 downto 0);
 
 	component bram_sp
 		port(
@@ -65,19 +65,8 @@ architecture Behavioral of bram is
 	end component bram_sp;
 
 begin
-	inst : bram_sp
-		port map(
-			clka  => CLK_I,
-			rsta  => RST_I,
-			ena   => STB_I,
-			wea   => we,
-			addra => ADR_I,
-			dina  => DAT_I,
-			douta => DAT_O
-		);
-
 	--For code syntactics
-	we(0) <= WE_I;
+	wea(0) <= WE_I;
 
 	process(CLK_I)
 	begin
@@ -91,6 +80,18 @@ begin
 			end if;
 		end if;
 	end process;
+
+	inst : bram_sp
+		port map(
+			clka  => CLK_I,
+			rsta  => RST_I,
+			ena   => STB_I,
+			wea   => wea,
+			addra => ADR_I,
+			dina  => DAT_I,
+			douta => DAT_O
+		);
+
 end Behavioral;
 
 	
