@@ -46,7 +46,7 @@ entity gpmc_interface is
 		--GPMC Interface
 		GPMC_CLK_I      : in    STD_LOGIC;
 		GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
-		GPMC_A_I        : in    STD_LOGIC_VECTOR(1 downto 1); -- Debugging
+		GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
 		GPMC_nCS_I      : in    STD_LOGIC;
 		GPMC_nWE_I      : in    STD_LOGIC;
 		GPMC_nOE_I      : in    STD_LOGIC;
@@ -57,7 +57,7 @@ end gpmc_interface;
 architecture Behavioral of gpmc_interface is
 	signal gpmc_din  : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal gpmc_dout : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal gpmc_addr : std_logic_vector(16 downto 0);
+	signal gpmc_addr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
 
 	component bram_sync_dp
 		generic(
@@ -97,7 +97,7 @@ begin
 		if (rising_edge(GPMC_CLK_I)) then
 			--First cycle of the bus transaction record the address
 			if (GPMC_nADV_ALE_I = '0') then
-				gpmc_addr <= GPMC_A_I & GPMC_D_B; -- Address of 16 bit word
+				gpmc_addr <= GPMC_D_B(ADDR_WIDTH downto 1); -- Address of 16 bit word
 			end if;
 		end if;
 	end process;
@@ -116,7 +116,7 @@ begin
 			B_CLK_I => GPMC_CLK_I,
 			B_DAT_I => gpmc_din,
 			B_DAT_O => gpmc_dout,
-			B_ADR_I => gpmc_addr(10 downto 1),
+			B_ADR_I => gpmc_addr,
 			B_WE_I  => GPMC_nWE_I
 		);
 

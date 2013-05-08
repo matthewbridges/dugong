@@ -145,28 +145,28 @@ package dcores is
 	end component spi_master_ip;
 
 	component gpmc_interface_ip
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 32;
-			CORE_ADDR_WIDTH : NATURAL               := 10
-		);
-		port(
-			--System Control Inputs
-			CLK_I         : in    STD_LOGIC;
-			RST_I         : in    STD_LOGIC;
-			--Slave to WHISHBONE
-			WB_I          : in    STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O          : out   STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			--GPMC Interface
-			GPMC_CLK      : in    STD_LOGIC;
-			GPMC_D        : inout STD_LOGIC_VECTOR(15 downto 0);
-			GPMC_A        : in    STD_LOGIC_VECTOR(10 downto 1);
-			GPMC_nCS      : in    STD_LOGIC;
-			GPMC_nWE      : in    STD_LOGIC;
-			GPMC_nOE      : in    STD_LOGIC;
-			GPMC_nADV_ALE : in    STD_LOGIC
+	generic(
+		DATA_WIDTH      : NATURAL               := 32;
+		ADDR_WIDTH      : NATURAL               := 10;
+		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+		CORE_DATA_WIDTH : NATURAL               := 32;
+		CORE_ADDR_WIDTH : NATURAL               := 10
+	);
+	port(
+		--System Control Inputs
+		CLK_I           : in    STD_LOGIC;
+		RST_I           : in    STD_LOGIC;
+		--Slave to WB
+		WB_I            : in    STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+		WB_O            : out   STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		--GPMC Interface
+		GPMC_CLK_I      : in    STD_LOGIC;
+		GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
+		GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
+		GPMC_nCS_I      : in    STD_LOGIC;
+		GPMC_nWE_I      : in    STD_LOGIC;
+		GPMC_nOE_I      : in    STD_LOGIC;
+		GPMC_nADV_ALE_I : in    STD_LOGIC
 		);
 	end component gpmc_interface_ip;
 

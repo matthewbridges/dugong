@@ -56,7 +56,7 @@ entity rhino_top is
 		--GPMC Interface
 		GPMC_CLK       : in    STD_LOGIC;
 		GPMC_D         : inout STD_LOGIC_VECTOR(15 downto 0);
-		--		GPMC_A        : in    STD_LOGIC_VECTOR(10 downto 1);
+		GPMC_A         : in    STD_LOGIC_VECTOR(10 downto 1);
 		GPMC_nCS       : in    STD_LOGIC;
 		GPMC_nWE       : in    STD_LOGIC;
 		GPMC_nOE       : in    STD_LOGIC;
@@ -172,7 +172,7 @@ begin
 		generic map(
 			DATA_WIDTH => DATA_WIDTH,
 			ADDR_WIDTH => ADDR_WIDTH,
-			BASE_ADDR  => x"000"
+			BASE_ADDR  => x"E00"
 		)
 		port map(
 			CLK_I => sys_con_clk,
@@ -185,19 +185,20 @@ begin
 		generic map(
 			DATA_WIDTH => DATA_WIDTH,
 			ADDR_WIDTH => ADDR_WIDTH,
-			BASE_ADDR  => x"E00"
+			BASE_ADDR  => x"000"
 		)
 		port map(
-			CLK_I         => sys_con_clk,
-			RST_I         => sys_con_rst,
-			WB_I          => wb_ms,
-			WB_O          => wb_sm(1),
-			GPMC_CLK      => GPMC_CLK,
-			GPMC_D        => GPMC_D,
-			GPMC_nCS      => GPMC_nCS,
-			GPMC_nWE      => GPMC_nWE,
-			GPMC_nOE      => GPMC_nOE,
-			GPMC_nADV_ALE => GPMC_nADV_ALE
+			CLK_I           => sys_con_clk,
+			RST_I           => sys_con_rst,
+			WB_I            => wb_ms,
+			WB_O            => wb_sm(1),
+			GPMC_CLK_I      => GPMC_CLK,
+			GPMC_D_B        => GPMC_D,
+			GPMC_A_I        => GPMC_A,
+			GPMC_nCS_I      => GPMC_nCS,
+			GPMC_nWE_I      => GPMC_nWE,
+			GPMC_nOE_I      => GPMC_nOE,
+			GPMC_nADV_ALE_I => GPMC_nADV_ALE
 		);
 
 	Clock_Counter : clk_counter_ip

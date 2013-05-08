@@ -36,7 +36,7 @@ use DUGONG_IP_CORE_Lib.dcores.ALL;
 entity gpmc_interface_ip is
 	generic(
 		DATA_WIDTH      : NATURAL               := 32;
-		ADDR_WIDTH      : NATURAL               := 12;
+		ADDR_WIDTH      : NATURAL               := 10;
 		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
 		CORE_DATA_WIDTH : NATURAL               := 32;
 		CORE_ADDR_WIDTH : NATURAL               := 10
@@ -51,7 +51,7 @@ entity gpmc_interface_ip is
 		--GPMC Interface
 		GPMC_CLK_I      : in    STD_LOGIC;
 		GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
-		GPMC_A_I        : in    STD_LOGIC_VECTOR(1 downto 1);
+		GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
 		GPMC_nCS_I      : in    STD_LOGIC;
 		GPMC_nWE_I      : in    STD_LOGIC;
 		GPMC_nOE_I      : in    STD_LOGIC;
@@ -83,7 +83,7 @@ architecture Behavioral of gpmc_interface_ip is
 			ACK_O           : out   STD_LOGIC;
 			GPMC_CLK_I      : in    STD_LOGIC;
 			GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
-			GPMC_A_I        : in    STD_LOGIC_VECTOR(1 downto 1); --debugging
+			GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
 			GPMC_nCS_I      : in    STD_LOGIC;
 			GPMC_nWE_I      : in    STD_LOGIC;
 			GPMC_nOE_I      : in    STD_LOGIC;
