@@ -43,19 +43,19 @@ entity gpmc_interface_ip is
 	);
 	port(
 		--System Control Inputs
-		CLK_I         : in    STD_LOGIC;
-		RST_I         : in    STD_LOGIC;
+		CLK_I           : in    STD_LOGIC;
+		RST_I           : in    STD_LOGIC;
 		--Slave to WB
-		WB_I          : in    STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-		WB_O          : out   STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		WB_I            : in    STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+		WB_O            : out   STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--GPMC Interface
-		GPMC_CLK      : in    STD_LOGIC;
-		GPMC_D        : inout STD_LOGIC_VECTOR(15 downto 0);
-		--		GPMC_A        : in    STD_LOGIC_VECTOR(10 downto 1);
-		GPMC_nCS      : in    STD_LOGIC;
-		GPMC_nWE      : in    STD_LOGIC;
-		GPMC_nOE      : in    STD_LOGIC;
-		GPMC_nADV_ALE : in    STD_LOGIC
+		GPMC_CLK_I      : in    STD_LOGIC;
+		GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
+		GPMC_A_I        : in    STD_LOGIC_VECTOR(1 downto 1);
+		GPMC_nCS_I      : in    STD_LOGIC;
+		GPMC_nWE_I      : in    STD_LOGIC;
+		GPMC_nOE_I      : in    STD_LOGIC;
+		GPMC_nADV_ALE_I : in    STD_LOGIC
 	);
 end gpmc_interface_ip;
 
@@ -73,21 +73,21 @@ architecture Behavioral of gpmc_interface_ip is
 			ADDR_WIDTH : natural := 10
 		);
 		port(
-			CLK_I         : in    STD_LOGIC;
-			RST_I         : in    STD_LOGIC;
-			DAT_I         : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O         : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I         : in    STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			STB_I         : in    STD_LOGIC;
-			WE_I          : in    STD_LOGIC;
-			ACK_O         : out   STD_LOGIC;
-			GPMC_CLK      : in    STD_LOGIC;
-			GPMC_D        : inout STD_LOGIC_VECTOR(15 downto 0);
-			--		GPMC_A        : in    STD_LOGIC_VECTOR(10 downto 1);
-			GPMC_nCS      : in    STD_LOGIC;
-			GPMC_nWE      : in    STD_LOGIC;
-			GPMC_nOE      : in    STD_LOGIC;
-			GPMC_nADV_ALE : in    STD_LOGIC
+			CLK_I           : in    STD_LOGIC;
+			RST_I           : in    STD_LOGIC;
+			DAT_I           : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O           : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I           : in    STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			STB_I           : in    STD_LOGIC;
+			WE_I            : in    STD_LOGIC;
+			ACK_O           : out   STD_LOGIC;
+			GPMC_CLK_I      : in    STD_LOGIC;
+			GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
+			GPMC_A_I        : in    STD_LOGIC_VECTOR(1 downto 1); --debugging
+			GPMC_nCS_I      : in    STD_LOGIC;
+			GPMC_nWE_I      : in    STD_LOGIC;
+			GPMC_nOE_I      : in    STD_LOGIC;
+			GPMC_nADV_ALE_I : in    STD_LOGIC
 		);
 	end component gpmc_interface;
 
@@ -123,20 +123,22 @@ begin
 			ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
-			CLK_I         => CLK_I,
-			RST_I         => RST_I,
-			DAT_I         => dat_i,
-			DAT_O         => dat_o,
-			ADR_I         => adr_i,
-			STB_I         => stb_i,
-			WE_I          => we_i,
-			ACK_O         => ack_o,
-			GPMC_CLK      => GPMC_CLK,
-			GPMC_D        => GPMC_D,
-			GPMC_nCS      => GPMC_nCS,
-			GPMC_nWE      => GPMC_nWE,
-			GPMC_nOE      => GPMC_nOE,
-			GPMC_nADV_ALE => GPMC_nADV_ALE);
+			CLK_I           => CLK_I,
+			RST_I           => RST_I,
+			DAT_I           => dat_i,
+			DAT_O           => dat_o,
+			ADR_I           => adr_i,
+			STB_I           => stb_i,
+			WE_I            => we_i,
+			ACK_O           => ack_o,
+			GPMC_CLK_I      => GPMC_CLK_I,
+			GPMC_D_B        => GPMC_D_B,
+			GPMC_A_I        => GPMC_A_I,
+			GPMC_nCS_I      => GPMC_nCS_I,
+			GPMC_nWE_I      => GPMC_nWE_I,
+			GPMC_nOE_I      => GPMC_nOE_I,
+			GPMC_nADV_ALE_I => GPMC_nADV_ALE_I
+		);
 
 end Behavioral;
 

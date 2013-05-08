@@ -162,7 +162,7 @@ package dcores is
 			--GPMC Interface
 			GPMC_CLK      : in    STD_LOGIC;
 			GPMC_D        : inout STD_LOGIC_VECTOR(15 downto 0);
-			--		GPMC_A        : in    STD_LOGIC_VECTOR(10 downto 1);
+			GPMC_A        : in    STD_LOGIC_VECTOR(10 downto 1);
 			GPMC_nCS      : in    STD_LOGIC;
 			GPMC_nWE      : in    STD_LOGIC;
 			GPMC_nOE      : in    STD_LOGIC;

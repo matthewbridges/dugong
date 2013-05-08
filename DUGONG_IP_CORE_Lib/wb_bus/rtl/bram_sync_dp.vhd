@@ -1,4 +1,4 @@
----------------------------------------------------------------------------------------------------------------
+--  
 --                    
 --_____/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________      
 --\____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
@@ -17,80 +17,72 @@
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 	MATTHEW BRIDGES
---
--- Name:		BRAM
--- Type:		CORE
--- Description: A core containing BRAM/s which can be used for temporary storage of general data	
---
--- Compliance:	DUGONG V1.0
--- ID:			x0001
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
-entity bram is
+entity bram_sync_dp is
 	generic(
 		DATA_WIDTH : natural := 32;
 		ADDR_WIDTH : natural := 10
 	);
 	port(
-		--System Control Inputs
-		CLK_I : in  STD_LOGIC;
-		RST_I : in  STD_LOGIC;
-		--Wishbone Slave Lines
-		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-		STB_I : in  STD_LOGIC;
-		WE_I  : in  STD_LOGIC;
-		--CYC_I : in   STD_LOGIC;
-		ACK_O : out STD_LOGIC
+		--PORT A
+		A_CLK_I : in  STD_LOGIC;
+		A_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		A_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		A_ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+		A_WE_I  : in  STD_LOGIC;
+		--PORT B
+		B_CLK_I : in  STD_LOGIC;
+		B_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		B_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		B_ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+		B_WE_I  : in  STD_LOGIC
 	);
-end bram;
+end bram_sync_dp;
 
-architecture Behavioral of bram is
-	component bram_sync_sp
-		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 10
-		);
-		port(
-			CLK_I : in  STD_LOGIC;
-			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			WE_I  : in  STD_LOGIC
-		);
-	end component bram_sync_sp;
-
+architecture Behavioral of bram_sync_dp is
+	-- Shared memory
+	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
+	shared variable mem : ram_type;
+	signal A_mem_adr    : integer := 0;
+	signal B_mem_adr    : integer := 0;
 begin
-	process(CLK_I)
+
+	--Port A
+	process(A_CLK_I)
 	begin
 		--Perform Clock Rising Edge operations
-		if (rising_edge(CLK_I)) then
-			--Check for reset
-			if (RST_I = '1') then
-				ACK_O <= '0';
-			else
-				ACK_O <= STB_I;
+		if (rising_edge(A_CLK_I)) then
+			--WRITING STATE
+			if (A_WE_I = '1') then
+				mem(to_integer(unsigned(A_ADR_I))) := A_DAT_I;
 			end if;
+			--READING STATE
+			A_mem_adr <= to_integer(unsigned(A_ADR_I));
 		end if;
 	end process;
 
-	inst : bram_sync_sp
-		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH
-		)
-		port map(
-			CLK_I => CLK_I,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			ADR_I => ADR_I,
-			WE_I  => WE_I
-		);
+	A_DAT_O <= mem(A_mem_adr);
+
+	--Port B
+	process(B_CLK_I)
+	begin
+		--Perform Clock Rising Edge operations
+		if (rising_edge(B_CLK_I)) then
+			--WRITING STATE
+			if (B_WE_I = '1') then
+				mem(to_integer(unsigned(B_ADR_I))) := B_DAT_I;
+			end if;
+			--READING STATE
+			B_mem_adr <= to_integer(unsigned(B_ADR_I));
+		end if;
+	end process;
+
+	B_DAT_O <= mem(B_mem_adr);
 
 end Behavioral;
 
-	
