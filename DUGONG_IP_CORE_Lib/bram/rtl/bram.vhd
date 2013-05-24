@@ -1,6 +1,6 @@
----------------------------------------------------------------------------------------------------------------
+--  
 --                    
---_____/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________      
+-- _____/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_______      
 --\____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
 -- \___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
 --  \___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
@@ -15,19 +15,22 @@
 --           \================================================================================================\
 --
 ---------------------------------------------------------------------------------------------------------------
--- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 	MATTHEW BRIDGES
+-- Company:			UNIVERSITY OF CAPE TOWN
+-- Engineer:		MATTHEW BRIDGES
 --
--- Name:		BRAM
--- Type:		CORE
--- Description: A core containing BRAM/s which can be used for temporary storage of general data	
+-- Name:			BRAM (001)
+-- Type:			CORE (3)
+-- Description: 	A core containing BRAM/s which can be used for temporary storage of general data	
 --
--- Compliance:	DUGONG V1.0
--- ID:			x0001
+-- Compliance:		DUGONG V1.1
+-- ID:				x 1-1-3-001
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+
+library DUGONG_IP_CORE_Lib;
+use DUGONG_IP_CORE_Lib.dprimitives.ALL;
 
 entity bram is
 	generic(
@@ -50,20 +53,6 @@ entity bram is
 end bram;
 
 architecture Behavioral of bram is
-	component bram_sync_sp
-		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 10
-		);
-		port(
-			CLK_I : in  STD_LOGIC;
-			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			WE_I  : in  STD_LOGIC
-		);
-	end component bram_sync_sp;
-
 begin
 	process(CLK_I)
 	begin
@@ -78,7 +67,7 @@ begin
 		end if;
 	end process;
 
-	inst : bram_sync_sp
+	mem : bram_sync_sp
 		generic map(
 			DATA_WIDTH => DATA_WIDTH,
 			ADDR_WIDTH => ADDR_WIDTH

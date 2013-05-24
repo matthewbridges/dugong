@@ -18,13 +18,13 @@
 -- Company:			UNIVERSITY OF CAPE TOWN
 -- Engineer:		MATTHEW BRIDGES
 --
--- Name:			BRAM_SYNC_DP (005)
+-- Name:			BRAM_SYNC_DP (006)
 -- Type:			PRIMITIVE (2)
 -- Description:		A BRAM primitive with one port which can take on generic data and address widths. Takes 
 --					advantage of FPGA on chip BRAMs
 --
--- Compliance:		DUGONG V1.0 (1-0)
--- ID:				x 1-0-2-005
+-- Compliance:		DUGONG V1.1 (1-1)
+-- ID:				x 1-1-2-006
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;

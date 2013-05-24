@@ -15,15 +15,15 @@
 --           \================================================================================================\
 --
 ---------------------------------------------------------------------------------------------------------------
--- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 	MATTHEW BRIDGES
+-- Company:			UNIVERSITY OF CAPE TOWN
+-- Engineer: 		MATTHEW BRIDGES
 --
--- Name:		BRAM_IP
--- Type:		IP CORE
--- Description: An IP core containing BRAM/s which can be used for temporary storage of general data	
+-- Name:			BRAM_IP (001)
+-- Type:			IP CORE (4)
+-- Description: 	An IP core containing BRAM/s which can be used for temporary storage of general data	
 --
--- Compliance:	DUGONG V1.0
--- ID:			x1-1-01
+-- Compliance:		DUGONG V1.1
+-- ID:				x 1-1-4-001
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -31,7 +31,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 library DUGONG_IP_CORE_Lib;
-use DUGONG_IP_CORE_Lib.dcores.ALL;
+use DUGONG_IP_CORE_Lib.dprimitives.ALL;
 
 entity bram_ip is
 	generic(
