@@ -71,6 +71,13 @@ _xmsgs/
 *.tcl
 *.txt
 *.vho
+*.cmd
+*.exe
+*.xmsgs
+*.wdb
+*.ini
+*/isim
+
 #################
 ## Eclipse
 #################
