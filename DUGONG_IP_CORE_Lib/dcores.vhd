@@ -16,13 +16,13 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 	MATTHEW BRIDGES
+-- Engineer: 		MATTHEW BRIDGES
 --
 -- Name:		DPRIMITIVES (001)
 -- Type:		PACKAGE (1)
--- Description: A package containing DUGONG IP Cores
+-- Description:		A package containing DUGONG IP Cores
 --
--- Compliance:	DUGONG V1.1 (1-1)
+-- Compliance:		DUGONG V1.1 (1-1)
 -- ID:			x 1-1-1-001
 ---------------------------------------------------------------------------------------------------------------
 

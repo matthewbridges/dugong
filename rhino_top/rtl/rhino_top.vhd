@@ -20,7 +20,7 @@
 --
 -- Name:		RHINO TOP (001)
 -- Type:		Top Level Module (F)
--- Description:	This is the top level module joining all cores and controllers to ports and top level signals	
+-- Description:		This is the top level module joining all cores and controllers to ports and top level signals	
 --			The addressing of cores is also done in this module
 --
 -- Compliance:		DUGONG V1.1

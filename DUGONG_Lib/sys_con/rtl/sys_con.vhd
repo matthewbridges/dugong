@@ -15,15 +15,15 @@
 --           \================================================================================================\
 --
 ---------------------------------------------------------------------------------------------------------------
--- Company:			UNIVERSITY OF CAPE TOWN
+-- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 		MATTHEW BRIDGES
 --
--- Name:			SYS_CON 
+-- Name:		SYS_CON 
 -- Type:			
 -- Description: 	
 --
 -- Compliance:		DUGONG V1.1
--- ID:				x 1-1-
+-- ID:			x 1-1-
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -88,13 +88,13 @@ begin
 	SYS_CLK_PLL_BASE : PLL_BASE
 		generic map(
 			BANDWIDTH             => "HIGH",
-			CLKFBOUT_MULT         => 1,
+			CLKFBOUT_MULT         => 10,
 			CLKFBOUT_PHASE        => 0.0,
 			CLKIN_PERIOD          => 10.000,
-			CLKOUT0_DIVIDE        => 1,
+			CLKOUT0_DIVIDE        => 5,
 			CLKOUT0_DUTY_CYCLE    => 0.50,
 			CLKOUT0_PHASE         => 0.0,
-			CLKOUT1_DIVIDE        => 1,
+			CLKOUT1_DIVIDE        => 5,
 			CLKOUT1_DUTY_CYCLE    => 0.50,
 			CLKOUT1_PHASE         => 180.0,
 			CLKOUT2_DIVIDE        => 1,

@@ -62,7 +62,8 @@ architecture Behavioral of bram_ip is
 	component bram
 		generic(
 			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 10);
+			ADDR_WIDTH : natural := 10
+		);
 		port(
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;

@@ -1,33 +1,37 @@
+--  
+--                    
+-- _____/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_______      
+--\____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+-- \___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
+--  \___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
+--   \___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--    \___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--     \___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--      \___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--       \___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--        \                                                                                                \
+--         \==============  Reconfigurable Hardware Interface for computatioN and radiO  ===================\
+--          \============================  http://www.rhinoplatform.org  ====================================\
+--           \================================================================================================\
+--
+---------------------------------------------------------------------------------------------------------------
+-- Company:		UNIVERSITY OF CAPE TOWN
+-- Engineer: 		MATTHEW BRIDGES
+--
+-- Name:		DCOMPONENTS (003)
+-- Type:		PACKAGE (1)
+-- Description: 	A package containing components that are used by the DUGONG controller	
+--
+-- Compliance:		DUGONG V1.1 (1-1)
+-- ID:			x 1-1-1-003
+---------------------------------------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
 
 package dcomponents is
-	component wb_s is
-		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3
-		);
-		port(
-			--System Control Inputs
-			CLK_I : in  STD_LOGIC;
-			RST_I : in  STD_LOGIC;
-			--Slave to WB
-			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			--Wishbone Slave Lines (inverted)
-			DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-			STB_I : out STD_LOGIC;
-			WE_I  : out STD_LOGIC;
-			CYC_I : out STD_LOGIC;
-			ACK_O : in  STD_LOGIC
-		);
-	end component;
+	subtype WB_O_type is std_logic_vector(32 downto 0);
+	type WB_O_vector is array (natural range <>) of WB_O_type;
 
 	component wb_m is
 		generic(
@@ -52,7 +56,7 @@ package dcomponents is
 		);
 	end component;
 
-	component system_controller
+	component sys_con
 		port(
 			--System Clock Differential Inputs 100MHz
 			SYS_CLK_P      : in  STD_LOGIC;
@@ -65,15 +69,11 @@ package dcomponents is
 			SYS_PWR_ON     : out STD_LOGIC;
 			SYS_PLL_Locked : out STD_LOGIC;
 			--System Control Outputs
-			CLK_123MHZ     : out STD_LOGIC;
-			CLK_123MHZ_n   : out STD_LOGIC;
-			CLK_246MHZ     : out STD_LOGIC;
-			CLK_983MHZ     : out STD_LOGIC;
-			CLK_15MHZ      : out STD_LOGIC;
-			CLK_15MHZ_n    : out STD_LOGIC;
+			CLK_100MHZ     : out STD_LOGIC;
+			CLK_100MHZ_n   : out STD_LOGIC;
 			RST_O          : out STD_LOGIC
 		);
-	end component;
+	end component sys_con;
 
 	component dugong_controller
 		generic(

@@ -16,13 +16,13 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 	MATTHEW BRIDGES
+-- Engineer: 		MATTHEW BRIDGES
 --
 -- Name:		DPRIMITIVES (002)
 -- Type:		PACKAGE (1)
--- Description: A package containing primitives that are used by the DUGONG IP Cores	
+-- Description: 	A package containing primitives that are used by the DUGONG IP Cores	
 --
--- Compliance:	DUGONG V1.1 (1-1)
+-- Compliance:		DUGONG V1.1 (1-1)
 -- ID:			x 1-1-1-002
 ---------------------------------------------------------------------------------------------------------------
 
@@ -31,9 +31,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 package dprimitives is
-
-	subtype WB_O_type is std_logic_vector(32 downto 0);
-	type WB_O_vector is array (natural range <>) of WB_O_type;
 
 	------------------------------
 	---- ARM SIDE INTERFACING ----
@@ -101,17 +98,6 @@ package dprimitives is
 			WE_I  : out STD_LOGIC;
 			CYC_I : out STD_LOGIC;
 			ACK_O : in  STD_LOGIC
-		);
-	end component;
-
-	component wb_intercon is
-		generic(
-			NUMBER_OF_CORES : NATURAL := 4
-		);
-		port(
-			--Slave to WB
-			WB_O_bus : out WB_O_type;
-			WB_O     : in  WB_O_vector(NUMBER_OF_CORES - 1 downto 0)
 		);
 	end component;
 
