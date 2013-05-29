@@ -15,15 +15,15 @@
 --           \================================================================================================\
 --
 ---------------------------------------------------------------------------------------------------------------
--- Company:			UNIVERSITY OF CAPE TOWN
+-- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer:		MATTHEW BRIDGES
 --
--- Name:			WB_REGISTER (001)
--- Type:			PRIMITIVE (2)
+-- Name:		WB_REGISTER (001)
+-- Type:		PRIMITIVE (2)
 -- Description:		A register primitive with one port which can take on generic data widths and default values.
 --
 -- Compliance:		DUGONG V1.1 (1-1)
--- ID:				x 1-1-2-001
+-- ID:			x 1-1-2-001
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;

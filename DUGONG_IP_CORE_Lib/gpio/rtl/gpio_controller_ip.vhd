@@ -15,15 +15,15 @@
 --           \================================================================================================\
 --
 ---------------------------------------------------------------------------------------------------------------
--- Company:			UNIVERSITY OF CAPE TOWN
+-- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 		MATTHEW BRIDGES
 --
--- Name:			BRAM_IP (002)
--- Type:			IP CORE (4)
+-- Name:		BRAM_IP (002)
+-- Type:		IP CORE (4)
 -- Description: 	An IP core for controlling GPIO of differing widths	
 --
 -- Compliance:		DUGONG V1.1
--- ID:				x 1-1-4-002
+-- ID:			x 1-1-4-002
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;

@@ -15,15 +15,15 @@
 --           \================================================================================================\
 --
 ---------------------------------------------------------------------------------------------------------------
--- Company:			UNIVERSITY OF CAPE TOWN
+-- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer:		MATTHEW BRIDGES
 --
--- Name:			BRAM (001)
--- Type:			CORE (3)
+-- Name:		BRAM (001)
+-- Type:		CORE (3)
 -- Description: 	A core containing BRAM/s which can be used for temporary storage of general data	
 --
 -- Compliance:		DUGONG V1.1
--- ID:				x 1-1-3-001
+-- ID:			x 1-1-3-001
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;

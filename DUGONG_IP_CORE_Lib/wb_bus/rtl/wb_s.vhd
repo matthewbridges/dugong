@@ -20,7 +20,7 @@
 --
 -- Name:		WB_S (002)
 -- Type:		PRIMITIVE (2)
--- Description:	A primitive which performs the bus logic of all IP Core slaves on the wishbone bus. It can 
+-- Description:		A primitive which performs the bus logic of all IP Core slaves on the wishbone bus. It can 
 --			take on generic data and address widths and a generic Address. DATA_WIDTH and ADDRESS_WIDTH
 --			should be set by the top level module and coincide with the widths of the Master.
 -- 

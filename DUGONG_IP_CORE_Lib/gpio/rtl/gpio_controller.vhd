@@ -15,15 +15,15 @@
 --           \================================================================================================\
 --
 ---------------------------------------------------------------------------------------------------------------
--- Company:			UNIVERSITY OF CAPE TOWN
+-- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer:		MATTHEW BRIDGES
 --
--- Name:			BRAM (002)
--- Type:			CORE (3)
+-- Name:		BRAM (002)
+-- Type:		CORE (3)
 -- Description: 	A core for controlling GPIO of differing widths	
 --
 -- Compliance:		DUGONG V1.1
--- ID:				x 1-1-3-002
+-- ID:			x 1-1-3-002
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;

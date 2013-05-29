@@ -15,15 +15,15 @@
 --           \================================================================================================\
 --
 ---------------------------------------------------------------------------------------------------------------
--- Company:			UNIVERSITY OF CAPE TOWN
+-- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 		MATTHEW BRIDGES
 --
--- Name:			BRAM_IP (001)
--- Type:			IP CORE (4)
+-- Name:		BRAM_IP (001)
+-- Type:		IP CORE (4)
 -- Description: 	An IP core containing BRAM/s which can be used for temporary storage of general data	
 --
 -- Compliance:		DUGONG V1.1
--- ID:				x 1-1-4-001
+-- ID:			x 1-1-4-001
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
