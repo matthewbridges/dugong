@@ -61,15 +61,14 @@ entity wb_s is
 end wb_s;
 
 architecture Behavioral of wb_s is
-	--WB Inputs
+	--WB
 	alias dat_ms  : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_I(DATA_WIDTH - 1 downto 0);
+	signal dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	alias adr_ms  : std_logic_vector(ADDR_WIDTH - 1 downto 0) is WB_I(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
 	alias stb_ms  : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH);
 	alias we_ms   : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 1);
 	alias cyc_ms  : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 2);
-	--WB Outputs
-	signal dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal ack_sm : std_logic;
+	signal ack_sm : std_logic;	
 
 	--Addressing Architecture
 	signal core_addr : unsigned(CORE_ADDR_WIDTH - 1 downto 0) := (others => '0');

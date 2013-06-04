@@ -40,11 +40,11 @@ package dcomponents is
 		);
 		port(
 			--System Control Inputs
-			--			CLK_I : in  STD_LOGIC;
-			--			RST_I : in  STD_LOGIC;
+			--		CLK_I : in  STD_LOGIC;
+			--		RST_I : in  STD_LOGIC;
 			--Master to WB
-			WB_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			WB_O  : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_MS : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_SM : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			--Wishbone Master Lines (inverted)
 			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);

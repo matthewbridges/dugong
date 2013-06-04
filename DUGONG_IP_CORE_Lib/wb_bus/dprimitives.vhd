@@ -51,26 +51,6 @@ package dprimitives is
 		);
 	end component gpmc_s;
 
-	component gpmc_m is
-		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 25
-		);
-		port(
-			--ARM Master Lines
-			GPMC_MS         : out   STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			GPMC_SM         : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			--GPMC Interface
-			GPMC_CLK_I      : in    STD_LOGIC;
-			GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
-			GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
-			GPMC_nWE_I      : in    STD_LOGIC;
-			GPMC_nCS_I      : in    STD_LOGIC_VECTOR(6 downto 0);
-			GPMC_nOE_I      : in    STD_LOGIC;
-			GPMC_nADV_ALE_I : in    STD_LOGIC
-		);
-	end component gpmc_m;
-
 	------------------------------
 	---- WB SIDE INTERFACING ----
 	------------------------------ 

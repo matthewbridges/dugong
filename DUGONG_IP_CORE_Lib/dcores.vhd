@@ -32,6 +32,30 @@ use IEEE.NUMERIC_STD.ALL;
 
 package dcores is
 
+	------------------------------
+	---- ARM SIDE INTERFACING ----
+	------------------------------ 
+
+	component gpmc_m is
+		generic(
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 28
+		);
+		port(
+			GPMC_CLK_I      : in    STD_LOGIC;
+			--Master to WB
+			WB_MS           : out   STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+			WB_SM           : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			--GPMC Interface
+			GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
+			GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
+			GPMC_nCS_I      : in    STD_LOGIC_VECTOR(6 downto 0);
+			GPMC_nADV_ALE_I : in    STD_LOGIC;
+			GPMC_nWE_I      : in    STD_LOGIC;
+			GPMC_nOE_I      : in    STD_LOGIC
+		);
+	end component gpmc_m;
+
 	---------------------------
 	---- WISHBONE IP CORES ----
 	---------------------------

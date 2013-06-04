@@ -30,8 +30,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-library dugong_lib;
-use dugong_lib.dcomponents.ALL;
+library DUGONG_Lib;
+use DUGONG_Lib.dcomponents.ALL;
 
 library DUGONG_IP_CORE_Lib;
 use DUGONG_IP_CORE_Lib.dcores.ALL;
@@ -44,19 +44,27 @@ entity rhino_top is
 	);
 	port(
 		--System Control Inputs
-		SYS_CLK_P      : in    STD_LOGIC;
-		SYS_CLK_N      : in    STD_LOGIC;
-		SYS_RST        : in    STD_LOGIC;
+		SYS_CLK_P       : in    STD_LOGIC;
+		SYS_CLK_N       : in    STD_LOGIC;
+		SYS_RST         : in    STD_LOGIC;
 		--System Control Outputs
-		SYS_CLK_o      : out   STD_LOGIC;
-		SYS_PWR_ON     : out   STD_LOGIC;
-		SYS_PLL_Locked : out   STD_LOGIC;
+		SYS_CLK_o       : out   STD_LOGIC;
+		SYS_PWR_ON      : out   STD_LOGIC;
+		SYS_PLL_Locked  : out   STD_LOGIC;
+		--GPMC Interface
+		GPMC_CLK_I      : in    STD_LOGIC;
+		GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
+		GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
+		GPMC_nCS_I      : in    STD_LOGIC_VECTOR(6 downto 0);
+		GPMC_nADV_ALE_I : in    STD_LOGIC;
+		GPMC_nWE_I      : in    STD_LOGIC;
+		GPMC_nOE_I      : in    STD_LOGIC;
 		-- USER GPIOs
-		GPIO           : inout STD_LOGIC_VECTOR(15 downto 0);
+		GPIO            : inout STD_LOGIC_VECTOR(15 downto 0);
 		--USER LEDs
-		LED            : inout STD_LOGIC_VECTOR(7 downto 0);
+		LED             : inout STD_LOGIC_VECTOR(7 downto 0);
 		--Debug GPIOs
-		DEBUG          : inout STD_LOGIC_VECTOR(31 downto 0)
+		DEBUG           : inout STD_LOGIC_VECTOR(31 downto 0)
 	);
 end rhino_top;
 
@@ -83,8 +91,9 @@ begin
 		);
 
 	Central_Control_Unit : dugong_controller
-		generic map(DATA_WIDTH => DATA_WIDTH,
-			    ADDR_WIDTH => ADDR_WIDTH
+		generic map(
+			DATA_WIDTH => DATA_WIDTH,
+			ADDR_WIDTH => ADDR_WIDTH
 		)
 		port map(
 			CLK_I   => sys_con_clk,
@@ -95,6 +104,27 @@ begin
 		);
 
 	wb_sm_bus <= wb_sm(0) or wb_sm(1) or wb_sm(2) or wb_sm(3);
+
+	--------------------------
+	-- ARM SIDE INTERFACING --
+	--------------------------
+
+	ARM_GPMC : gpmc_m
+		generic map(
+			DATA_WIDTH => DATA_WIDTH,
+			ADDR_WIDTH => 28
+		)
+		port map(
+			GPMC_CLK_I      => GPMC_CLK_I,
+			WB_MS           => open,
+			WB_SM           => (others => '0'),
+			GPMC_D_B        => GPMC_D_B,
+			GPMC_A_I        => GPMC_A_I,
+			GPMC_nCS_I      => GPMC_nCS_I,
+			GPMC_nADV_ALE_I => GPMC_nADV_ALE_I,
+			GPMC_nWE_I      => GPMC_nWE_I,
+			GPMC_nOE_I      => GPMC_nOE_I
+		);
 
 	---------------------
 	-- DUGONG IP CORES --
