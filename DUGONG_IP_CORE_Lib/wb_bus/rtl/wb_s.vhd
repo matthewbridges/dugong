@@ -50,25 +50,25 @@ entity wb_s is
 		WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 		WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 		--Wishbone Slave Lines (inverted)
+		ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 		DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 		DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-		STB_I : out STD_LOGIC;
 		WE_I  : out STD_LOGIC;
-		CYC_I : out STD_LOGIC;
-		ACK_O : in  STD_LOGIC
+		STB_I : out STD_LOGIC;
+		ACK_O : in  STD_LOGIC;
+		CYC_I : out STD_LOGIC
 	);
 end wb_s;
 
 architecture Behavioral of wb_s is
 	--WB
-	alias dat_ms  : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_I(DATA_WIDTH - 1 downto 0);
+	alias adr_ms  : std_logic_vector(ADDR_WIDTH - 1 downto 0) is WB_I(ADDR_WIDTH - 1 downto 0);
+	alias dat_ms  : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_I(DATA_WIDTH + ADDR_WIDTH - 1 downto ADDR_WIDTH);
 	signal dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	alias adr_ms  : std_logic_vector(ADDR_WIDTH - 1 downto 0) is WB_I(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
 	alias stb_ms  : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH);
 	alias we_ms   : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 1);
 	alias cyc_ms  : std_logic is WB_I(ADDR_WIDTH + DATA_WIDTH + 2);
-	signal ack_sm : std_logic;	
+	signal ack_sm : std_logic;
 
 	--Addressing Architecture
 	signal core_addr : unsigned(CORE_ADDR_WIDTH - 1 downto 0) := (others => '0');
