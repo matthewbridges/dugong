@@ -30,6 +30,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+library DUGONG_IP_CORE_Lib;
+use DUGONG_IP_CORE_Lib.dprimitives.ALL;
+
 package dcores is
 
 	------------------------------
@@ -42,11 +45,18 @@ package dcores is
 			ADDR_WIDTH : natural := 28
 		);
 		port(
-			GPMC_CLK_I      : in    STD_LOGIC;
-			--Master to WB
-			WB_MS           : out   STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_SM           : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			--System Control Inputs
+			CLK_I           : in    STD_LOGIC;
+			RST_I           : in    STD_LOGIC;
+			--Wishbone Master Lines
+			ADR_O           : out   STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			DAT_I           : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O           : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WE_O            : out   STD_LOGIC;
+			STB_O           : out   STD_LOGIC;
+			ACK_I           : in    STD_LOGIC;
 			--GPMC Interface
+			GPMC_CLK_I      : in    STD_LOGIC;
 			GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
 			GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
 			GPMC_nCS_I      : in    STD_LOGIC_VECTOR(6 downto 0);

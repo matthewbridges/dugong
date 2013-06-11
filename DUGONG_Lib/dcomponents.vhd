@@ -30,8 +30,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 package dcomponents is
-	subtype WB_O_type is std_logic_vector(32 downto 0);
-	type WB_O_vector is array (natural range <>) of WB_O_type;
 
 	component wb_m is
 		generic(
@@ -46,9 +44,9 @@ package dcomponents is
 			WB_MS : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_SM : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			--Wishbone Master Lines (inverted)
+			ADR_O : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_O : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			STB_O : in  STD_LOGIC;
 			WE_O  : in  STD_LOGIC;
 			CYC_O : in  STD_LOGIC;

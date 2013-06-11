@@ -31,6 +31,15 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 package dprimitives is
+	constant DATA_WIDTH : natural := 32;
+	constant ADDR_WIDTH : natural := 12;
+
+	subtype WB_O_type is std_logic_vector(DATA_WIDTH downto 0);
+	type WB_O_vector is array (natural range <>) of WB_O_type;
+
+	subtype ADDR_type is unsigned(ADDR_WIDTH - 1 downto 0);
+
+	constant DEFAULT_ADDR : ADDR_TYPE := (others => '0');
 
 	------------------------------
 	---- ARM SIDE INTERFACING ----
