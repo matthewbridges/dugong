@@ -32,14 +32,14 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity wb_register is
 	generic(
-		DATA_WIDTH   : NATURAL                       := 16;
+		DATA_WIDTH   : NATURAL                       := 32;
 		DEFAULT_DATA : STD_LOGIC_VECTOR(63 downto 0) := x"0000000000000000"
 	);
 	port(
 		--System Control Inputs:
 		CLK_I : in  STD_LOGIC;
 		RST_I : in  STD_LOGIC;
-		--WISHBONE SLAVE interface:1-
+		--WISHBONE SLAVE interface:1-2
 		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		WE_I  : in  STD_LOGIC;
@@ -51,7 +51,7 @@ entity wb_register is
 end wb_register;
 
 architecture Behavioral of wb_register is
-	signal Q : std_logic_vector(DATA_WIDTH - 1 downto 0) := DEFAULT_DATA(DATA_WIDTH - 1 downto 0);
+	signal Q : std_logic_vector(DATA_WIDTH - 1 downto 0);
 
 begin
 	process(CLK_I)
@@ -60,7 +60,7 @@ begin
 		if (rising_edge(CLK_I)) then
 			--RST STATE
 			if (RST_I = '1') then
-				Q <= (others => '0');
+				Q <= DEFAULT_DATA(DATA_WIDTH - 1 downto 0);
 			else
 				--WRITING STATE
 				if ((STB_I and WE_I) = '1') then
