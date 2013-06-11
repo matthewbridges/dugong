@@ -33,7 +33,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity wb_register is
 	generic(
 		DATA_WIDTH   : NATURAL                       := 32;
-		DEFAULT_DATA : STD_LOGIC_VECTOR(63 downto 0) := x"0000000000000000"
+		DEFAULT_DATA : STD_LOGIC_VECTOR(31 downto 0) := x"00000000"
 	);
 	port(
 		--System Control Inputs:

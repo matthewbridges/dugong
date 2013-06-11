@@ -67,30 +67,30 @@ package dprimitives is
 			--System Control Inputs
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
-			--Slave to WHISHBONE
+			--Slave to WB
 			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
 			--Wishbone Slave Lines (inverted)
+			ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 			DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-			STB_I : out STD_LOGIC;
 			WE_I  : out STD_LOGIC;
-			CYC_I : out STD_LOGIC;
-			ACK_O : in  STD_LOGIC
+			STB_I : out STD_LOGIC;
+			ACK_O : in  STD_LOGIC;
+			CYC_I : out STD_LOGIC
 		);
 	end component;
 
 	component wb_register is
 		generic(
-			DATA_WIDTH   : NATURAL                       := 16;
-			DEFAULT_DATA : STD_LOGIC_VECTOR(63 downto 0) := x"0000000000000000"
+			DATA_WIDTH   : NATURAL                       := 32;
+			DEFAULT_DATA : STD_LOGIC_VECTOR(31 downto 0) := x"00000000"
 		);
 		port(
 			--System Control Inputs:
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
-			--WISHBONE SLAVE interface:
+			--WISHBONE SLAVE interface:1-2
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			WE_I  : in  STD_LOGIC;

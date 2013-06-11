@@ -97,7 +97,8 @@ begin
 		--WISHBONE Register
 		reg : wb_register
 			generic map(
-				DATA_WIDTH => DATA_WIDTH
+				DATA_WIDTH => DATA_WIDTH,
+				DEFAULT_DATA => x"AAAA7777"
 			)
 			port map(
 				CLK_I => CLK_I,
