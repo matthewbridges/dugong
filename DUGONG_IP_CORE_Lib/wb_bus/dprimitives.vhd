@@ -34,8 +34,11 @@ package dprimitives is
 	constant DATA_WIDTH : natural := 32;
 	constant ADDR_WIDTH : natural := 12;
 
-	subtype WB_O_type is std_logic_vector(DATA_WIDTH downto 0);
-	type WB_O_vector is array (natural range <>) of WB_O_type;
+	subtype WB_MS_type is std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
+	type WB_MS_vector is array (natural range <>) of WB_MS_type;
+
+	subtype WB_SM_type is std_logic_vector(DATA_WIDTH downto 0);
+	type WB_SM_vector is array (natural range <>) of WB_SM_type;
 
 	subtype ADDR_type is unsigned(ADDR_WIDTH - 1 downto 0);
 
@@ -45,30 +48,67 @@ package dprimitives is
 	---- ARM SIDE INTERFACING ----
 	------------------------------ 
 
-	component gpmc_s
+	component gpmc_m is
 		generic(
-			DATA_WIDTH      : natural               := 32;
-			ADDR_WIDTH      : natural               := 25;
-			BASE_ADDR       : UNSIGNED(27 downto 0) := x"0000000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 2
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 28
 		);
 		port(
-			--ARM Slave Lines
-			GPMC_MS : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			GPMC_SM : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+			--System Control Inputs
+			CLK_I           : in    STD_LOGIC;
+			RST_I           : in    STD_LOGIC;
+			--Wishbone Master Lines
+			ADR_O           : out   STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			DAT_I           : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O           : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WE_O            : out   STD_LOGIC;
+			STB_O           : out   STD_LOGIC;
+			ACK_I           : in    STD_LOGIC;
+			CYC_O           : out   STD_LOGIC;
+			--GPMC Interface
+			GPMC_CLK_I      : in    STD_LOGIC;
+			GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
+			GPMC_A_I        : in    STD_LOGIC_VECTOR(10 downto 1);
+			GPMC_nCS_I      : in    STD_LOGIC_VECTOR(6 downto 0);
+			GPMC_nADV_ALE_I : in    STD_LOGIC;
+			GPMC_nWE_I      : in    STD_LOGIC;
+			GPMC_nOE_I      : in    STD_LOGIC
 		);
-	end component gpmc_s;
+	end component gpmc_m;
 
-	------------------------------
+	-----------------------------
 	---- WB SIDE INTERFACING ----
-	------------------------------ 
+	-----------------------------
+
+	component wb_m is
+		generic(
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 12
+		);
+		port(
+			--System Control Inputs
+			--		CLK_I : in  STD_LOGIC;
+			--		RST_I : in  STD_LOGIC;
+			--Master to WB
+			WB_MS : out WB_MS_type;
+			WB_SM : in  WB_SM_type;
+			--Wishbone Master Lines (inverted)
+			ADR_O : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			STB_O : in  STD_LOGIC;
+			WE_O  : in  STD_LOGIC;
+			CYC_O : in  STD_LOGIC;
+			ACK_I : out STD_LOGIC;
+			GNT_I : in  STD_LOGIC
+		);
+	end component;
 
 	component wb_s is
 		generic(
 			DATA_WIDTH      : NATURAL               := 32;
 			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
+			BASE_ADDR       : UNSIGNED(15 downto 0) := x"0000";
 			CORE_DATA_WIDTH : NATURAL               := 16;
 			CORE_ADDR_WIDTH : NATURAL               := 3
 		);
@@ -87,6 +127,26 @@ package dprimitives is
 			STB_I : out STD_LOGIC;
 			ACK_O : in  STD_LOGIC;
 			CYC_I : out STD_LOGIC
+		);
+	end component;
+
+	component wb_arbiter_intercon is
+		generic(
+			NUMBER_OF_MASTERS : NATURAL := 2;
+			NUMBER_OF_SLAVES  : NATURAL := 4
+		);
+		port(
+			--System Control Inputs
+			CLK_I     : in  STD_LOGIC;
+			RST_I     : in  STD_LOGIC;
+			--Masters to WB
+			WB_MS     : in  WB_MS_vector(NUMBER_OF_MASTERS - 1 downto 0);
+			WB_MS_BUS : out WB_MS_type;
+			--Slaves to WB
+			WB_SM     : in  WB_SM_vector(NUMBER_OF_SLAVES - 1 downto 0);
+			WB_SM_BUS : out WB_SM_type;
+			--Master Arbitration
+			WB_GNT_O  : out STD_LOGIC_VECTOR(NUMBER_OF_MASTERS - 1 downto 0)
 		);
 	end component;
 
