@@ -52,8 +52,7 @@ package dprimitives is
 
 	component gpmc_m is
 		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 28
+			GPMC_ADDR_WIDTH : natural := 28
 		);
 		port(
 			--System Control Inputs
@@ -74,7 +73,9 @@ package dprimitives is
 			GPMC_nCS_I      : in    STD_LOGIC_VECTOR(6 downto 0);
 			GPMC_nADV_ALE_I : in    STD_LOGIC;
 			GPMC_nWE_I      : in    STD_LOGIC;
-			GPMC_nOE_I      : in    STD_LOGIC
+			GPMC_nOE_I      : in    STD_LOGIC;
+			--Debugging Signal
+			DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0)
 		);
 	end component gpmc_m;
 
@@ -182,9 +183,10 @@ package dprimitives is
 		port(
 			--PORT
 			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			WE_I  : in  STD_LOGIC
 		);
 	end component;

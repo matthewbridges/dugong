@@ -20,9 +20,10 @@
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer:		MATTHEW BRIDGES
 --
--- Name:		BRAM_IP (002)
+-- Name:		GPIO_CONTOLLER_IP (002)
 -- Type:		IP CORE (4)
--- Description: 	An IP core for controlling GPIO of differing widths	
+-- Description: 	An IP core for controlling GPIO of differing widths. Includes a streaming interface
+--			for asynchronous digital IO. This allows bypassing the WB Bus.	
 --
 -- Compliance:		DUGONG V1.4
 -- ID:			x 1-4-4-002
@@ -50,19 +51,19 @@ entity gpio_controller_ip is
 		WB_MS         : in    WB_MS_type;
 		WB_SM         : out   WB_SM_type;
 		--GPIO Stream Interface
-		GPIO_STREAM_I : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		GPIO_STREAM_O : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		GPIO_STREAM_O : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		GPIO_STREAM_I : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 		--GPIO Interface
 		GPIO_B        : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 	);
 end gpio_controller_ip;
 
 architecture Behavioral of gpio_controller_ip is
+	signal adr_i : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 	signal dat_i : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 	signal dat_o : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-	signal adr_i : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-	signal stb_i : STD_LOGIC;
 	signal we_i  : STD_LOGIC;
+	signal stb_i : STD_LOGIC;
 	signal ack_o : STD_LOGIC;
 
 	component gpio_controller
@@ -79,8 +80,8 @@ architecture Behavioral of gpio_controller_ip is
 			WE_I          : in    STD_LOGIC;
 			STB_I         : in    STD_LOGIC;
 			ACK_O         : out   STD_LOGIC;
-			GPIO_STREAM_I : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			GPIO_STREAM_O : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			GPIO_STREAM_O : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			GPIO_STREAM_I : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			GPIO_B        : inout STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
 		);
 	end component gpio_controller;
@@ -97,12 +98,12 @@ begin
 			RST_I => RST_I,
 			WB_MS => WB_MS,
 			WB_SM => WB_SM,
-			ADR_I => ADR_I,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			WE_I  => WE_I,
-			STB_I => STB_I,
-			ACK_O => ACK_O,
+			ADR_I => adr_i,
+			DAT_I => dat_i,
+			DAT_O => dat_o,
+			WE_I  => we_i,
+			STB_I => stb_i,
+			ACK_O => ack_o,
 			CYC_I => open
 		);
 
@@ -120,8 +121,8 @@ begin
 			WE_I          => WE_I,
 			STB_I         => STB_I,
 			ACK_O         => ACK_O,
-			GPIO_STREAM_I => GPIO_STREAM_I,
 			GPIO_STREAM_O => GPIO_STREAM_O,
+			GPIO_STREAM_I => GPIO_STREAM_I,
 			GPIO_B        => GPIO_B
 		);
 

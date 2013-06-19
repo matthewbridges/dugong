@@ -20,7 +20,7 @@
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer:		MATTHEW BRIDGES
 --
--- Name:		BRAM (002)
+-- Name:		GPIO_CONTROLLER(002)
 -- Type:		CORE (3)
 -- Description: 	A core for controlling GPIO of differing widths. Includes a streaming interface
 --			for asynchronous digital IO. This allows bypassing the WB Bus.
@@ -60,8 +60,8 @@ entity gpio_controller is
 		ACK_O         : out   STD_LOGIC;
 		--CYC_I : in   STD_LOGIC;
 		--GPIO Stream Interface
-		GPIO_STREAM_I : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		GPIO_STREAM_O : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		GPIO_STREAM_O : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		GPIO_STREAM_I : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		--GPIO Interface
 		GPIO_B        : inout STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
 	);
@@ -112,9 +112,9 @@ begin
 
 	--Generate GPIO tri-state buffers and multiplexors for each GPIO pin
 	gpio_control_buffers : for gpio_num in 0 to DATA_WIDTH - 1 generate
-		gpio(gpio_num)          <= GPIO_STREAM_O(gpio_num) when user_mem(3)(gpio_num) = '1' else user_mem(0)(gpio_num); -- STREAM REG Control
+		gpio(gpio_num)          <= GPIO_STREAM_I(gpio_num) when user_mem(3)(gpio_num) = '1' else user_mem(0)(gpio_num); -- STREAM REG Control
 		GPIO_B(gpio_num)        <= gpio(gpio_num) when user_mem(2)(gpio_num) = '1' else 'Z'; -- DIRECTION Control
-		GPIO_STREAM_I(gpio_num) <= GPIO_B(gpio_num) when user_mem(2)(gpio_num) = '0' else '0';
+		GPIO_STREAM_O(gpio_num) <= GPIO_B(gpio_num) when user_mem(2)(gpio_num) = '0' else '0';
 	end generate gpio_control_buffers;
 
 end Behavioral;
