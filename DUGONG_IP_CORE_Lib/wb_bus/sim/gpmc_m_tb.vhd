@@ -1,22 +1,25 @@
 ---------------------------------------------------------------------------------------------------------------
 --                    
---______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________      
---\____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
--- \___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
---  \___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
---   \___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
---    \___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
---     \___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
---      \___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
---       \___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
---        \                                                                                                \
---         \==============  Reconfigurable Hardware Interface for computatioN and radiO  ===================\
---          \============================  http://www.rhinoplatform.org  ====================================\
---           \================================================================================================\
+--______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________     
+--\ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+-- \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
+--  \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
+--   \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--    \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--     \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--      \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--       \ ___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--        \ __________________________________________\          \__________________________________________\
+--         |:------------------------------------------|: DUGONG :|-----------------------------------------:|
+--        / ==========================================/          /========================================= /
+--       / =============================================================================================== /
+--      / ================  Reconfigurable Hardware Interface for computatioN and radiO  ================ /
+--     / ===============================  http://www.rhinoplatform.org  ================================ /
+--    / =============================================================================================== /
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 		MATTHEW BRIDGES
+-- Engineer:		MATTHEW BRIDGES
 --
 -- Name:		GPMC_M_TB (003)
 -- Type:		TB (F)
@@ -31,12 +34,11 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.ALL;
 
 library DUGONG_IP_CORE_Lib;
-use DUGONG_IP_CORE_Lib.dcores.ALL;
+use DUGONG_IP_CORE_Lib.dprimitives.ALL;
 
 entity gpmc_m_tb is
 	generic(
-		DATA_WIDTH : natural := 32;
-		ADDR_WIDTH : natural := 28
+		GPMC_ADDR_WIDTH : natural := 28
 	);
 end entity gpmc_m_tb;
 
@@ -53,6 +55,7 @@ architecture Behavioral of gpmc_m_tb is
 	signal WE_O  : STD_LOGIC;
 	signal STB_O : STD_LOGIC;
 	signal ACK_I : STD_LOGIC                                 := '0';
+	signal CYC_O : STD_LOGIC;
 
 	--GPMC Interface
 	signal GPMC_CLK_I      : STD_LOGIC                     := '0';
@@ -63,18 +66,21 @@ architecture Behavioral of gpmc_m_tb is
 	signal GPMC_nWE_I      : STD_LOGIC                     := '1';
 	signal GPMC_nOE_I      : STD_LOGIC                     := '1';
 
+	--Debugging
+	signal DEBUG : STD_LOGIC_VECTOR(31 downto 0);
+
 	signal gpmcfclk    : std_logic := '0';
+	signal gpmcclk     : std_logic := '0';
 	signal gpmc_clk_en : std_logic := '0';
 
 	-- Clock period definitions
 	constant CLK_I_period    : time := 10 ns;
-	constant gpmcfclk_period : time := 11.5 ns;
+	constant gpmcfclk_period : time := 6.024 ns;
 
 begin
 	uut : gpmc_m
 		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH
+			GPMC_ADDR_WIDTH => GPMC_ADDR_WIDTH
 		)
 		port map(
 			CLK_I           => CLK_I,
@@ -85,13 +91,15 @@ begin
 			WE_O            => WE_O,
 			STB_O           => STB_O,
 			ACK_I           => ACK_I,
+			CYC_O           => CYC_O,
 			GPMC_CLK_I      => GPMC_CLK_I,
 			GPMC_D_B        => GPMC_D_B,
 			GPMC_A_I        => GPMC_A_I,
 			GPMC_nCS_I      => GPMC_nCS_I,
 			GPMC_nADV_ALE_I => GPMC_nADV_ALE_I,
 			GPMC_nWE_I      => GPMC_nWE_I,
-			GPMC_nOE_I      => GPMC_nOE_I
+			GPMC_nOE_I      => GPMC_nOE_I,
+			DEBUG           => DEBUG
 		);
 
 	-- Clock process definitions
@@ -111,7 +119,17 @@ begin
 		wait for gpmcfclk_period / 2;
 	end process;
 
-	GPMC_CLK_I <= gpmcfclk and gpmc_clk_en;
+	gpmcclk_process : process
+	begin
+		wait until rising_edge(gpmcfclk);
+		wait until rising_edge(gpmcfclk);
+		gpmcclk <= '0';
+		wait until rising_edge(gpmcfclk);
+		wait until rising_edge(gpmcfclk);
+		gpmcclk <= '1';
+	end process;
+
+	GPMC_CLK_I <= gpmcclk and gpmc_clk_en;
 
 	-- Stimulus process
 	wb_stim_proc : process
@@ -139,13 +157,15 @@ begin
 		wait until rising_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '1';
 		GPMC_A_I        <= "0000000000";
-		GPMC_D_B        <= x"F000";
+		GPMC_D_B        <= x"1E08";
+		gpmc_clk_en     <= '1';
 		wait until falling_edge(gpmcfclk);
-		gpmc_clk_en <= '1';
-		wait until rising_edge(gpmcfclk);
 		GPMC_nCS_I <= "1111110";
 		wait until falling_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '0';
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
 		wait until falling_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '1';
 		wait until rising_edge(gpmcfclk);
@@ -153,12 +173,14 @@ begin
 		wait until falling_edge(gpmcfclk);
 		GPMC_nWE_I <= '0';
 		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
 		GPMC_nWE_I <= '1';
 		wait until rising_edge(gpmcfclk);
 		GPMC_nCS_I <= "1111111";
-		wait until falling_edge(gpmcfclk);
-		gpmc_clk_en <= '0';
 		wait until rising_edge(gpmcfclk);
+		gpmc_clk_en     <= '0';
 		GPMC_nADV_ALE_I <= '0';
 		GPMC_A_I        <= "0000000000";
 		GPMC_D_B        <= (others => 'Z');
@@ -166,14 +188,15 @@ begin
 		wait until rising_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '1';
 		GPMC_A_I        <= "0000000000";
-		GPMC_D_B        <= x"F001";
+		GPMC_D_B        <= x"1E09";
+		gpmc_clk_en     <= '1';
 		wait until falling_edge(gpmcfclk);
-		gpmc_clk_en <= '1';
-		wait until rising_edge(gpmcfclk);
 		GPMC_nCS_I <= "1111110";
 		wait until falling_edge(gpmcfclk);
-		wait until falling_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '0';
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
 		wait until falling_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '1';
 		wait until rising_edge(gpmcfclk);
@@ -181,12 +204,14 @@ begin
 		wait until falling_edge(gpmcfclk);
 		GPMC_nWE_I <= '0';
 		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
 		GPMC_nWE_I <= '1';
 		wait until rising_edge(gpmcfclk);
 		GPMC_nCS_I <= "1111111";
-		wait until falling_edge(gpmcfclk);
-		gpmc_clk_en <= '0';
 		wait until rising_edge(gpmcfclk);
+		gpmc_clk_en     <= '0';
 		GPMC_nADV_ALE_I <= '0';
 		GPMC_A_I        <= "0000000000";
 		GPMC_D_B        <= (others => 'Z');
@@ -196,13 +221,14 @@ begin
 		GPMC_nADV_ALE_I <= '1';
 		GPMC_A_I        <= "0000000000";
 		GPMC_D_B        <= x"E000";
+		gpmc_clk_en     <= '1';
 		wait until falling_edge(gpmcfclk);
-		gpmc_clk_en <= '1';
-		wait until rising_edge(gpmcfclk);
 		GPMC_nCS_I <= "1111110";
 		wait until falling_edge(gpmcfclk);
-		wait until falling_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '0';
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
 		wait until falling_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '1';
 		wait until rising_edge(gpmcfclk);
@@ -210,12 +236,14 @@ begin
 		wait until falling_edge(gpmcfclk);
 		GPMC_nOE_I <= '0';
 		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
 		GPMC_nOE_I <= '1';
 		wait until rising_edge(gpmcfclk);
 		GPMC_nCS_I <= "1111111";
 		wait until falling_edge(gpmcfclk);
-		gpmc_clk_en <= '0';
-		wait until rising_edge(gpmcfclk);
+		gpmc_clk_en     <= '0';
 		GPMC_nADV_ALE_I <= '0';
 		GPMC_A_I        <= "0000000000";
 		--WORD 2
@@ -223,13 +251,14 @@ begin
 		GPMC_nADV_ALE_I <= '1';
 		GPMC_A_I        <= "0000000000";
 		GPMC_D_B        <= x"E001";
+		gpmc_clk_en     <= '1';
 		wait until falling_edge(gpmcfclk);
-		gpmc_clk_en <= '1';
-		wait until rising_edge(gpmcfclk);
 		GPMC_nCS_I <= "1111110";
 		wait until falling_edge(gpmcfclk);
-		wait until falling_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '0';
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
 		wait until falling_edge(gpmcfclk);
 		GPMC_nADV_ALE_I <= '1';
 		wait until rising_edge(gpmcfclk);
@@ -237,12 +266,14 @@ begin
 		wait until falling_edge(gpmcfclk);
 		GPMC_nOE_I <= '0';
 		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
+		wait until falling_edge(gpmcfclk);
 		GPMC_nOE_I <= '1';
 		wait until rising_edge(gpmcfclk);
 		GPMC_nCS_I <= "1111111";
 		wait until falling_edge(gpmcfclk);
-		gpmc_clk_en <= '0';
-		wait until rising_edge(gpmcfclk);
+		gpmc_clk_en     <= '0';
 		GPMC_nADV_ALE_I <= '0';
 		GPMC_A_I        <= "0000000000";
 
