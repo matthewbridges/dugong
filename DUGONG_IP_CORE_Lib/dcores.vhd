@@ -43,8 +43,6 @@ package dcores is
 
 	component bram_ip
 		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
 			BASE_ADDR       : UNSIGNED(15 downto 0) := x"0000";
 			CORE_DATA_WIDTH : NATURAL               := 32;
 			CORE_ADDR_WIDTH : NATURAL               := 10
@@ -54,8 +52,8 @@ package dcores is
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
 			--Slave to WB
-			WB_I  : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O  : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0)
+			WB_MS : in  WB_MS_type;
+			WB_SM : out WB_SM_type
 		);
 	end component bram_ip;
 
@@ -116,8 +114,8 @@ package dcores is
 			WB_MS         : in    WB_MS_type;
 			WB_SM         : out   WB_SM_type;
 			--GPIO Stream Interface
-			GPIO_STREAM_I : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			GPIO_STREAM_O : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			GPIO_STREAM_O : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			GPIO_STREAM_I : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			--GPIO Interface
 			GPIO_B        : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
