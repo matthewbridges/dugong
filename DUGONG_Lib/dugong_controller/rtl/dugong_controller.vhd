@@ -27,19 +27,19 @@ use IEEE.NUMERIC_STD.ALL;
 library DUGONG_Lib;
 use DUGONG_Lib.dcomponents.ALL;
 
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
+
 entity dugong_controller is
-	generic(
-		DATA_WIDTH : natural := 32;
-		ADDR_WIDTH : natural := 12
-	);
 	port(
 		--System Control Inputs
 		CLK_I   : in  STD_LOGIC;
 		CLK_I_n : in  STD_LOGIC;
 		RST_I   : in  STD_LOGIC;
 		--Master to WB
-		WB_I    : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-		WB_O    : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0)
+		WB_MS   : out WB_MS_type;
+		WB_SM   : in  WB_SM_type;
+		GNT_I   : in  STD_LOGIC
 	);
 end dugong_controller;
 
@@ -98,25 +98,17 @@ architecture Behavioral of dugong_controller is
 
 begin
 	bus_logic : wb_m
-		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH
-		)
 		port map(
-			--System Control Inputs
-			--			CLK_I => CLK_I,
-			--			RST_I => RST_I,
-			--Master to WB
-			WB_MS  => WB_O,
-			WB_SM  => WB_I,
-			--Wishbone Master Lines (inverted)
-			DAT_I => dat_i,
-			DAT_O => dat_o,
-			ADR_O => adr_o,
-			STB_O => stb_o,
-			WE_O  => we_o,
-			CYC_O => cyc_o,
-			ACK_I => ack_i
+			WB_MS => WB_MS,
+			WB_SM => WB_SM,
+			ADR_O => ADR_O,
+			DAT_I => DAT_I,
+			DAT_O => DAT_O,
+			STB_O => STB_O,
+			WE_O  => WE_O,
+			CYC_O => CYC_O,
+			ACK_I => ACK_I,
+			GNT_I => GNT_I
 		);
 
 	prog_counter : program_counter
