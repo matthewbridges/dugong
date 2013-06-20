@@ -32,8 +32,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-library DUGONG_IP_CORE_Lib;
-use DUGONG_IP_CORE_Lib.dprimitives.ALL;
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 --NB The DATA_WIDTH and ADDR_WIDTH constants are set in the dprimitives package
 entity bram_ip is
@@ -44,11 +44,11 @@ entity bram_ip is
 	);
 	port(
 		--System Control Inputs
-		CLK_I         : in    STD_LOGIC;
-		RST_I         : in    STD_LOGIC;
+		CLK_I : in  STD_LOGIC;
+		RST_I : in  STD_LOGIC;
 		--Slave to WB
-		WB_MS         : in    WB_MS_type;
-		WB_SM         : out   WB_SM_type
+		WB_MS : in  WB_MS_type;
+		WB_SM : out WB_SM_type
 	);
 end bram_ip;
 
@@ -62,23 +62,23 @@ architecture Behavioral of bram_ip is
 	signal cyc_i : STD_LOGIC;
 
 	component bram
-	generic(
-		DATA_WIDTH : natural := 32;
-		ADDR_WIDTH : natural := 10
-	);
-	port(
-		--System Control Inputs
-		CLK_I : in  STD_LOGIC;
-		RST_I : in  STD_LOGIC;
-		--Wishbone Slave Lines
-		ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		WE_I  : in  STD_LOGIC;
-		STB_I : in  STD_LOGIC;
-		ACK_O : out STD_LOGIC;
-		CYC_I : in  STD_LOGIC
-	);
+		generic(
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 10
+		);
+		port(
+			--System Control Inputs
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			--Wishbone Slave Lines
+			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WE_I  : in  STD_LOGIC;
+			STB_I : in  STD_LOGIC;
+			ACK_O : out STD_LOGIC;
+			CYC_I : in  STD_LOGIC
+		);
 	end component bram;
 
 begin
