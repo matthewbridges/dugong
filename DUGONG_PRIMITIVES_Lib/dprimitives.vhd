@@ -85,10 +85,6 @@ package dprimitives is
 	-----------------------------
 
 	component wb_m is
-		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 12
-		);
 		port(
 			--System Control Inputs
 			--		CLK_I : in  STD_LOGIC;
@@ -102,8 +98,8 @@ package dprimitives is
 			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			STB_O : in  STD_LOGIC;
 			WE_O  : in  STD_LOGIC;
-			CYC_O : in  STD_LOGIC;
 			ACK_I : out STD_LOGIC;
+			CYC_O : in  STD_LOGIC;
 			GNT_I : in  STD_LOGIC
 		);
 	end component;
