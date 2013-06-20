@@ -74,6 +74,7 @@ package dprimitives is
 			GPMC_nADV_ALE_I : in    STD_LOGIC;
 			GPMC_nWE_I      : in    STD_LOGIC;
 			GPMC_nOE_I      : in    STD_LOGIC;
+			GPMC_WAIT_O     : out   STD_LOGIC;
 			--Debugging Signal
 			DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0)
 		);
