@@ -18,7 +18,7 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 		MATTHEW BRIDGES
+-- Engineer:		MATTHEW BRIDGES
 --
 -- Name:		WB_ARBITER_INTERCON (004)
 -- Type:		PRIMITIVE (2)
@@ -31,9 +31,8 @@
 library IEEE;
 use IEEE.std_logic_1164.ALL;
 
-library DUGONG_IP_CORE_Lib;
-use DUGONG_IP_CORE_Lib.dcores.ALL;
-use DUGONG_IP_CORE_Lib.dprimitives.ALL;
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 --NB The DATA_WIDTH and ADDR_WIDTH constants are set in the dprimitives package
 entity wb_arbiter_intercon is

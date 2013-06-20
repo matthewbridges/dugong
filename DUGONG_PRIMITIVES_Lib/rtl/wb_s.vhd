@@ -33,8 +33,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-library DUGONG_IP_CORE_Lib;
-use DUGONG_IP_CORE_Lib.dprimitives.ALL;
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 --NB The DATA_WIDTH and ADDR_WIDTH constants are set in the dprimitives package
 entity wb_s is
