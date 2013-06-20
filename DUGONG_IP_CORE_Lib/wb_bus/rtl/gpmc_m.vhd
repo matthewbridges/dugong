@@ -60,6 +60,7 @@ entity gpmc_m is
 		GPMC_nADV_ALE_I : in    STD_LOGIC;
 		GPMC_nWE_I      : in    STD_LOGIC;
 		GPMC_nOE_I      : in    STD_LOGIC;
+		GPMC_WAIT_O     : out   STD_LOGIC;
 		--Debugging Signal
 		DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0)
 	);
@@ -97,20 +98,18 @@ begin
 			else
 				--Perform Clock Rising Edge operations
 				if (rising_edge(CLK_I)) then
-					if (gpmc_ack = '1') then
-						gpmc_ack <= gpmc_stb;
-					elsif (stb_ms = '1') then
+					if (stb_ms = '1') then
 						if (ACK_I = '1') then
-							dat_sm <= DAT_I;
-							we_ms  <= '0';
-							stb_ms <= '0';
-							cyc_ms <= '0';
+							dat_sm   <= DAT_I;
+							we_ms    <= '0';
+							stb_ms   <= '0';
+							cyc_ms   <= '0';
+							gpmc_ack <= '1';
 						end if;
 					elsif (gpmc_stb = '1') then
-						stb_ms   <= '1';
-						cyc_ms   <= '1';
-						we_ms    <= word_sel;
-						gpmc_ack <= '1';
+						stb_ms <= '1';
+						cyc_ms <= '1';
+						we_ms  <= word_sel;
 					end if;
 				end if;
 			end if;
@@ -171,11 +170,13 @@ begin
 	--gpmc_dout <= x"0" & adr_ms(GPMC_ADDR_WIDTH - 1 downto 16) when word_sel = '1' else adr_ms(15 downto 0);
 	gpmc_dout <= dat_sm(31 downto 16) when word_sel = '1' else dat_sm(15 downto 0);
 
+	GPMC_WAIT_O <= not gpmc_stb;
+
 	--GPMC tri-state buffers for GPMC Bidirectional Data Bus
 	GPMC_D_B <= gpmc_dout when GPMC_nOE_I = '0' else (others => 'Z');
 	--GPMC_D_B <= x"FEDC" when GPMC_nOE_I = '0' else (others => 'Z');
 
-	DEBUG <= "00000000000" & GPMC_CLK_I & GPMC_A_I & GPMC_nCS_I & GPMC_nADV_ALE_I & GPMC_nWE_I & GPMC_nOE_I;
+	DEBUG <= "0000000000" & GPMC_CLK_I & GPMC_A_I & GPMC_nCS_I & GPMC_nADV_ALE_I & GPMC_nWE_I & GPMC_nOE_I & gpmc_stb;
 
 end Behavioral;
 	

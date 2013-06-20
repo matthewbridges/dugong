@@ -65,6 +65,7 @@ architecture Behavioral of gpmc_m_tb is
 	signal GPMC_nADV_ALE_I : STD_LOGIC                     := '0';
 	signal GPMC_nWE_I      : STD_LOGIC                     := '1';
 	signal GPMC_nOE_I      : STD_LOGIC                     := '1';
+	signal GPMC_WAIT_O     : STD_LOGIC;
 
 	--Debugging
 	signal DEBUG : STD_LOGIC_VECTOR(31 downto 0);
@@ -99,6 +100,7 @@ begin
 			GPMC_nADV_ALE_I => GPMC_nADV_ALE_I,
 			GPMC_nWE_I      => GPMC_nWE_I,
 			GPMC_nOE_I      => GPMC_nOE_I,
+			GPMC_WAIT_O     => GPMC_WAIT_O,
 			DEBUG           => DEBUG
 		);
 
