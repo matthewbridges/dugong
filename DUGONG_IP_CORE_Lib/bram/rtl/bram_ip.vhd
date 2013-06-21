@@ -38,7 +38,7 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 --NB The DATA_WIDTH and ADDR_WIDTH constants are set in the dprimitives package
 entity bram_ip is
 	generic(
-		BASE_ADDR       : UNSIGNED(15 downto 0) := x"0000";
+		BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
 		CORE_DATA_WIDTH : NATURAL               := 32;
 		CORE_ADDR_WIDTH : NATURAL               := 10
 	);

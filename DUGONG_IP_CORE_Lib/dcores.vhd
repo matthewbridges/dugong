@@ -43,9 +43,9 @@ package dcores is
 
 	component bram_ip
 		generic(
-			BASE_ADDR       : UNSIGNED(15 downto 0) := x"0000";
-			CORE_DATA_WIDTH : NATURAL               := 32;
-			CORE_ADDR_WIDTH : NATURAL               := 10
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 32;
+			CORE_ADDR_WIDTH : NATURAL                           := 10
 		);
 		port(
 			--System Control Inputs
@@ -102,9 +102,9 @@ package dcores is
 
 	component gpio_controller_ip
 		generic(
-			BASE_ADDR       : UNSIGNED(15 downto 0) := x"0000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 16;
+			CORE_ADDR_WIDTH : NATURAL                           := 3
 		);
 		port(
 			--System Control Inputs
