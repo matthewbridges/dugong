@@ -1,5 +1,5 @@
 --                    
--- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________     
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________    
 -- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
 --  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
 --   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
@@ -89,6 +89,10 @@ architecture Behavioral of rhino_top is
 	signal debug_top : std_logic_vector(31 downto 0);
 
 begin
+	--------------------------------
+	-- CLOCKING AND RESET CONTROL --
+	--------------------------------
+
 	System_Controller : sys_con
 		port map(
 			SYS_CLK_P      => SYS_CLK_P,
@@ -165,7 +169,7 @@ begin
 
 	Block_RAM_1 : bram_ip
 		generic map(
-			BASE_ADDR       => x"0000",
+			BASE_ADDR       => x"00000000",
 			CORE_DATA_WIDTH => 32,
 			CORE_ADDR_WIDTH => 11
 		)
@@ -178,7 +182,7 @@ begin
 
 	LEDs_8 : gpio_controller_ip
 		generic map(
-			BASE_ADDR       => x"3C00",
+			BASE_ADDR       => x"00003C00",
 			CORE_DATA_WIDTH => 8
 		)
 		port map(
@@ -193,7 +197,7 @@ begin
 
 	GPIOs_16 : gpio_controller_ip
 		GENERIC MAP(
-			BASE_ADDR       => x"3C20",
+			BASE_ADDR       => x"00003C20",
 			CORE_DATA_WIDTH => 16
 		)
 		PORT MAP(
@@ -208,7 +212,7 @@ begin
 
 	Debug_32 : gpio_controller_ip
 		GENERIC MAP(
-			BASE_ADDR       => x"3C40",
+			BASE_ADDR       => x"00003C40",
 			CORE_DATA_WIDTH => 32
 		)
 		PORT MAP(
