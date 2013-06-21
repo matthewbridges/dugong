@@ -45,13 +45,14 @@ end dugong_controller;
 
 architecture Behavioral of dugong_controller is
 	--WB Master Lines
+	signal adr_o : std_logic_vector(ADDR_WIDTH - 1 downto 0);
 	signal dat_i : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal dat_o : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal adr_o : std_logic_vector(ADDR_WIDTH - 1 downto 0);
-	signal stb_o : std_logic;
 	signal we_o  : std_logic;
-	signal cyc_o : std_logic;
+	signal stb_o : std_logic;
 	signal ack_i : std_logic;
+	signal cyc_o : std_logic;
+	signal err_i : std_logic;
 
 	signal dat : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal adr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
@@ -88,26 +89,29 @@ architecture Behavioral of dugong_controller is
 		);
 	end component;
 
-	COMPONENT inst_mem
-		PORT(
-			clka  : IN  STD_LOGIC;
-			addra : IN  STD_LOGIC_VECTOR(8 DOWNTO 0);
-			douta : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+	component inst_mem
+		port(
+			clka  : in  STD_LOGIC;
+			addra : in  STD_LOGIC_VECTOR(8 DOWNTO 0);
+			douta : out STD_LOGIC_VECTOR(63 DOWNTO 0)
 		);
-	END COMPONENT;
+	end component inst_mem;
 
 begin
 	bus_logic : wb_m
 		port map(
+			CLK_I => CLK_I,
+			RST_I => RST_I,
 			WB_MS => WB_MS,
 			WB_SM => WB_SM,
-			ADR_O => ADR_O,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			STB_O => STB_O,
-			WE_O  => WE_O,
-			CYC_O => CYC_O,
-			ACK_I => ACK_I,
+			ADR_O => adr_o,
+			DAT_I => dat_i,
+			DAT_O => dat_o,
+			WE_O  => we_o,
+			STB_O => stb_o,
+			ACK_I => ack_i,
+			CYC_O => cyc_o,
+			ERR_I => err_i,
 			GNT_I => GNT_I
 		);
 
@@ -171,7 +175,7 @@ begin
 						pc_en <= '1';   -- Request new instruction
 					end if;
 
-				elsif (ack_i = '1') then
+				elsif ((ack_i or err_i) = '1') then
 					if (we_o = '0') then
 						accum <= dat_i;
 					end if;
