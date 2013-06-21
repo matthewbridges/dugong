@@ -1,7 +1,7 @@
 ##############################################################
 #
 # Xilinx Core Generator version 14.3
-# Date: Wed Jun 19 09:10:45 2013
+# Date: Fri Jun 21 15:08:44 2013
 #
 ##############################################################
 #
@@ -57,7 +57,7 @@ CSET enable_32bit_address=false
 CSET enable_a=Always_Enabled
 CSET enable_b=Always_Enabled
 CSET error_injection_type=Single_Bit_Error_Injection
-CSET fill_remaining_memory_locations=true
+CSET fill_remaining_memory_locations=false
 CSET interface_type=Native
 CSET load_init_file=true
 CSET mem_file=no_Mem_file_loaded
@@ -74,15 +74,15 @@ CSET port_b_clock=0
 CSET port_b_enable_rate=0
 CSET port_b_write_rate=0
 CSET primitive=8kx2
-CSET read_width_a=48
-CSET read_width_b=48
+CSET read_width_a=64
+CSET read_width_b=64
 CSET register_porta_input_of_softecc=false
 CSET register_porta_output_of_memory_core=false
 CSET register_porta_output_of_memory_primitives=false
 CSET register_portb_output_of_memory_core=false
 CSET register_portb_output_of_memory_primitives=false
 CSET register_portb_output_of_softecc=false
-CSET remaining_memory_locations=000000000000
+CSET remaining_memory_locations=0
 CSET reset_memory_latch_a=false
 CSET reset_memory_latch_b=false
 CSET reset_priority_a=CE
@@ -98,11 +98,11 @@ CSET use_regceb_pin=false
 CSET use_rsta_pin=false
 CSET use_rstb_pin=false
 CSET write_depth_a=512
-CSET write_width_a=48
-CSET write_width_b=48
+CSET write_width_a=64
+CSET write_width_b=64
 # END Parameters
 # BEGIN Extra information
 MISC pkg_timestamp=2012-09-17T22:14:36Z
 # END Extra information
 GENERATE
-# CRC: 2cf8bf34
+# CRC: 6f140976
