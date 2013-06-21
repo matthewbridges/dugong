@@ -1,18 +1,20 @@
----------------------------------------------------------------------------------------------------------------
 --                    
---______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________      
---\____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
--- \___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
---  \___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
---   \___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
---    \___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
---     \___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
---      \___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
---       \___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
---        \                                                                                                \
---         \==============  Reconfigurable Hardware Interface for computatioN and radiO  ===================\
---          \============================  http://www.rhinoplatform.org  ====================================\
---           \================================================================================================\
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________     
+-- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--        \ ___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--         \ __________________________________________\          \__________________________________________\
+--          |:------------------------------------------|: DUGONG :|-----------------------------------------:|
+--         / ==========================================/          /========================================= /
+--        / =============================================================================================== /
+--       / ================  Reconfigurable Hardware Interface for computatioN and radiO  ================ /
+--      / ===============================  http://www.rhinoplatform.org  ================================ /
+--     / =============================================================================================== /
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
@@ -20,15 +22,18 @@
 --
 -- Name:		RHINO TOP (001)
 -- Type:		Top Level Module (F)
--- Description:		This is the top level module joining all cores and controllers to ports and top level signals	
---			The addressing of cores is also done in this module
+-- Description:		This is the top level module joining all cores and controllers to ports and 
+--			top level signals. The addressing of cores is also done in this module
 --
--- Compliance:		DUGONG V1.1
--- ID:			x 1-1-F-001
+-- Compliance:		DUGONG V1.3
+-- ID:			x 1-3-F-001
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 library DUGONG_Lib;
 use DUGONG_Lib.dcomponents.ALL;
@@ -36,11 +41,11 @@ use DUGONG_Lib.dcomponents.ALL;
 library DUGONG_IP_CORE_Lib;
 use DUGONG_IP_CORE_Lib.dcores.ALL;
 
+--NB The DATA_WIDTH and ADDR_WIDTH constants are set in the dprimitives package
 entity rhino_top is
 	generic(
-		DATA_WIDTH      : natural := 32;
-		ADDR_WIDTH      : natural := 12;
-		NUMBER_OF_CORES : NATURAL := 4
+		NUMBER_OF_MASTERS : NATURAL := 2;
+		NUMBER_OF_SLAVES  : NATURAL := 4
 	);
 	port(
 		--System Control Inputs
@@ -59,6 +64,9 @@ entity rhino_top is
 		GPMC_nADV_ALE_I : in    STD_LOGIC;
 		GPMC_nWE_I      : in    STD_LOGIC;
 		GPMC_nOE_I      : in    STD_LOGIC;
+		GPMC_WAIT_O     : out   STD_LOGIC;
+		--WB Status Signals
+		WB_GNT_O        : out   STD_LOGIC_VECTOR(NUMBER_OF_MASTERS - 1 downto 0);
 		-- USER GPIOs
 		GPIO            : inout STD_LOGIC_VECTOR(15 downto 0);
 		--USER LEDs
@@ -72,9 +80,13 @@ architecture Behavioral of rhino_top is
 	signal sys_con_clk   : std_logic;
 	signal sys_con_clk_n : std_logic;
 	signal sys_con_rst   : std_logic;
-	signal wb_ms         : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-	signal wb_sm_bus     : std_logic_vector(DATA_WIDTH downto 0);
-	signal wb_sm         : WB_O_vector(NUMBER_OF_CORES - 1 downto 0);
+	signal wb_ms_bus     : WB_MS_type;
+	signal wb_ms         : WB_MS_vector(NUMBER_OF_MASTERS - 1 downto 0);
+	signal wb_sm_bus     : WB_SM_type;
+	signal wb_sm         : WB_SM_vector(NUMBER_OF_SLAVES - 1 downto 0);
+	signal wb_gnt        : std_logic_vector(NUMBER_OF_MASTERS - 1 downto 0);
+
+	signal debug_top : std_logic_vector(31 downto 0);
 
 begin
 	System_Controller : sys_con
@@ -90,41 +102,62 @@ begin
 			RST_O          => sys_con_rst
 		);
 
-	Central_Control_Unit : dugong_controller
-		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH
-		)
-		port map(
-			CLK_I   => sys_con_clk,
-			CLK_I_n => sys_con_clk_n,
-			RST_I   => sys_con_rst,
-			WB_I    => wb_sm_bus,
-			WB_O    => wb_ms
-		);
-
-	wb_sm_bus <= wb_sm(0) or wb_sm(1) or wb_sm(2) or wb_sm(3);
-
 	--------------------------
 	-- ARM SIDE INTERFACING --
 	--------------------------
 
-	ARM_GPMC : gpmc_m
-		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => 28
-		)
+	ARM_Interface : gpmc_wb_bridge
 		port map(
+			CLK_I           => sys_con_clk,
+			RST_I           => sys_con_rst,
+			WB_MS           => wb_ms(0),
+			WB_SM           => wb_sm_bus,
+			GNT_I           => wb_gnt(0),
 			GPMC_CLK_I      => GPMC_CLK_I,
-			WB_MS           => open,
-			WB_SM           => (others => '0'),
 			GPMC_D_B        => GPMC_D_B,
 			GPMC_A_I        => GPMC_A_I,
 			GPMC_nCS_I      => GPMC_nCS_I,
 			GPMC_nADV_ALE_I => GPMC_nADV_ALE_I,
 			GPMC_nWE_I      => GPMC_nWE_I,
-			GPMC_nOE_I      => GPMC_nOE_I
+			GPMC_nOE_I      => GPMC_nOE_I,
+			GPMC_WAIT_O     => GPMC_WAIT_O,
+			DEBUG           => debug_top
 		);
+
+	------------
+	-- DUGONG --
+	------------
+
+	Central_Control_Unit : dugong_controller
+		port map(
+			CLK_I   => sys_con_clk,
+			CLK_I_n => sys_con_clk_n,
+			RST_I   => sys_con_rst,
+			WB_MS   => wb_ms(1),
+			WB_SM   => wb_sm_bus,
+			GNT_I   => wb_gnt(1)
+		);
+
+	---------------------------
+	-- Bussing Interconnects --
+	---------------------------
+
+	WB_Intercon : wb_arbiter_intercon
+		generic map(
+			NUMBER_OF_MASTERS => NUMBER_OF_MASTERS,
+			NUMBER_OF_SLAVES  => NUMBER_OF_SLAVES
+		)
+		port map(
+			CLK_I     => sys_con_clk,
+			RST_I     => sys_con_rst,
+			WB_MS     => wb_ms,
+			WB_MS_BUS => wb_ms_bus,
+			WB_SM     => wb_sm,
+			WB_SM_BUS => wb_sm_bus,
+			WB_GNT_O  => wb_gnt
+		);
+
+	WB_GNT_O <= wb_gnt;
 
 	---------------------
 	-- DUGONG IP CORES --
@@ -132,60 +165,60 @@ begin
 
 	Block_RAM_1 : bram_ip
 		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH,
-			BASE_ADDR  => x"E00"
+			BASE_ADDR       => x"0000",
+			CORE_DATA_WIDTH => 32,
+			CORE_ADDR_WIDTH => 11
 		)
 		port map(
 			CLK_I => sys_con_clk,
 			RST_I => sys_con_rst,
-			WB_I  => wb_ms,
-			WB_O  => wb_sm(0)
+			WB_MS => wb_ms_bus,
+			WB_SM => wb_sm(0)
 		);
 
 	LEDs_8 : gpio_controller_ip
-		generic map(DATA_WIDTH      => DATA_WIDTH,
-			    ADDR_WIDTH      => ADDR_WIDTH,
-			    BASE_ADDR       => x"F00",
-			    CORE_DATA_WIDTH => 8
+		generic map(
+			BASE_ADDR       => x"3C00",
+			CORE_DATA_WIDTH => 8
 		)
 		port map(
-			CLK_I => sys_con_clk,
-			RST_I => sys_con_rst,
-			WB_I  => wb_ms,
-			WB_O  => wb_sm(1),
-			GPIO  => LED
+			CLK_I         => sys_con_clk,
+			RST_I         => sys_con_rst,
+			WB_MS         => wb_ms_bus,
+			WB_SM         => wb_sm(1),
+			GPIO_STREAM_O => open,
+			GPIO_STREAM_I => (others => '0'),
+			GPIO_B        => LED
 		);
 
 	GPIOs_16 : gpio_controller_ip
 		GENERIC MAP(
-			DATA_WIDTH      => DATA_WIDTH,
-			ADDR_WIDTH      => ADDR_WIDTH,
-			BASE_ADDR       => x"F08",
+			BASE_ADDR       => x"3C20",
 			CORE_DATA_WIDTH => 16
 		)
 		PORT MAP(
-			CLK_I => sys_con_clk,
-			RST_I => sys_con_rst,
-			WB_I  => wb_ms,
-			WB_O  => wb_sm(2),
-			GPIO  => GPIO
+			CLK_I         => sys_con_clk,
+			RST_I         => sys_con_rst,
+			WB_MS         => wb_ms_bus,
+			WB_SM         => wb_sm(2),
+			GPIO_STREAM_O => open,
+			GPIO_STREAM_I => (others => '0'),
+			GPIO_B        => GPIO
 		);
 
 	Debug_32 : gpio_controller_ip
 		GENERIC MAP(
-			DATA_WIDTH      => DATA_WIDTH,
-			ADDR_WIDTH      => ADDR_WIDTH,
-			BASE_ADDR       => x"F10",
+			BASE_ADDR       => x"3C40",
 			CORE_DATA_WIDTH => 32
 		)
 		PORT MAP(
-			CLK_I => sys_con_clk,
-			RST_I => sys_con_rst,
-			WB_I  => wb_ms,
-			WB_O  => wb_sm(3),
-			GPIO  => DEBUG
+			CLK_I         => sys_con_clk,
+			RST_I         => sys_con_rst,
+			WB_MS         => wb_ms_bus,
+			WB_SM         => wb_sm(3),
+			GPIO_STREAM_O => open,
+			GPIO_STREAM_I => debug_top,
+			GPIO_B        => DEBUG
 		);
 
 end Behavioral;
-
