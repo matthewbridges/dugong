@@ -30,6 +30,7 @@
 
 library IEEE;
 use IEEE.std_logic_1164.ALL;
+use IEEE.numeric_std.ALL;
 
 library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
@@ -38,8 +39,8 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity wb_m is
 	port(
 		--System Control Inputs
-		--		CLK_I : in  STD_LOGIC;
-		--		RST_I : in  STD_LOGIC;
+		CLK_I : in  STD_LOGIC;
+		RST_I : in  STD_LOGIC;
 		--Master to WB
 		WB_MS : out WB_MS_type;
 		WB_SM : in  WB_SM_type;
@@ -51,6 +52,8 @@ entity wb_m is
 		WE_O  : in  STD_LOGIC;
 		ACK_I : out STD_LOGIC;
 		CYC_O : in  STD_LOGIC;
+		ERR_I : out STD_LOGIC;
+		--Wishbone Arbitration Signal
 		GNT_I : in  STD_LOGIC
 	);
 end wb_m;
@@ -59,7 +62,34 @@ architecture Behavioral of wb_m is
 	alias dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_SM(DATA_WIDTH - 1 downto 0);
 	alias ack_sm : std_logic is WB_SM(DATA_WIDTH);
 
+	signal count : unsigned(3 downto 0);
+
 begin
+	process(CLK_I, RST_I)
+	begin
+		--RST STATE
+		if (RST_I = '1') then
+			count <= x"0";
+			ERR_I <= '0';
+		else
+			if (rising_edge(CLK_I)) then
+				--CORRECT TERMINATION STATE
+				if ((ack_sm and GNT_I) = '1') then
+					count <= x"0";
+					ERR_I <= '0';
+				--TIMEOUT STATE
+				elsif (count = 15) then
+					count <= x"0";
+					ERR_I <= '1';
+				-- COUNTING STATE
+				elsif (STB_O = '1') then
+					count <= count + 1;
+					ERR_I <= '0';
+				end if;
+			end if;
+		end if;
+	end process;
+
 	--WB Output Ports
 	WB_MS <= (CYC_O & STB_O & WE_O & DAT_O & ADR_O);
 
