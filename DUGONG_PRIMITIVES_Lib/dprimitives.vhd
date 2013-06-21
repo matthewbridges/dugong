@@ -34,7 +34,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 package dprimitives is
 	constant DATA_WIDTH : natural := 32;
-	constant ADDR_WIDTH : natural := 12;
+	constant ADDR_WIDTH : natural := 28;
 
 	subtype WB_MS_type is std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
 	type WB_MS_vector is array (natural range <>) of WB_MS_type;
@@ -66,6 +66,7 @@ package dprimitives is
 			STB_O           : out   STD_LOGIC;
 			ACK_I           : in    STD_LOGIC;
 			CYC_O           : out   STD_LOGIC;
+			ERR_I           : in    STD_LOGIC;
 			--GPMC Interface
 			GPMC_CLK_I      : in    STD_LOGIC;
 			GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
@@ -87,8 +88,8 @@ package dprimitives is
 	component wb_m is
 		port(
 			--System Control Inputs
-			--		CLK_I : in  STD_LOGIC;
-			--		RST_I : in  STD_LOGIC;
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
 			--Master to WB
 			WB_MS : out WB_MS_type;
 			WB_SM : in  WB_SM_type;
@@ -96,19 +97,21 @@ package dprimitives is
 			ADR_O : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			STB_O : in  STD_LOGIC;
 			WE_O  : in  STD_LOGIC;
+			STB_O : in  STD_LOGIC;
 			ACK_I : out STD_LOGIC;
 			CYC_O : in  STD_LOGIC;
+			ERR_I : out STD_LOGIC;
+			--Wishbone Arbitration Signal
 			GNT_I : in  STD_LOGIC
 		);
 	end component;
 
 	component wb_s is
 		generic(
-			BASE_ADDR       : UNSIGNED(15 downto 0) := x"0000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 16;
+			CORE_ADDR_WIDTH : NATURAL                           := 3
 		);
 		port(
 			--System Control Inputs
