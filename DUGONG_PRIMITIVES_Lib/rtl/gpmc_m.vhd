@@ -52,6 +52,7 @@ entity gpmc_m is
 		STB_O           : out   STD_LOGIC;
 		ACK_I           : in    STD_LOGIC;
 		CYC_O           : out   STD_LOGIC;
+		ERR_I           : in    STD_LOGIC;
 		--GPMC Interface
 		GPMC_CLK_I      : in    STD_LOGIC;
 		GPMC_D_B        : inout STD_LOGIC_VECTOR(15 downto 0);
@@ -101,6 +102,12 @@ begin
 					if (stb_ms = '1') then
 						if (ACK_I = '1') then
 							dat_sm   <= DAT_I;
+							we_ms    <= '0';
+							stb_ms   <= '0';
+							cyc_ms   <= '0';
+							gpmc_ack <= '1';
+						elsif (ERR_I = '1') then
+							dat_sm   <= x"EEEEEEEE";
 							we_ms    <= '0';
 							stb_ms   <= '0';
 							cyc_ms   <= '0';

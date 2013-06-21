@@ -68,19 +68,23 @@ architecture Behavioral of gpmc_wb_bridge is
 	signal stb_o : std_logic;
 	signal ack_i : std_logic;
 	signal cyc_o : std_logic;
+	signal err_i : std_logic;
 
 begin
 	bus_logic : wb_m
 		port map(
+			CLK_I => CLK_I,
+			RST_I => RST_I,
 			WB_MS => WB_MS,
 			WB_SM => WB_SM,
-			ADR_O => ADR_O,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			STB_O => STB_O,
-			WE_O  => WE_O,
-			CYC_O => CYC_O,
-			ACK_I => ACK_I,
+			ADR_O => adr_o,
+			DAT_I => dat_i,
+			DAT_O => dat_o,
+			WE_O  => we_o,
+			STB_O => stb_o,
+			ACK_I => ack_i,
+			CYC_O => cyc_o,
+			ERR_I => err_i,
 			GNT_I => GNT_I
 		);
 
@@ -91,13 +95,14 @@ begin
 		port map(
 			CLK_I           => CLK_I,
 			RST_I           => RST_I,
-			ADR_O           => ADR_O,
-			DAT_I           => DAT_I,
-			DAT_O           => DAT_O,
-			WE_O            => WE_O,
-			STB_O           => STB_O,
-			ACK_I           => ACK_I,
-			CYC_O           => CYC_O,
+			ADR_O           => adr_o,
+			DAT_I           => dat_i,
+			DAT_O           => dat_o,
+			WE_O            => we_o,
+			STB_O           => stb_o,
+			ACK_I           => ack_i,
+			CYC_O           => cyc_o,
+			ERR_I           => err_i,
 			GPMC_CLK_I      => GPMC_CLK_I,
 			GPMC_D_B        => GPMC_D_B,
 			GPMC_A_I        => GPMC_A_I,
