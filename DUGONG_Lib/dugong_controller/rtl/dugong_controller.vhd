@@ -1,31 +1,36 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date:    16:22:16 08/07/2012 
--- Design Name: 
--- Module Name:    dugong - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
+--                    
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________     
+-- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--        \ ___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--         \ __________________________________________\          \__________________________________________\
+--          |:------------------------------------------|: DUGONG :|-----------------------------------------:|
+--         / ==========================================/          /========================================= /
+--        / =============================================================================================== /
+--       / ================  Reconfigurable Hardware Interface for computatioN and radiO  ================ /
+--      / ===============================  http://www.rhinoplatform.org  ================================ /
+--     / =============================================================================================== /
 --
--- Dependencies: 
+---------------------------------------------------------------------------------------------------------------
+-- Company:		UNIVERSITY OF CAPE TOWN
+-- Engineer:		MATTHEW BRIDGES
 --
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
+-- Name:		
+-- Type:		
+-- Description: 		
 --
-----------------------------------------------------------------------------------
+-- Compliance:		DUGONG V1.
+-- ID:			x 1-
+---------------------------------------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
 use IEEE.NUMERIC_STD.ALL;
-
-library DUGONG_Lib;
-use DUGONG_Lib.dcomponents.ALL;
 
 library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
@@ -33,13 +38,16 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity dugong_controller is
 	port(
 		--System Control Inputs
-		CLK_I   : in  STD_LOGIC;
-		CLK_I_n : in  STD_LOGIC;
-		RST_I   : in  STD_LOGIC;
+		CLK_I     : in  STD_LOGIC;
+		CLK_I_n   : in  STD_LOGIC;
+		RST_I     : in  STD_LOGIC;
 		--Master to WB
-		WB_MS   : out WB_MS_type;
-		WB_SM   : in  WB_SM_type;
-		GNT_I   : in  STD_LOGIC
+		WB_MS     : out WB_MS_type;
+		WB_SM     : in  WB_SM_type;
+		GNT_I     : in  STD_LOGIC;
+		--STATUS SIGNALS
+		T_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0);
+		E_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0)
 	);
 end dugong_controller;
 
@@ -66,7 +74,7 @@ architecture Behavioral of dugong_controller is
 
 	signal instruction : std_logic_vector(ADDR_WIDTH + DATA_WIDTH + 3 downto 0);
 	signal pc          : std_logic_vector(8 downto 0);
-	signal wait_cntr   : unsigned(ADDR_WIDTH + DATA_WIDTH - 1 downto 0);
+	signal wait_cntr   : unsigned(DATA_WIDTH - 1 downto 0);
 	signal accum       : std_logic_vector(DATA_WIDTH - 1 downto 0);
 
 	signal pc_ack_i : std_logic;
@@ -100,19 +108,21 @@ architecture Behavioral of dugong_controller is
 begin
 	bus_logic : wb_m
 		port map(
-			CLK_I => CLK_I,
-			RST_I => RST_I,
-			WB_MS => WB_MS,
-			WB_SM => WB_SM,
-			ADR_O => adr_o,
-			DAT_I => dat_i,
-			DAT_O => dat_o,
-			WE_O  => we_o,
-			STB_O => stb_o,
-			ACK_I => ack_i,
-			CYC_O => cyc_o,
-			ERR_I => err_i,
-			GNT_I => GNT_I
+			CLK_I     => CLK_I,
+			RST_I     => RST_I,
+			WB_MS     => WB_MS,
+			WB_SM     => WB_SM,
+			ADR_O     => adr_o,
+			DAT_I     => dat_i,
+			DAT_O     => dat_o,
+			WE_O      => we_o,
+			STB_O     => stb_o,
+			ACK_I     => ack_i,
+			CYC_O     => cyc_o,
+			ERR_I     => err_i,
+			GNT_I     => GNT_I,
+			T_COUNT_O => T_COUNT_O,
+			E_COUNT_O => E_COUNT_O
 		);
 
 	prog_counter : program_counter
@@ -139,20 +149,22 @@ begin
 			douta => instruction
 		);
 
-	process(CLK_I)
+	process(CLK_I, RST_I)
 	begin
-		--Perform Rising Edge operations
-		if (rising_edge(CLK_I)) then
-			if (RST_I = '1') then
-				dat_o <= (others => '0');
-				adr_o <= (others => '0');
-				stb_o <= '0';
-				we_o  <= '0';
-				cyc_o <= '0';
-				accum <= (others => '0');
-				pc_en <= '1';
+		--RST STATE
+		if (RST_I = '1') then
+			dat_o <= (others => '0');
+			adr_o <= (others => '0');
+			stb_o <= '0';
+			we_o  <= '0';
+			cyc_o <= '0';
+			accum <= (others => '0');
+			pc_en <= '1';
 
-			else
+		else
+			--Perform Rising Edge operations
+			if (rising_edge(CLK_I)) then
+
 				-- Check if bus is idle
 				if (stb_o = '0') then
 					if (wait_en = '1') then
@@ -176,7 +188,7 @@ begin
 					end if;
 
 				elsif ((ack_i or err_i) = '1') then
-					if (we_o = '0') then
+					if ((we_o and err_i) = '0') then
 						accum <= dat_i;
 					end if;
 					stb_o <= '0';       -- Conclude bus transfer
@@ -186,7 +198,7 @@ begin
 				if (pc_ack_i = '1') then
 					dat       <= instruction(DATA_WIDTH - 1 downto 0);
 					adr       <= instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
-					wait_cntr <= unsigned(instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto 0));
+					wait_cntr <= unsigned(instruction(DATA_WIDTH - 1 downto 0));
 					bus_en    <= instruction(ADDR_WIDTH + DATA_WIDTH) or instruction(ADDR_WIDTH + DATA_WIDTH + 1);
 					write_en  <= instruction(ADDR_WIDTH + DATA_WIDTH);
 					accum_en  <= instruction(ADDR_WIDTH + DATA_WIDTH + 1);
