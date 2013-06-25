@@ -143,8 +143,8 @@ begin
 		);
 
 	instruction_mem : inst_mem
-		PORT MAP(
-			clka  => clk_I_n,
+		port map(
+			clka  => CLK_I_n,
 			addra => pc,
 			douta => instruction
 		);
@@ -197,7 +197,7 @@ begin
 
 				if (pc_ack_i = '1') then
 					dat       <= instruction(DATA_WIDTH - 1 downto 0);
-					adr       <= instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH);
+					adr       <= "00" & instruction(ADDR_WIDTH + DATA_WIDTH - 1 downto DATA_WIDTH + 2);
 					wait_cntr <= unsigned(instruction(DATA_WIDTH - 1 downto 0));
 					bus_en    <= instruction(ADDR_WIDTH + DATA_WIDTH) or instruction(ADDR_WIDTH + DATA_WIDTH + 1);
 					write_en  <= instruction(ADDR_WIDTH + DATA_WIDTH);
