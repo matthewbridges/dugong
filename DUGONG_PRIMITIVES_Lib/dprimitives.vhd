@@ -88,22 +88,26 @@ package dprimitives is
 	component wb_m is
 		port(
 			--System Control Inputs
-			CLK_I : in  STD_LOGIC;
-			RST_I : in  STD_LOGIC;
+			CLK_I     : in  STD_LOGIC;
+			RST_I     : in  STD_LOGIC;
 			--Master to WB
-			WB_MS : out WB_MS_type;
-			WB_SM : in  WB_SM_type;
+			WB_MS     : out WB_MS_type;
+			WB_SM     : in  WB_SM_type;
 			--Wishbone Master Lines (inverted)
-			ADR_O : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			WE_O  : in  STD_LOGIC;
-			STB_O : in  STD_LOGIC;
-			ACK_I : out STD_LOGIC;
-			CYC_O : in  STD_LOGIC;
-			ERR_I : out STD_LOGIC;
+			ADR_O     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			DAT_I     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WE_O      : in  STD_LOGIC;
+			STB_O     : in  STD_LOGIC;
+			ACK_I     : out STD_LOGIC;
+			CYC_O     : in  STD_LOGIC;
+			--Wishbone Error Signal
+			ERR_I     : out STD_LOGIC;
 			--Wishbone Arbitration Signal
-			GNT_I : in  STD_LOGIC
+			GNT_I     : in  STD_LOGIC;
+			--STATUS SIGNALS
+			T_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0);
+			E_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0)
 		);
 	end component;
 
