@@ -39,22 +39,26 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity wb_m is
 	port(
 		--System Control Inputs
-		CLK_I : in  STD_LOGIC;
-		RST_I : in  STD_LOGIC;
+		CLK_I     : in  STD_LOGIC;
+		RST_I     : in  STD_LOGIC;
 		--Master to WB
-		WB_MS : out WB_MS_type;
-		WB_SM : in  WB_SM_type;
+		WB_MS     : out WB_MS_type;
+		WB_SM     : in  WB_SM_type;
 		--Wishbone Master Lines (inverted)
-		ADR_O : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-		DAT_I : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_O : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		STB_O : in  STD_LOGIC;
-		WE_O  : in  STD_LOGIC;
-		ACK_I : out STD_LOGIC;
-		CYC_O : in  STD_LOGIC;
-		ERR_I : out STD_LOGIC;
+		ADR_O     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+		DAT_I     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		DAT_O     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		WE_O      : in  STD_LOGIC;
+		STB_O     : in  STD_LOGIC;
+		ACK_I     : out STD_LOGIC;
+		CYC_O     : in  STD_LOGIC;
+		--Wishbone Error Signal
+		ERR_I     : out STD_LOGIC;
 		--Wishbone Arbitration Signal
-		GNT_I : in  STD_LOGIC
+		GNT_I     : in  STD_LOGIC;
+		--STATUS SIGNALS
+		T_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0);
+		E_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0)
 	);
 end wb_m;
 
@@ -62,33 +66,60 @@ architecture Behavioral of wb_m is
 	alias dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_SM(DATA_WIDTH - 1 downto 0);
 	alias ack_sm : std_logic is WB_SM(DATA_WIDTH);
 
-	signal count : unsigned(3 downto 0);
+	signal cycle_count : unsigned(3 downto 0);
+	signal error       : std_logic;
+
+	signal transfer_count : unsigned(31 downto 0);
+	signal error_count    : unsigned(31 downto 0);
+	signal lock           : std_logic;
 
 begin
-	process(CLK_I, RST_I)
+	process(CLK_I, RST_I, STB_O, error)
 	begin
 		--RST STATE
 		if (RST_I = '1') then
-			count <= x"0";
-			ERR_I <= '0';
+			cycle_count    <= (others => '0');
+			error          <= '0';
+			transfer_count <= (others => '0');
+			error_count    <= (others => '0');
+			lock           <= '0';
 		else
-			if (rising_edge(CLK_I)) then
-				--CORRECT TERMINATION STATE
-				if ((ack_sm and GNT_I) = '1') then
-					count <= x"0";
-					ERR_I <= '0';
-				--TIMEOUT STATE
-				elsif (count = 15) then
-					count <= x"0";
-					ERR_I <= '1';
-				-- COUNTING STATE
-				elsif (STB_O = '1') then
-					count <= count + 1;
-					ERR_I <= '0';
+			if ((STB_O = '0') and (error = '1')) then
+				cycle_count <= (others => '0');
+				error       <= '0';
+				lock        <= '0';
+			else
+				if (rising_edge(CLK_I)) then
+					--CORRECT TERMINATION STATE
+					if ((ack_sm and GNT_I) = '1') then
+						cycle_count <= (others => '0');
+						error       <= '0';
+						if (lock = '0') then
+							transfer_count <= transfer_count + 1;
+							lock           <= '1';
+						end if;
+					--TIMEOUT STATE
+					elsif (cycle_count = 15) then
+						error <= '1';
+						if (lock = '0') then
+							error_count <= error_count + 1;
+							lock        <= '1';
+						end if;
+					-- COUNTING STATE
+					elsif (STB_O = '1') then
+						cycle_count <= cycle_count + 1;
+						error       <= '0';
+						lock        <= '0';
+					end if;
 				end if;
 			end if;
 		end if;
 	end process;
+
+	ERR_I <= error;
+
+	T_COUNT_O <= std_logic_vector(transfer_count);
+	E_COUNT_O <= std_logic_vector(error_count);
 
 	--WB Output Ports
 	WB_MS <= (CYC_O & STB_O & WE_O & DAT_O & ADR_O);
