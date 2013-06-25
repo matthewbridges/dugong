@@ -73,20 +73,26 @@ package dcomponents is
 			GPMC_nOE_I      : in    STD_LOGIC;
 			GPMC_WAIT_O     : out   STD_LOGIC;
 			--Debugging Signal
-			DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0)
+			DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0);
+			--STATUS SIGNALS
+			T_COUNT_O       : out   STD_LOGIC_VECTOR(31 downto 0);
+			E_COUNT_O       : out   STD_LOGIC_VECTOR(31 downto 0)
 		);
 	end component;
 
 	component dugong_controller
 		port(
 			--System Control Inputs
-			CLK_I   : in  STD_LOGIC;
-			CLK_I_n : in  STD_LOGIC;
-			RST_I   : in  STD_LOGIC;
+			CLK_I     : in  STD_LOGIC;
+			CLK_I_n   : in  STD_LOGIC;
+			RST_I     : in  STD_LOGIC;
 			--Master to WB
-			WB_MS   : out WB_MS_type;
-			WB_SM   : in  WB_SM_type;
-			GNT_I   : in  STD_LOGIC
+			WB_MS     : out WB_MS_type;
+			WB_SM     : in  WB_SM_type;
+			GNT_I     : in  STD_LOGIC;
+			--STATUS SIGNALS
+			T_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0);
+			E_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0)
 		);
 	end component;
 
