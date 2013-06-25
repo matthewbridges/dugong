@@ -183,7 +183,7 @@ begin
 	GPMC_D_B <= gpmc_dout when GPMC_nOE_I = '0' else (others => 'Z');
 	--GPMC_D_B <= x"FEDC" when GPMC_nOE_I = '0' else (others => 'Z');
 
-	DEBUG <= "0000000000" & GPMC_CLK_I & GPMC_A_I & GPMC_nCS_I & GPMC_nADV_ALE_I & GPMC_nWE_I & GPMC_nOE_I & gpmc_stb;
+	DEBUG <= adr_ms(4 downto 0) & we_ms & stb_ms & ACK_I & cyc_ms & ERR_I & GPMC_CLK_I & GPMC_A_I & GPMC_nCS_I & GPMC_nADV_ALE_I & GPMC_nWE_I & GPMC_nOE_I & gpmc_stb;
 
 end Behavioral;
 	
