@@ -1,102 +1,78 @@
---------------------------------------------------------------------------------
--- Company: 
--- Engineer:
+--                    
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________     
+-- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--        \ ___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--         \ __________________________________________\          \__________________________________________\
+--          |:------------------------------------------|: DUGONG :|-----------------------------------------:|
+--         / ==========================================/          /========================================= /
+--        / =============================================================================================== /
+--       / ================  Reconfigurable Hardware Interface for computatioN and radiO  ================ /
+--      / ===============================  http://www.rhinoplatform.org  ================================ /
+--     / =============================================================================================== /
 --
--- Create Date:   12:11:21 08/30/2012
--- Design Name:   
--- Module Name:   /home/mbridges/Projects/Dugong/sim/dugong_tb.vhd
--- Project Name:  Dugong
--- Target Device:  
--- Tool versions:  
--- Description:   
--- 
--- VHDL Test Bench Created by ISE for module: dugong
--- 
--- Dependencies:
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
+---------------------------------------------------------------------------------------------------------------
+-- Company:		UNIVERSITY OF CAPE TOWN
+-- Engineer:		MATTHEW BRIDGES
 --
--- Notes: 
--- This testbench has been automatically generated using types std_logic and
--- std_logic_vector for the ports of the unit under test.  Xilinx recommends
--- that these types always be used for the top-level I/O of a design in order
--- to guarantee that the testbench will bind correctly to the post-implementation 
--- simulation model.
---------------------------------------------------------------------------------
-LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
+-- Name:		GPMC_M_TB (003)
+-- Type:		TB (F)
+-- Description: 		
+--
+-- Compliance:		DUGONG V1.3
+-- ID:			x 1-3-F-003
+---------------------------------------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---USE ieee.numeric_std.ALL;
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
-ENTITY dugong_tb IS
-	generic(
-		DATA_WIDTH : natural := 32;
-		ADDR_WIDTH : natural := 12
-	);
-END dugong_tb;
+entity dugong_tb is
+end dugong_tb;
 
-ARCHITECTURE behavior OF dugong_tb IS
-
-	-- Component Declaration for the Unit Under Test (UUT)
-
-	COMPONENT dugong
-		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 12
-		);
+architecture Behavioral of dugong_tb is
+	component dugong_controller
 		port(
-			--System Control Inputs
-			CLK_I   : in  STD_LOGIC;
-			CLK_I_n : in  STD_LOGIC;
-			RST_I   : in  STD_LOGIC;
-			--Master to WB
-			WB_I    : in  STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
-			WB_O    : out STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0)
+			CLK_I     : in  STD_LOGIC;
+			CLK_I_n   : in  STD_LOGIC;
+			RST_I     : in  STD_LOGIC;
+			WB_MS     : out WB_MS_type;
+			WB_SM     : in  WB_SM_type;
+			GNT_I     : in  STD_LOGIC;
+			T_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0);
+			E_COUNT_O : out STD_LOGIC_VECTOR(31 downto 0)
 		);
-	END COMPONENT;
+	end component dugong_controller;
 
-	--Inputs
-	signal CLK_I   : std_logic                             := '0';
-	signal CLK_I_n : std_logic                             := '1';
-	signal RST_I   : std_logic                             := '1';
-	signal WB_I    : std_logic_vector(DATA_WIDTH downto 0) := (others => '0');
-
-	--Outputs
-	signal WB_O : std_logic_vector(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-
-	signal temp    : std_logic_vector(DATA_WIDTH - 1 downto 0) := (others => '0');
-	signal dat_out : std_logic_vector(15 downto 0);
-	signal adr_out : std_logic_vector(11 downto 0);
-	signal stb     : std_logic;
-	signal we      : std_logic;
-	signal ack     : std_logic;
+	signal CLK_I     : STD_LOGIC  := '0';
+	signal CLK_I_n   : STD_LOGIC  := '1';
+	signal RST_I     : STD_LOGIC  := '1';
+	signal WB_MS     : WB_MS_type;
+	signal WB_SM     : WB_SM_type := (others => '0');
+	signal GNT_I     : STD_LOGIC  := '0';
+	signal T_COUNT_O : STD_LOGIC_VECTOR(31 downto 0);
+	signal E_COUNT_O : STD_LOGIC_VECTOR(31 downto 0);
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
 
-BEGIN
-	dat_out <= WB_O(15 downto 0);
-	adr_out <= WB_O(27 downto 16);
-	stb     <= WB_O(28);
-	we      <= WB_O(29);
-	ack     <= WB_I(16);
-
-	-- Instantiate the Unit Under Test (UUT)
-	uut : dugong
-		generic map(
-			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH
-		)
+begin
+	uut : component dugong_controller
 		port map(
-			CLK_I   => CLK_I,
-			CLK_I_n => CLK_I_n,
-			RST_I   => RST_I,
-			WB_I    => WB_I,
-			WB_O    => WB_O
+			CLK_I     => CLK_I,
+			CLK_I_n   => CLK_I_n,
+			RST_I     => RST_I,
+			WB_MS     => WB_MS,
+			WB_SM     => WB_SM,
+			GNT_I     => GNT_I,
+			T_COUNT_O => T_COUNT_O,
+			E_COUNT_O => E_COUNT_O
 		);
 
 	-- Clock process definitions
@@ -111,6 +87,18 @@ BEGIN
 	end process;
 
 	-- Stimulus process
+	wb_stim_proc : process
+	begin
+		wait until rising_edge(WB_MS(1 + DATA_WIDTH + ADDR_WIDTH));
+		wait until rising_edge(CLK_I);
+		WB_SM(DATA_WIDTH)              <= '1';
+		WB_SM(DATA_WIDTH - 1 downto 0) <= x"FFFFEEEE";
+		wait until falling_edge(WB_MS(1 + DATA_WIDTH + ADDR_WIDTH));
+		wait until rising_edge(CLK_I);
+		WB_SM(DATA_WIDTH)              <= '0';
+		WB_SM(DATA_WIDTH - 1 downto 0) <= x"00000000";
+	end process;
+
 	stim_proc : process
 	begin
 		-- hold reset state for 100 ns.
@@ -119,23 +107,11 @@ BEGIN
 		RST_I <= '0';
 
 		wait for CLK_I_period * 10;
-		-- insert stimulus here 
 
-
+		wait for CLK_I_period * 15;
+		wait until rising_edge(CLK_I);
+		GNT_I <= '1';
 		wait;
 	end process;
 
---	ACK_proc : process
---	begin
---		wait until (rising_edge(WB_O(28)));
---		wait until (rising_edge(CLK_I));
---		WB_I(15 downto 0) <= temp;
---		temp              <= WB_O(15 downto 0);
---		WB_I(16)          <= '1';
---		wait until (rising_edge(CLK_I));
---		--wait until (falling_edge(WB_O(28)));
---		WB_I(16)          <= '0';
---		WB_I(15 downto 0) <= x"0000";
---	end process;
-
-END;
+end architecture Behavioral;
