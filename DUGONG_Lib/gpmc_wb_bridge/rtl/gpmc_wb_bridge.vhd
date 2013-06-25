@@ -55,7 +55,10 @@ entity gpmc_wb_bridge is
 		GPMC_nOE_I      : in    STD_LOGIC;
 		GPMC_WAIT_O     : out   STD_LOGIC;
 		--Debugging Signal
-		DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0)
+		DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0);
+		--STATUS SIGNALS
+		T_COUNT_O       : out   STD_LOGIC_VECTOR(31 downto 0);
+		E_COUNT_O       : out   STD_LOGIC_VECTOR(31 downto 0)
 	);
 end entity gpmc_wb_bridge;
 
@@ -73,19 +76,21 @@ architecture Behavioral of gpmc_wb_bridge is
 begin
 	bus_logic : wb_m
 		port map(
-			CLK_I => CLK_I,
-			RST_I => RST_I,
-			WB_MS => WB_MS,
-			WB_SM => WB_SM,
-			ADR_O => adr_o,
-			DAT_I => dat_i,
-			DAT_O => dat_o,
-			WE_O  => we_o,
-			STB_O => stb_o,
-			ACK_I => ack_i,
-			CYC_O => cyc_o,
-			ERR_I => err_i,
-			GNT_I => GNT_I
+			CLK_I     => CLK_I,
+			RST_I     => RST_I,
+			WB_MS     => WB_MS,
+			WB_SM     => WB_SM,
+			ADR_O     => adr_o,
+			DAT_I     => dat_i,
+			DAT_O     => dat_o,
+			WE_O      => we_o,
+			STB_O     => stb_o,
+			ACK_I     => ack_i,
+			CYC_O     => cyc_o,
+			ERR_I     => err_i,
+			GNT_I     => GNT_I,
+			T_COUNT_O => T_COUNT_O,
+			E_COUNT_O => E_COUNT_O
 		);
 
 	GPMC_interface : gpmc_m
