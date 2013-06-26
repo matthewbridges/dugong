@@ -55,6 +55,7 @@ architecture Behavioral of gpmc_m_tb is
 	signal STB_O : STD_LOGIC;
 	signal ACK_I : STD_LOGIC                                 := '0';
 	signal CYC_O : STD_LOGIC;
+	signal ERR_I : STD_LOGIC                                 := '0';
 
 	--GPMC Interface
 	signal GPMC_CLK_I      : STD_LOGIC                     := '0';
@@ -92,6 +93,7 @@ begin
 			STB_O           => STB_O,
 			ACK_I           => ACK_I,
 			CYC_O           => CYC_O,
+			ERR_I           => ERR_I,
 			GPMC_CLK_I      => GPMC_CLK_I,
 			GPMC_D_B        => GPMC_D_B,
 			GPMC_A_I        => GPMC_A_I,
