@@ -54,14 +54,15 @@ architecture Behavioral of wb_register is
 	signal Q : std_logic_vector(DATA_WIDTH - 1 downto 0);
 
 begin
-	process(CLK_I)
+	process(CLK_I, RST_I)
 	begin
-		--Perform Clock Rising Edge operations
-		if (rising_edge(CLK_I)) then
-			--RST STATE
-			if (RST_I = '1') then
-				Q <= DEFAULT_DATA(DATA_WIDTH - 1 downto 0);
-			else
+		--RST STATE
+		if (RST_I = '1') then
+			Q <= DEFAULT_DATA(DATA_WIDTH - 1 downto 0);
+		else
+			--Perform Clock Rising Edge operations
+			if (rising_edge(CLK_I)) then
+
 				--WRITING STATE
 				if ((STB_I and WE_I) = '1') then
 					Q <= DAT_I;
