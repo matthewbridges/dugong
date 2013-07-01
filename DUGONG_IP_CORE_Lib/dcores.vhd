@@ -1,9 +1,9 @@
 --                    
--- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________     
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
 -- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
---  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
---   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
---    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\
 --     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
 --      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
 --       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
@@ -108,16 +108,16 @@ package dcores is
 		);
 		port(
 			--System Control Inputs
-			CLK_I         : in    STD_LOGIC;
-			RST_I         : in    STD_LOGIC;
+			CLK_I      : in    STD_LOGIC;
+			RST_I      : in    STD_LOGIC;
 			--Slave to WB
-			WB_MS         : in    WB_MS_type;
-			WB_SM         : out   WB_SM_type;
-			--GPIO Stream Interface
-			GPIO_STREAM_O : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			GPIO_STREAM_I : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			WB_MS      : in    WB_MS_type;
+			WB_SM      : out   WB_SM_type;
+			--GPIO Auxiliary Interface
+			GPIO_AUX_O : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			GPIO_AUX_I : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			--GPIO Interface
-			GPIO_B        : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+			GPIO_B     : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
 	end component gpio_controller_ip;
 
@@ -143,6 +143,22 @@ package dcores is
 			SPI_N_SS  : out STD_LOGIC
 		);
 	end component spi_m_ip;
+
+	component wb_test_slave_ip is
+		generic(
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 32;
+			CORE_ADDR_WIDTH : NATURAL                           := 24
+		);
+		port(
+			--System Control Inputs
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			--Slave to WB
+			WB_MS : in  WB_MS_type;
+			WB_SM : out WB_SM_type
+		);
+	end component wb_test_slave_ip;
 
 end package dcores;
 
