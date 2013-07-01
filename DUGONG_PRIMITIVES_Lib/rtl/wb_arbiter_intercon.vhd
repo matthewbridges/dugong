@@ -74,9 +74,9 @@ begin
 	begin
 		--RST STATE
 		if (RST_I = '1') then
-			bus_busy <= '0';
+			bus_busy   <= '0';
 			master_sel <= 0;
-			WB_GNT_O <= "00";
+			WB_GNT_O   <= "00";
 		else
 			--Perform Rising Edge operations
 			if (falling_edge(CLK_I)) then
@@ -102,5 +102,6 @@ begin
 
 	WB_MS_BUS <= WB_MS(master_sel) when (bus_busy = '1') else (others => '0');
 
-	WB_SM_BUS <= WB_SM(0) or WB_SM(1) or WB_SM(2) or WB_SM(3);
+	WB_SM_BUS <= WB_SM(0) or WB_SM(1) or WB_SM(2) or WB_SM(3) or WB_SM(4);
+
 end Behavioral;
