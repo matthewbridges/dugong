@@ -73,8 +73,8 @@ architecture Behavioral of wb_s is
 
 	--Addressing Architecture
 	signal core_addr : unsigned(CORE_ADDR_WIDTH - 1 downto 0) := (others => '0');
-	signal core_sel  : std_logic;
-	signal user_sel  : std_logic;
+	signal core_sel  : std_logic                              := '0';
+	signal user_sel  : std_logic                              := '0';
 
 	--User memory architecture
 	type ram_type is array (0 to 3) of std_logic_vector(DATA_WIDTH - 1 downto 0);
@@ -84,9 +84,9 @@ architecture Behavioral of wb_s is
 
 begin
 
-	--Core Address --> equals IP Address(core_addr_width-1:0)
+	--Core Address --> equals WB_ADR_MS(core_addr_width-1:0)
 	core_addr <= unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0));
-	core_sel  <= '1' when (adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH) = std_logic_vector(BASE_ADDR(ADDR_WIDTH + 1 downto CORE_ADDR_WIDTH + 2))) else '0';
+	core_sel  <= '1' when (unsigned(adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH)) = BASE_ADDR(ADDR_WIDTH + 1 downto CORE_ADDR_WIDTH + 2)) else '0';
 	user_sel  <= core_sel when core_addr > 3 else '0';
 
 	--Generate Bus registers
@@ -121,12 +121,13 @@ begin
 		dat_sm(DATA_WIDTH - 1 downto CORE_DATA_WIDTH) <= (others => '0') when (user_sel = '1') else core_mem(to_integer(core_addr(1 downto 0)))(DATA_WIDTH - 1 downto CORE_DATA_WIDTH);
 	end generate data_reduction;
 
-	--Generate WB Output Port tri-state buffers for each line
+	--Generate WB Output Port buffers for each line
 	WB_SM <= ack_sm & dat_sm when core_sel = '1' else (others => '0');
+	--WB_SM <= ack_sm & "00" & adr_ms & "00" when core_sel = '1' else (others => '0');
 
 	--WB Input Ports
 	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);
-	ADR_I <= std_logic_vector(core_addr - 4); -- when core_mem_sel = '0' else (others => '0');
+	ADR_I <= std_logic_vector(core_addr - 4) when ((user_sel and core_sel) = '1') else (others => '0');
 	WE_I  <= we_ms;
 	STB_I <= stb_ms and user_sel;
 	cyc_I <= cyc_ms and user_sel;

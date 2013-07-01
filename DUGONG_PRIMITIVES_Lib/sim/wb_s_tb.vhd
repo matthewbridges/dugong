@@ -37,7 +37,7 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 entity wb_s_tb is
 	generic(
-		BASE_ADDR       : UNSIGNED(15 downto 0) := x"0000";
+		BASE_ADDR       : UNSIGNED(31 downto 0) := x"00000000";
 		CORE_DATA_WIDTH : NATURAL               := 16;
 		CORE_ADDR_WIDTH : NATURAL               := 3
 	);
@@ -96,38 +96,48 @@ begin
 	end process;
 
 	-- Stimulus process
+	wb_slave_proc : process
+	begin
+		wait until rising_edge(STB_I);
+		wait until rising_edge(CLK_I);
+		ACK_O <= '1';
+		DAT_O <= x"FFEE";
+		wait until falling_edge(STB_I);
+		wait until rising_edge(CLK_I);
+		ACK_O <= '0';
+	end process;
+
+	-- Stimulus process
 	wb_stim_proc : process
 	begin
 		-- hold reset state for 100 ns.
 		wait for 100 ns;
 
 		RST_I <= '0';
+		WB_MS <= "111" & x"FEDCBA98" & x"FFFFFFF";
 
 		wait for CLK_I_period * 10;
 
 		-- Standard IP Core Tests
 		wait until rising_edge(CLK_I);
-		WB_MS <= "110" & x"00000000" & x"000"; --Read Base Address
+		WB_MS <= "110" & x"00000000" & x"0000000"; --Read Base Address
 		wait until rising_edge(WB_SM(DATA_WIDTH));
 		wait until rising_edge(CLK_I);
-		WB_MS <= "000" & x"00000000" & x"000"; --NULL
+		WB_MS <= "000" & x"00000000" & x"0000000"; --NULL
 		wait until rising_edge(CLK_I);
-		WB_MS <= "110" & x"00000000" & x"001"; --Read High Address
+		WB_MS <= "110" & x"00000000" & x"0000001"; --Read High Address
 		wait until rising_edge(WB_SM(DATA_WIDTH));
 		wait until rising_edge(CLK_I);
-		WB_MS <= "000" & x"00000000" & x"000"; --NULL
+		WB_MS <= "000" & x"00000000" & x"0000000"; --NULL
 
 		wait until rising_edge(CLK_I);
-		WB_MS <= "111" & x"FEDCAB98" & x"004"; --Write xFEDCAB98 to 004
-		wait until rising_edge(CLK_I);
-		ACK_O <= '1';
+		WB_MS <= "111" & x"FEDCAB98" & x"0000004"; --Write xFEDCAB98 to 004
 		wait until rising_edge(WB_SM(DATA_WIDTH));
 		wait until rising_edge(CLK_I);
-		WB_MS <= "000" & x"00000000" & x"000"; --NULL
-		ACK_O <= '0';
+		WB_MS <= "000" & x"00000000" & x"0000000"; --NULL
 
 		wait until rising_edge(CLK_I);
-		WB_MS <= "111" & x"FEDCAB98" & x"008"; --Write xFEDCAB98 to 008
+		WB_MS <= "111" & x"FEDCAB98" & x"0000008"; --Write xFEDCAB98 to 008
 
 		wait;
 	end process;
