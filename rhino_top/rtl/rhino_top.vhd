@@ -35,8 +35,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
-library DUGONG_Lib;
-use DUGONG_Lib.dcomponents.ALL;
+library DUGONG_MASTER_Lib;
+use DUGONG_MASTER_Lib.dcomponents.ALL;
 
 library DUGONG_IP_CORE_Lib;
 use DUGONG_IP_CORE_Lib.dcores.ALL;
@@ -45,7 +45,7 @@ use DUGONG_IP_CORE_Lib.dcores.ALL;
 entity rhino_top is
 	generic(
 		NUMBER_OF_MASTERS : NATURAL := 2;
-		NUMBER_OF_SLAVES  : NATURAL := 4
+		NUMBER_OF_SLAVES  : NATURAL := 5
 	);
 	port(
 		--System Control Inputs
@@ -125,7 +125,9 @@ begin
 			GPMC_nWE_I      => GPMC_nWE_I,
 			GPMC_nOE_I      => GPMC_nOE_I,
 			GPMC_WAIT_O     => GPMC_WAIT_O,
-			DEBUG           => debug_top
+			DEBUG           => debug_top,
+			T_COUNT_O       => open,
+			E_COUNT_O       => open
 		);
 
 	------------
@@ -134,12 +136,14 @@ begin
 
 	Central_Control_Unit : dugong_controller
 		port map(
-			CLK_I   => sys_con_clk,
-			CLK_I_n => sys_con_clk_n,
-			RST_I   => sys_con_rst,
-			WB_MS   => wb_ms(1),
-			WB_SM   => wb_sm_bus,
-			GNT_I   => wb_gnt(1)
+			CLK_I     => sys_con_clk,
+			CLK_I_n   => sys_con_clk_n,
+			RST_I     => sys_con_rst,
+			WB_MS     => wb_ms(1),
+			WB_SM     => wb_sm_bus,
+			GNT_I     => wb_gnt(1),
+			T_COUNT_O => open,
+			E_COUNT_O => open
 		);
 
 	---------------------------
@@ -169,9 +173,9 @@ begin
 
 	Block_RAM_1 : bram_ip
 		generic map(
-			BASE_ADDR       => x"00000000",
+			BASE_ADDR       => x"04000000",
 			CORE_DATA_WIDTH => 32,
-			CORE_ADDR_WIDTH => 11
+			CORE_ADDR_WIDTH => 16
 		)
 		port map(
 			CLK_I => sys_con_clk,
@@ -182,47 +186,58 @@ begin
 
 	LEDs_8 : gpio_controller_ip
 		generic map(
-			BASE_ADDR       => x"00003C00",
+			BASE_ADDR       => x"08003C00",
 			CORE_DATA_WIDTH => 8
 		)
 		port map(
-			CLK_I         => sys_con_clk,
-			RST_I         => sys_con_rst,
-			WB_MS         => wb_ms_bus,
-			WB_SM         => wb_sm(1),
-			GPIO_STREAM_O => open,
-			GPIO_STREAM_I => (others => '0'),
-			GPIO_B        => LED
+			CLK_I      => sys_con_clk,
+			RST_I      => sys_con_rst,
+			WB_MS      => wb_ms_bus,
+			WB_SM      => wb_sm(1),
+			GPIO_AUX_O => open,
+			GPIO_AUX_I => (others => '0'),
+			GPIO_B     => LED
 		);
 
 	GPIOs_16 : gpio_controller_ip
 		GENERIC MAP(
-			BASE_ADDR       => x"00003C20",
+			BASE_ADDR       => x"08003C20",
 			CORE_DATA_WIDTH => 16
 		)
 		PORT MAP(
-			CLK_I         => sys_con_clk,
-			RST_I         => sys_con_rst,
-			WB_MS         => wb_ms_bus,
-			WB_SM         => wb_sm(2),
-			GPIO_STREAM_O => open,
-			GPIO_STREAM_I => (others => '0'),
-			GPIO_B        => GPIO
+			CLK_I      => sys_con_clk,
+			RST_I      => sys_con_rst,
+			WB_MS      => wb_ms_bus,
+			WB_SM      => wb_sm(2),
+			GPIO_AUX_O => open,
+			GPIO_AUX_I => (others => '0'),
+			GPIO_B     => GPIO
 		);
 
 	Debug_32 : gpio_controller_ip
 		GENERIC MAP(
-			BASE_ADDR       => x"00003C40",
+			BASE_ADDR       => x"08003C40",
 			CORE_DATA_WIDTH => 32
 		)
 		PORT MAP(
-			CLK_I         => sys_con_clk,
-			RST_I         => sys_con_rst,
-			WB_MS         => wb_ms_bus,
-			WB_SM         => wb_sm(3),
-			GPIO_STREAM_O => open,
-			GPIO_STREAM_I => debug_top,
-			GPIO_B        => DEBUG
+			CLK_I      => sys_con_clk,
+			RST_I      => sys_con_rst,
+			WB_MS      => wb_ms_bus,
+			WB_SM      => wb_sm(3),
+			GPIO_AUX_O => open,
+			GPIO_AUX_I => debug_top,
+			GPIO_B     => DEBUG
+		);
+
+	test : wb_test_slave_ip
+		generic map(
+			BASE_ADDR => x"10000000"
+		)
+		port map(
+			CLK_I => sys_con_clk,
+			RST_I => sys_con_rst,
+			WB_MS => wb_ms_bus,
+			WB_SM => wb_sm(4)
 		);
 
 end Behavioral;
