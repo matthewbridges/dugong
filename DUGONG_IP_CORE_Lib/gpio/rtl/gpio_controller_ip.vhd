@@ -28,6 +28,16 @@
 -- Compliance:		DUGONG V1.4
 -- ID:			x 1-4-4-002
 ---------------------------------------------------------------------------------------------------------------
+--	ADDR	| NAME		| Type		--
+--	0	| N/A		| WB_REG	--
+-- 	1	| N/A		| WB_REG	--
+-- 	2	| N/A		| WB_REG	--
+-- 	3	| N/A		| WB_REG	--
+--	4	| GPIO_OUT	| WB_REG	--
+-- 	5	| GPIO_IN	| WB_LATCH	--
+-- 	6	| Output_Enable	| WB_REG	--
+-- 	7	| AUX_Enable	| WB_REG	--
+--------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -40,21 +50,21 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity gpio_controller_ip is
 	generic(
 		BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
-		CORE_DATA_WIDTH : NATURAL               := 16;
-		CORE_ADDR_WIDTH : NATURAL               := 3
+		CORE_DATA_WIDTH : NATURAL                           := 16;
+		CORE_ADDR_WIDTH : NATURAL                           := 3
 	);
 	port(
 		--System Control Inputs
-		CLK_I         : in    STD_LOGIC;
-		RST_I         : in    STD_LOGIC;
+		CLK_I      : in    STD_LOGIC;
+		RST_I      : in    STD_LOGIC;
 		--Slave to WB
-		WB_MS         : in    WB_MS_type;
-		WB_SM         : out   WB_SM_type;
-		--GPIO Stream Interface
-		GPIO_STREAM_O : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		GPIO_STREAM_I : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		WB_MS      : in    WB_MS_type;
+		WB_SM      : out   WB_SM_type;
+		--GPIO Auxiliary Interface
+		GPIO_AUX_O : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		GPIO_AUX_I : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 		--GPIO Interface
-		GPIO_B        : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+		GPIO_B     : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 	);
 end gpio_controller_ip;
 
@@ -65,24 +75,31 @@ architecture Behavioral of gpio_controller_ip is
 	signal we_i  : STD_LOGIC;
 	signal stb_i : STD_LOGIC;
 	signal ack_o : STD_LOGIC;
+	signal cyc_i : STD_LOGIC;
 
 	component gpio_controller
 		generic(
-			DATA_WIDTH : natural := 16;
-			ADDR_WIDTH : natural := 3
+			DATA_WIDTH          : natural := 16;
+			ADDR_WIDTH          : natural := 3;
+			NUMBER_OF_REGISTERS : natural := 3
 		);
 		port(
-			CLK_I         : in    STD_LOGIC;
-			RST_I         : in    STD_LOGIC;
-			ADR_I         : in    STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			DAT_I         : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O         : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			WE_I          : in    STD_LOGIC;
-			STB_I         : in    STD_LOGIC;
-			ACK_O         : out   STD_LOGIC;
-			GPIO_STREAM_O : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			GPIO_STREAM_I : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			GPIO_B        : inout STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+			--System Control Inputs
+			CLK_I      : in    STD_LOGIC;
+			RST_I      : in    STD_LOGIC;
+			--Wishbone Slave Lines
+			ADR_I      : in    STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			DAT_I      : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O      : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WE_I       : in    STD_LOGIC;
+			STB_I      : in    STD_LOGIC;
+			ACK_O      : out   STD_LOGIC;
+			CYC_I      : in    STD_LOGIC;
+			--GPIO Auxiliary Interface
+			GPIO_AUX_O : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			GPIO_AUX_I : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			--GPIO Interface
+			GPIO_B     : inout STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
 		);
 	end component gpio_controller;
 
@@ -104,7 +121,7 @@ begin
 			WE_I  => we_i,
 			STB_I => stb_i,
 			ACK_O => ack_o,
-			CYC_I => open
+			CYC_I => cyc_i
 		);
 
 	user_logic : gpio_controller
@@ -113,17 +130,18 @@ begin
 			ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
-			CLK_I         => CLK_I,
-			RST_I         => RST_I,
-			ADR_I         => ADR_I,
-			DAT_I         => DAT_I,
-			DAT_O         => DAT_O,
-			WE_I          => WE_I,
-			STB_I         => STB_I,
-			ACK_O         => ACK_O,
-			GPIO_STREAM_O => GPIO_STREAM_O,
-			GPIO_STREAM_I => GPIO_STREAM_I,
-			GPIO_B        => GPIO_B
+			CLK_I      => CLK_I,
+			RST_I      => RST_I,
+			ADR_I      => adr_i,
+			DAT_I      => dat_i,
+			DAT_O      => dat_o,
+			WE_I       => we_i,
+			STB_I      => stb_i,
+			ACK_O      => ack_o,
+			CYC_I      => cyc_i,
+			GPIO_AUX_O => GPIO_AUX_O,
+			GPIO_AUX_I => GPIO_AUX_I,
+			GPIO_B     => GPIO_B
 		);
 
 end Behavioral;
