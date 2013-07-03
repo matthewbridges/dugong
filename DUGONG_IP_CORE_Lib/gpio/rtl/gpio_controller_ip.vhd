@@ -1,9 +1,9 @@
---                    
+--
 -- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
 -- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
 --  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
 --   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\
---    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\
 --     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
 --      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
 --       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
@@ -18,15 +18,15 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer:		MATTHEW BRIDGES
+-- Engineer: 		MATTHEW BRIDGES
 --
 -- Name:		GPIO_CONTOLLER_IP (002)
 -- Type:		IP CORE (4)
 -- Description: 	An IP core for controlling GPIO of differing widths. Includes a streaming interface
 --			for asynchronous digital IO. This allows bypassing the WB Bus.	
 --
--- Compliance:		DUGONG V1.4
--- ID:			x 1-4-4-002
+-- Compliance:		DUGONG V0.3
+-- ID:			x 0-3-4-002
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
 --	0	| N/A		| WB_REG	--
@@ -79,27 +79,26 @@ architecture Behavioral of gpio_controller_ip is
 
 	component gpio_controller
 		generic(
-			DATA_WIDTH          : natural := 16;
-			ADDR_WIDTH          : natural := 3;
-			NUMBER_OF_REGISTERS : natural := 3
+			CORE_DATA_WIDTH : natural := 16;
+			CORE_ADDR_WIDTH : natural := 3
 		);
 		port(
 			--System Control Inputs
 			CLK_I      : in    STD_LOGIC;
 			RST_I      : in    STD_LOGIC;
 			--Wishbone Slave Lines
-			ADR_I      : in    STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			DAT_I      : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O      : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I      : in    STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+			DAT_I      : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			DAT_O      : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			WE_I       : in    STD_LOGIC;
 			STB_I      : in    STD_LOGIC;
 			ACK_O      : out   STD_LOGIC;
 			CYC_I      : in    STD_LOGIC;
 			--GPIO Auxiliary Interface
-			GPIO_AUX_O : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			GPIO_AUX_I : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			GPIO_AUX_O : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			GPIO_AUX_I : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			--GPIO Interface
-			GPIO_B     : inout STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+			GPIO_B     : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
 	end component gpio_controller;
 
@@ -126,8 +125,8 @@ begin
 
 	user_logic : gpio_controller
 		generic map(
-			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH
+			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
+			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
 			CLK_I      => CLK_I,
