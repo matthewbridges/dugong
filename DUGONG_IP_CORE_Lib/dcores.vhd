@@ -1,4 +1,4 @@
---                    
+--
 -- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
 -- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
 --  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
@@ -20,12 +20,12 @@
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 		MATTHEW BRIDGES
 --
--- Name:		DPRIMITIVES (001)
+-- Name:		DCORES (001)
 -- Type:		PACKAGE (1)
 -- Description:		A package containing DUGONG IP Cores
 --
--- Compliance:		DUGONG V1.3
--- ID:			x 1-3-1-001
+-- Compliance:		DUGONG V0.3
+-- ID:			x 0-3-1-001
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -123,18 +123,17 @@ package dcores is
 
 	component spi_m_ip
 		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3);
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 32;
+			CORE_ADDR_WIDTH : NATURAL                           := 3
+		);
 		port(
 			--System Control Inputs
 			CLK_I     : in  STD_LOGIC;
 			RST_I     : in  STD_LOGIC;
-			--Slave to WHISHBONE
-			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			--Slave to WB
+			WB_MS     : in  WB_MS_type;
+			WB_SM     : out WB_SM_type;
 			--Serial Peripheral Interface
 			SPI_CLK_I : in  STD_LOGIC;
 			SPI_CE    : in  STD_LOGIC;
