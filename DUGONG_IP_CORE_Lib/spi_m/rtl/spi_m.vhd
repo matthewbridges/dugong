@@ -178,7 +178,7 @@ begin
 	end generate user_fifos;
 
 	--Generate WB Latches
-	user_latches : if ((2 ** CORE_ADDR_WIDTH) - 5 > NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS) generate
+	user_latches : if ((2 ** CORE_ADDR_WIDTH) - 4) /= NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS generate
 	begin
 		user_latches : for i in NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS to ((2 ** CORE_ADDR_WIDTH) - 5) generate
 		begin
