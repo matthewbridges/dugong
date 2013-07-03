@@ -1,9 +1,9 @@
---                    
--- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________     
+--
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
 -- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
---  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
---   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
---    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\
 --     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
 --      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
 --       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
@@ -22,10 +22,10 @@
 --
 -- Name:		DPRIMITIVES (002)
 -- Type:		PACKAGE (1)
--- Description: 	A package containing primitives that are used by the DUGONG IP Cores	
+-- Description:		A package containing primitives that are used by the DUGONG IP Cores	
 --
--- Compliance:		DUGONG V1.3
--- ID:			x 1-3-1-002
+-- Compliance:		DUGONG V0.3
+-- ID:			x 0-3-1-002
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -58,7 +58,7 @@ package dprimitives is
 			--System Control Inputs
 			CLK_I           : in    STD_LOGIC;
 			RST_I           : in    STD_LOGIC;
-			--Wishbone Master Lines
+			--Wishbone Master Interface
 			ADR_O           : out   STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			DAT_I           : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O           : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
@@ -93,7 +93,7 @@ package dprimitives is
 			--Master to WB
 			WB_MS     : out WB_MS_type;
 			WB_SM     : in  WB_SM_type;
-			--Wishbone Master Lines (inverted)
+			--Wishbone Master Interface (inverted)
 			ADR_O     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			DAT_I     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
@@ -124,7 +124,7 @@ package dprimitives is
 			--Slave to WB
 			WB_MS : in  WB_MS_type;
 			WB_SM : out WB_SM_type;
-			--Wishbone Slave Lines (inverted)
+			--Wishbone Slave Interface (inverted)
 			ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 			DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
@@ -138,7 +138,7 @@ package dprimitives is
 	component wb_arbiter_intercon is
 		generic(
 			NUMBER_OF_MASTERS : NATURAL := 2;
-			NUMBER_OF_SLAVES  : NATURAL := 4
+			NUMBER_OF_SLAVES  : NATURAL := 5
 		);
 		port(
 			--System Control Inputs
@@ -155,6 +155,10 @@ package dprimitives is
 		);
 	end component;
 
+	----------------------------------------
+	---- Wishbone Slave Memory Elements ----
+	----------------------------------------
+
 	component wb_register is
 		generic(
 			DATA_WIDTH   : NATURAL                       := 32;
@@ -164,14 +168,39 @@ package dprimitives is
 			--System Control Inputs:
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
-			--WISHBONE SLAVE interface:1-2
+			--WISHBONE SLAVE interface
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			WE_I  : in  STD_LOGIC;
-			--SEL_I : in  STD_LOGIC_VECTOR(DATA_WIDTH / 8 - 1 downto 0);
 			STB_I : in  STD_LOGIC;
 			ACK_O : out STD_LOGIC
-		--CYC_I : in   STD_LOGIC;
+		);
+	end component;
+
+	component wb_fifo is
+		generic(
+			DATA_WIDTH : NATURAL := 32;
+			ADDR_WIDTH : NATURAL := 4   --FIFO DEPTH = ADDR_WIDTH^2
+		);
+		port(
+			--System Control Inputs:
+			RST_I    : in  STD_LOGIC;
+			--WRITE PORT
+			--WISHBONE SLAVE interface (WRITE-ONLY)
+			WR_CLK_I : in  STD_LOGIC;
+			WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WR_WE_I  : in  std_logic;
+			WR_STB_I : in  STD_LOGIC;
+			WR_ACK_O : out STD_LOGIC;
+			--READ PORT
+			--WISHBONE SLAVE interface (READ-ONLY)
+			RD_CLK_I : in  STD_LOGIC;
+			RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			RD_STB_I : in  STD_LOGIC;
+			RD_ACK_O : out STD_LOGIC;
+			--STATUS SIGNALS
+			FULL     : out STD_LOGIC;
+			EMPTY    : out STD_LOGIC
 		);
 	end component;
 
@@ -184,7 +213,7 @@ package dprimitives is
 			--System Control Inputs:
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
-			--WISHBONE SLAVE interface:1-2
+			--WISHBONE SLAVE interface
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			STB_I : in  STD_LOGIC;
@@ -202,9 +231,10 @@ package dprimitives is
 			ADDR_WIDTH : natural := 10
 		);
 		port(
-			--PORT
+			--System Control Inputs:
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
+			--PORT
 			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);

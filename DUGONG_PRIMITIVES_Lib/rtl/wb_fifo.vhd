@@ -42,12 +42,14 @@ entity wb_fifo is
 		--System Control Inputs:
 		RST_I    : in  STD_LOGIC;
 		--WRITE PORT
+		--WISHBONE SLAVE interface (WRITE-ONLY)
 		WR_CLK_I : in  STD_LOGIC;
 		WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		WR_WE_I  : in  std_logic;
 		WR_STB_I : in  STD_LOGIC;
 		WR_ACK_O : out STD_LOGIC;
 		--READ PORT
+		--WISHBONE SLAVE interface (READ-ONLY)
 		RD_CLK_I : in  STD_LOGIC;
 		RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		RD_STB_I : in  STD_LOGIC;

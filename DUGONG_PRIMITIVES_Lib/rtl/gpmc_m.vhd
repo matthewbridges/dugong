@@ -46,7 +46,7 @@ entity gpmc_m is
 		--System Control Inputs
 		CLK_I           : in    STD_LOGIC;
 		RST_I           : in    STD_LOGIC;
-		--Wishbone Master Lines
+		--Wishbone Master Interface
 		ADR_O           : out   STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 		DAT_I           : in    STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O           : out   STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);

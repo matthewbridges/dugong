@@ -40,7 +40,7 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity wb_arbiter_intercon is
 	generic(
 		NUMBER_OF_MASTERS : NATURAL := 2;
-		NUMBER_OF_SLAVES  : NATURAL := 4
+		NUMBER_OF_SLAVES  : NATURAL := 5
 	);
 	port(
 		--System Control Inputs

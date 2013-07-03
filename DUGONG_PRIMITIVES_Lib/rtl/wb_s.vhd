@@ -51,7 +51,7 @@ entity wb_s is
 		--Slave to WB
 		WB_MS : in  WB_MS_type;
 		WB_SM : out WB_SM_type;
-		--Wishbone Slave Lines (inverted)
+		--Wishbone Slave Interface (inverted)
 		ADR_I : out STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 		DAT_I : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 		DAT_O : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);

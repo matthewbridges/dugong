@@ -41,7 +41,7 @@ entity wb_latch is
 		--System Control Inputs:
 		CLK_I : in  STD_LOGIC;
 		RST_I : in  STD_LOGIC;
-		--WISHBONE SLAVE interface:1-2
+		--WISHBONE SLAVE interface
 		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		STB_I : in  STD_LOGIC;

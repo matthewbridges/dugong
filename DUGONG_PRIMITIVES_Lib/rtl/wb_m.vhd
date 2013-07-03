@@ -46,7 +46,7 @@ entity wb_m is
 		--Master to WB
 		WB_MS     : out WB_MS_type;
 		WB_SM     : in  WB_SM_type;
-		--Wishbone Master Lines (inverted)
+		--Wishbone Master Interface (inverted)
 		ADR_O     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 		DAT_I     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
