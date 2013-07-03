@@ -1,44 +1,67 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date:    13:12:23 06/24/2012 
--- Design Name: 
--- Module Name:    dac3283_controller_ip - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
 --
--- Dependencies: 
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
+-- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\
+--     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--        \ ___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--         \ __________________________________________\          \__________________________________________\
+--          |:------------------------------------------|: DUGONG :|-----------------------------------------:|
+--         / ==========================================/          /========================================= /
+--        / =============================================================================================== /
+--       / ================  Reconfigurable Hardware Interface for computatioN and radiO  ================ /
+--      / ===============================  http://www.rhinoplatform.org  ================================ /
+--     / =============================================================================================== /
 --
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
+---------------------------------------------------------------------------------------------------------------
+-- Company:		UNIVERSITY OF CAPE TOWN
+-- Engineer: 		MATTHEW BRIDGES
 --
-----------------------------------------------------------------------------------
+-- Name:		SPI_M (003)
+-- Type:		IP_CORE (4)
+-- Description: 	An IP core which forwards SPI data out to OFF-CHIP SPI slaves. Has a generic CORE_DATA_WIDTH
+--			which corresponds to the length of the SPI data transfer. No assumptions are made as to
+--			the content of the data. The input has a FIFO, however, it is up to the user to ensure 
+--			that the data rate does not exceed the SPI's capacity. Excess data is just ignored.
+--
+-- Compliance:		DUGONG V0.3
+-- ID:			x 0-3-4-003
+---------------------------------------------------------------------------------------------------------------
+--	ADDR	| NAME		| Type		--
+--	0	| N/A		| WB_REG	--
+-- 	1	| N/A		| WB_REG	--
+-- 	2	| N/A		| WB_REG	--
+-- 	3	| N/A		| WB_REG	--
+--	4	| SPI_OUT(n)	| WB_FIFO	--
+-- 	5	| SPI_IN(n-1)	| WB_LATCH	--
+-- 	6	| SPI_OUT(n-1)	| WB_LATCH	--
+-- 	7	| XFER_COUNT	| WB_LATCH	--
+--------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-library DUGONG_IP_CORE_Lib;
-use DUGONG_IP_CORE_Lib.dcores.ALL;
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
+--NB The DATA_WIDTH and ADDR_WIDTH constants are set in the dprimitives package
 entity spi_m_ip is
 	generic(
-		DATA_WIDTH      : NATURAL               := 32;
-		ADDR_WIDTH      : NATURAL               := 12;
-		BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-		CORE_DATA_WIDTH : NATURAL               := 16;
-		CORE_ADDR_WIDTH : NATURAL               := 3
+		BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+		CORE_DATA_WIDTH : NATURAL                           := 32;
+		CORE_ADDR_WIDTH : NATURAL                           := 3
 	);
 	port(
 		--System Control Inputs
 		CLK_I     : in  STD_LOGIC;
 		RST_I     : in  STD_LOGIC;
 		--Slave to WB
-		WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-		WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+		WB_MS     : in  WB_MS_type;
+		WB_SM     : out WB_SM_type;
 		--Serial Peripheral Interface
 		SPI_CLK_I : in  STD_LOGIC;
 		SPI_CE    : in  STD_LOGIC;
@@ -49,83 +72,76 @@ entity spi_m_ip is
 end spi_m_ip;
 
 architecture Behavioral of spi_m_ip is
+	signal adr_i : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 	signal dat_i : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 	signal dat_o : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-	signal adr_i : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-	signal stb_i : STD_LOGIC;
 	signal we_i  : STD_LOGIC;
+	signal stb_i : STD_LOGIC;
 	signal ack_o : STD_LOGIC;
+	signal cyc_i : STD_LOGIC;
 
-	component spi_m is
+	component spi_m
 		generic(
-			DATA_WIDTH : natural := 16;
-			ADDR_WIDTH : natural := 3
+			CORE_DATA_WIDTH : natural := 32;
+			CORE_ADDR_WIDTH : natural := 3
 		);
 		port(
 			--System Control Inputs
 			CLK_I     : in  STD_LOGIC;
 			RST_I     : in  STD_LOGIC;
 			--Wishbone Slave Lines
-			DAT_I     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			STB_I     : in  STD_LOGIC;
+			ADR_I     : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+			DAT_I     : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			DAT_O     : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			WE_I      : in  STD_LOGIC;
-			--		CYC_I : in   STD_LOGIC;
+			STB_I     : in  STD_LOGIC;
 			ACK_O     : out STD_LOGIC;
-			--Serial Peripheral Interface
+			CYC_I     : in  STD_LOGIC;
+			--SPI Interface
 			SPI_CLK_I : in  STD_LOGIC;
 			SPI_CE    : in  STD_LOGIC;
 			SPI_MOSI  : out STD_LOGIC;
 			SPI_MISO  : in  STD_LOGIC;
 			SPI_N_SS  : out STD_LOGIC
 		);
-	end component;
+	end component spi_m;
 
 begin
 	bus_logic : wb_s
 		generic map(
-			DATA_WIDTH      => DATA_WIDTH,
-			ADDR_WIDTH      => ADDR_WIDTH,
 			BASE_ADDR       => BASE_ADDR,
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
-			--System Control Inputs		
 			CLK_I => CLK_I,
 			RST_I => RST_I,
-			--Slave to WB
-			WB_I  => WB_I,
-			WB_O  => WB_O,
-			--Wishbone Slave Lines (inverted)
+			WB_MS => WB_MS,
+			WB_SM => WB_SM,
+			ADR_I => adr_i,
 			DAT_I => dat_i,
 			DAT_O => dat_o,
-			ADR_I => adr_i,
-			STB_I => stb_i,
 			WE_I  => we_i,
-			CYC_I => open,
-			ACK_O => ack_o
+			STB_I => stb_i,
+			ACK_O => ack_o,
+			CYC_I => cyc_i
 		);
 
 	user_logic : spi_m
 		generic map(
-			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH
+			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
+			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
-			--System Control Inputs
 			CLK_I     => CLK_I,
 			RST_I     => RST_I,
-			--Wishbone Slave Lines
+			ADR_I     => adr_i,
 			DAT_I     => dat_i,
 			DAT_O     => dat_o,
-			ADR_I     => adr_i,
-			STB_I     => stb_i,
 			WE_I      => we_i,
-			--	CYC_I =>
+			STB_I     => stb_i,
 			ACK_O     => ack_o,
-			--SPI Interface
+			CYC_I     => cyc_i,
 			SPI_CLK_I => SPI_CLK_I,
 			SPI_CE    => SPI_CE,
 			SPI_MOSI  => SPI_MOSI,

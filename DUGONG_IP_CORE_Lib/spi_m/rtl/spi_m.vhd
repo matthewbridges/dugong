@@ -1,43 +1,66 @@
-----------------------------------------------------------------------------------
--- Company: University of Cape Town
--- Engineer: Matthew Bridges 
--- 
--- Create Date:    11:43:28 06/19/2012 
--- Design Name: 
--- Module Name:    spi_master - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
 --
--- Dependencies: 
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
+-- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\
+--     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--        \ ___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--         \ __________________________________________\          \__________________________________________\
+--          |:------------------------------------------|: DUGONG :|-----------------------------------------:|
+--         / ==========================================/          /========================================= /
+--        / =============================================================================================== /
+--       / ================  Reconfigurable Hardware Interface for computatioN and radiO  ================ /
+--      / ===============================  http://www.rhinoplatform.org  ================================ /
+--     / =============================================================================================== /
 --
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
+---------------------------------------------------------------------------------------------------------------
+-- Company:		UNIVERSITY OF CAPE TOWN
+-- Engineer: 		MATTHEW BRIDGES
 --
-----------------------------------------------------------------------------------
+-- Name:		SPI_M (003)
+-- Type:		CORE (3)
+-- Description: 	A core which forwards SPI data out to OFF-CHIP SPI slaves. Has a generic CORE_DATA_WIDTH
+--			which corresponds to the length of the SPI data transfer. No assumptions are made as to
+--			the content of the data. The input has a FIFO, however, it is up to the user to ensure 
+--			that the data rate does not exceed the SPI's capacity. Excess data is just ignored.
+--
+-- Compliance:		DUGONG V0.3
+-- ID:			x 0-3-3-003
+---------------------------------------------------------------------------------------------------------------
+--	ADDR	| NAME		| Type		--
+--	0	| SPI_OUT(n)	| WB_FIFO	--
+-- 	1	| SPI_IN(n-1)	| WB_LATCH	--
+-- 	2	| SPI_OUT(n-1)	| WB_LATCH	--
+-- 	3	| XFER_COUNT	| WB_LATCH	--
+--------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
+
 entity spi_m is
 	generic(
-		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 3
+		CORE_DATA_WIDTH : natural := 32;
+		CORE_ADDR_WIDTH : natural := 3
 	);
 	port(
 		--System Control Inputs
 		CLK_I     : in  STD_LOGIC;
 		RST_I     : in  STD_LOGIC;
 		--Wishbone Slave Lines
-		DAT_I     : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_O     : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		ADR_I     : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-		STB_I     : in  STD_LOGIC;
+		ADR_I     : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+		DAT_I     : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		DAT_O     : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 		WE_I      : in  STD_LOGIC;
-		--		CYC_I : in   STD_LOGIC;
+		STB_I     : in  STD_LOGIC;
 		ACK_O     : out STD_LOGIC;
+		CYC_I     : in  STD_LOGIC;
 		--SPI Interface
 		SPI_CLK_I : in  STD_LOGIC;
 		SPI_CE    : in  STD_LOGIC;
@@ -48,137 +71,211 @@ entity spi_m is
 end spi_m;
 
 architecture Behavioral of spi_m is
-	--Core user memory architecture
-	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 5) of std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal user_mem : ram_type;
-	signal mem_adr  : integer := 0;
-	--Dual-port signaling
-	signal mem_stb  : boolean;
-	signal mem_ack  : boolean;
-	--Dual-port lock
-	signal lock     : std_logic;
+	subtype small_int is integer range 0 to 2 ** CORE_ADDR_WIDTH - 5;
+	type t is array (0 to (2 ** CORE_ADDR_WIDTH) - 5) of small_int;
+
+	---------------------------------
+	--DEFINE MEMORY STRUCTURE HERE --
+	---------------------------------
+	constant NUMBER_OF_REGISTERS : natural := 0;
+	constant NUMBER_OF_FIFOS     : natural := 1;
+	constant user_addr           : t       := (0, 1, 2, 3); --Addresses of registers followed by Addresses of FIFOs followed by Addresses of Latches
+	--------------------------------------------------
+	--	ADDR	| NAME		| Type		--
+	--	0	| SPI_OUT(n)	| WB_REG	--
+	-- 	1	| SPI_IN(n-1)	| WB_LATCH	--
+	-- 	2	| SPI_OUT(n-1)	| WB_LATCH	--
+	-- 	3	| XFER_COUNT	| WB_LATCH	--
+	--------------------------------------------------
+
+	----------------------------------------
+	--END OF MEMEORY STRUCTURE DEFINITION --
+	----------------------------------------		
+
+	--User memory architecture
+	type ram_type is array (0 to (2 ** CORE_ADDR_WIDTH) - 5) of std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
+	signal user_D   : ram_type                                                := (others => (others => '0'));
+	signal user_Q   : ram_type                                                := (others => (others => '0'));
+	signal user_stb : std_logic_vector(((2 ** CORE_ADDR_WIDTH) - 5) downto 0) := (others => '0');
+	signal user_ack : std_logic_vector(((2 ** CORE_ADDR_WIDTH) - 5) downto 0) := (others => '0');
+
+	signal wb_addr : small_int;
+
+	signal fifo_stb   : std_logic;
+	signal fifo_ack   : std_logic;
+	signal fifo_empty : std_logic;
 
 	--SPI Specific Signals	
-	signal idle     : boolean;
-	signal shifting : boolean;
-
-	signal write_data   : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal read_data    : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal idle         : boolean;
+	signal shifting     : std_logic;
+	signal write_data   : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
+	signal read_data    : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
 	signal transfer_bit : integer;
 
-	signal count : unsigned(DATA_WIDTH - 1 downto 0);
+	signal count : unsigned(CORE_DATA_WIDTH - 1 downto 0);
 
 begin
-	process(CLK_I)
+	---------------------------------
+	----------{ BUS LOGIC }----------
+	---------------------------------
+
+	--User Memory Address --> equals IP Address(core_addr_width-1:0) - 4
+	wb_addr <= to_integer(unsigned(ADR_I));
+
+	--Generate WB registers
+	user_registers : if (NUMBER_OF_REGISTERS > 0) generate
 	begin
+		user_registers : for i in 0 to (NUMBER_OF_REGISTERS - 1) generate
+		begin
+			--WISHBONE Register
+			reg : wb_register
+				generic map(
+					DATA_WIDTH   => CORE_DATA_WIDTH,
+					DEFAULT_DATA => x"00000000"
+				)
+				port map(
+					CLK_I => CLK_I,
+					RST_I => RST_I,
+					DAT_I => user_D(user_addr(i)),
+					DAT_O => user_Q(user_addr(i)),
+					WE_I  => WE_I,
+					STB_I => user_stb(user_addr(i)),
+					ACK_O => user_ack(user_addr(i))
+				);
 
-		--Perform Clock Rising Edge operations
-		if (rising_edge(CLK_I)) then
-			--Check for reset
-			if (RST_I = '1') then
-				ACK_O       <= '0';
-				user_mem(3) <= std_logic_vector(count);
-				mem_ack     <= false;
-				lock        <= '0';
+			user_D(user_addr(i)) <= DAT_I;
+		end generate user_registers;
+	end generate user_registers;
 
-			else
-				DAT_O   <= user_mem(mem_adr);
-				mem_ack <= mem_stb;
-				--Check for internal strobe	
-				if (mem_stb) then
-					user_mem(1) <= read_data;
-					user_mem(2) <= write_data;
-					user_mem(3) <= std_logic_vector(count);
-					lock        <= '0';
-				else
-					--Check for external strobe
-					if (STB_I = '1') then
-						case mem_adr is
-							--Lockable memory
-							when 0 =>
-								if (lock = '0') then
-									--Check for write
-									if (WE_I = '1') then
-										user_mem(mem_adr) <= DAT_I;
-										lock              <= '1';
-									end if;
-									ACK_O <= '1';
-								end if;
-							--Read-only memory
-							when 1 | 2 | 3 =>
-								ACK_O <= '1';
-							--Not Lockable, read/write memory
-							when others =>
-								--Check for write
-								if (WE_I = '1') then
-									user_mem(mem_adr) <= DAT_I;
-								end if;
-								ACK_O <= '1';
-						end case;
-					else
-						ACK_O <= '0';
-					end if;
-				end if;
-			end if;
-		end if;
-	end process;
-	--Core Memory Address --> equals IP Address(core_addr_width-1:0) - 4
-	mem_adr <= to_integer(unsigned(ADR_I));
+	--Generate WB FIFOs
+	user_fifos : if (NUMBER_OF_FIFOs > 0) generate
+	begin
+		user_fifos : for i in NUMBER_OF_REGISTERS to (NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS - 1) generate
+		begin
+			--WISHBONE FIFOs
+			fifo : wb_fifo
+				generic map(
+					DATA_WIDTH => CORE_DATA_WIDTH,
+					ADDR_WIDTH => 4
+				)
+				port map(
+					RST_I    => RST_I,
+					WR_CLK_I => CLK_I,
+					WR_DAT_I => user_D(user_addr(i)),
+					WR_WE_I  => WE_I,
+					WR_STB_I => user_stb(user_addr(i)),
+					WR_ACK_O => user_ack(user_addr(i)),
+					RD_CLK_I => SPI_CLK_I,
+					RD_DAT_O => user_Q(user_addr(i)),
+					RD_STB_I => fifo_stb,
+					RD_ACK_O => fifo_ack,
+					FULL     => open,
+					EMPTY    => fifo_empty
+				);
+
+			user_D(user_addr(i)) <= DAT_I;
+		end generate user_fifos;
+	end generate user_fifos;
+
+	--Generate WB Latches
+	user_latches : if ((2 ** CORE_ADDR_WIDTH) - 5 > NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS) generate
+	begin
+		user_latches : for i in NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS to ((2 ** CORE_ADDR_WIDTH) - 5) generate
+		begin
+			--WISHBONE Latches
+			latch : wb_latch
+				generic map(
+					DATA_WIDTH   => CORE_DATA_WIDTH,
+					DEFAULT_DATA => x"00000000"
+				)
+				port map(
+					CLK_I => CLK_I,
+					RST_I => RST_I,
+					DAT_I => user_D(user_addr(i)),
+					DAT_O => user_Q(user_addr(i)),
+					STB_I => user_stb(user_addr(i)),
+					ACK_O => user_ack(user_addr(i))
+				);
+		end generate user_latches;
+	end generate user_latches;
+
+	--Generate user Strobe lines
+	user_registers_control : for i in 0 to ((2 ** CORE_ADDR_WIDTH) - 5) generate
+	begin
+		--Check for valid addr
+		user_stb(i) <= (STB_I and CYC_I) when (wb_addr = i) else '0';
+	end generate user_registers_control;
+
+	DAT_O <= user_Q(wb_addr);
+	ACK_O <= user_ack(wb_addr);
+
+	----------------------------------
+	----------{ USER LOGIC }----------
+	----------------------------------
 
 	--SPI Instruction generation process
-	process(SPI_CLK_I)
+	process(SPI_CLK_I, RST_I)
 	begin
-		if (rising_edge(SPI_CLK_I)) then
-			-- RESET STATE
-			if (RST_I = '1') then
-				idle     <= true;
-				shifting <= false;
-				SPI_MOSI <= '0';
-				SPI_N_SS <= '1';
-				count    <= (others => '0');
-				mem_stb  <= false;
-			-- IDLE STATE
-			elsif (idle) then
-				transfer_bit <= DATA_WIDTH - 1;
-				if (SPI_CE = '1' and lock = '1') then
-					write_data <= user_mem(0);
-					count      <= count + 1;
-					idle       <= false;
-				end if;
-			--SHIFTING STATE
-			else
-				if (transfer_bit < 0) then
-					shifting <= false;
-					SPI_MOSI <= '0';
-					SPI_N_SS <= '1';
-					if (mem_stb and mem_ack) then
-						mem_stb <= false;
-						idle    <= true;
-					else
-						mem_stb <= true;
+		-- RESET STATE
+		if (RST_I = '1') then
+			idle     <= true;
+			fifo_stb <= '0';
+			shifting <= '0';
+			SPI_MOSI <= '0';
+			count    <= (others => '0');
+		else
+			if (rising_edge(SPI_CLK_I)) then
+				-- IDLE STATE
+				if (idle) then
+					transfer_bit <= CORE_DATA_WIDTH - 1;
+					if (SPI_CE = '1') then
+						if (fifo_ack = '1') then
+							write_data <= user_Q(0);
+							idle       <= false;
+							fifo_stb   <= '0';
+						elsif (fifo_empty = '0') then
+							fifo_stb <= '1';
+						end if;
 					end if;
+				--SHIFTING STATE
 				else
-					shifting     <= true;
-					SPI_MOSI     <= write_data(transfer_bit);
-					SPI_N_SS     <= '0';
-					--Decrement Transfer bit;
-					transfer_bit <= transfer_bit - 1;
+					if (transfer_bit = -1) then
+						user_D(1) <= read_data;
+						user_D(2) <= write_data;
+						shifting  <= '0';
+						SPI_MOSI  <= '0';
+						count     <= count + 1;
+						idle      <= true;
+					else
+						shifting     <= '1';
+						SPI_MOSI     <= write_data(transfer_bit);
+						--Decrement Transfer bit;
+						transfer_bit <= transfer_bit - 1;
+					end if;
 				end if;
 			end if;
 		end if;
 	end process;
 
 	--SPI Shifter Process
-	process(SPI_CLK_I)
+	process(SPI_CLK_I, RST_I)
 	begin
-		if (falling_edge(SPI_CLK_I)) then
-			if (RST_I = '1') then
-				read_data <= (others => '0');
-			elsif (shifting) then
-				read_data(transfer_bit + 1) <= SPI_MISO;
+		-- RESET STATE
+		if (RST_I = '1') then
+			read_data <= (others => '0');
+		else
+			if (falling_edge(SPI_CLK_I)) then
+				--SHIFTING STATE
+				if (shifting = '1') then
+					read_data(transfer_bit + 1) <= SPI_MISO;
+				end if;
 			end if;
 		end if;
 	end process;
+
+	SPI_N_SS <= not shifting;
+
+	user_D(3) <= std_logic_vector(count);
 
 end Behavioral;
 
