@@ -29,10 +29,10 @@
 -- ID:			x 0-3-4-002
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
---	0	| N/A		| WB_REG	--
--- 	1	| N/A		| WB_REG	--
--- 	2	| N/A		| WB_REG	--
--- 	3	| N/A		| WB_REG	--
+--	0	| BASE_ADDR	| WB_LATCH	--
+-- 	1	| HIGH_ADDR	| WB_LATCH	--
+-- 	2	| CORE_ID	| WB_REG	-- --SEE HEADER
+-- 	3	| xFEDCBA98	| WB_REG	-- --TEST_SIGNAL
 --	4	| GPIO_OUT	| WB_REG	--
 -- 	5	| GPIO_IN	| WB_LATCH	--
 -- 	6	| Output_Enable	| WB_REG	--
@@ -106,6 +106,7 @@ begin
 	bus_logic : wb_s
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
+			CORE_ID         => x"00034002", -- SEE HEADER
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
