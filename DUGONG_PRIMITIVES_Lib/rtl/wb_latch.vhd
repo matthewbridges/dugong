@@ -22,7 +22,7 @@
 --
 -- Name:		WB_LATCH (009)
 -- Type:		PRIMITIVE (2)
--- Description:		A latch primitive with one port which can take on generic data widths and default values.
+-- Description:		A latch primitive with one port which can take on generic data widths.
 --
 -- Compliance:		DUGONG V0.3
 -- ID:			x 0-3-2-009
@@ -34,8 +34,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity wb_latch is
 	generic(
-		DATA_WIDTH   : NATURAL                       := 32;
-		DEFAULT_DATA : STD_LOGIC_VECTOR(31 downto 0) := x"00000000"
+		DATA_WIDTH : NATURAL := 32
 	);
 	port(
 		--System Control Inputs:
@@ -58,7 +57,7 @@ begin
 	begin
 		--RST STATE
 		if (RST_I = '1') then
-			Q   <= DEFAULT_DATA(DATA_WIDTH - 1 downto 0);
+			Q   <= (others => '0');
 			ack <= '0';
 		else
 			if (STB_I = '0') then
