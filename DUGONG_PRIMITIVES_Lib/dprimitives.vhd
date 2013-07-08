@@ -114,6 +114,7 @@ package dprimitives is
 	component wb_s is
 		generic(
 			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_ID         : UNSIGNED(31 downto 0)             := x"00032002"; -- SEE HEADER
 			CORE_DATA_WIDTH : NATURAL                           := 16;
 			CORE_ADDR_WIDTH : NATURAL                           := 3
 		);
@@ -206,6 +207,22 @@ package dprimitives is
 
 	component wb_latch is
 		generic(
+			DATA_WIDTH : NATURAL := 32
+		);
+		port(
+			--System Control Inputs:
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			--WISHBONE SLAVE interface
+			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			STB_I : in  STD_LOGIC;
+			ACK_O : out STD_LOGIC
+		);
+	end component;
+
+	component wb_const is
+		generic(
 			DATA_WIDTH   : NATURAL                       := 32;
 			DEFAULT_DATA : STD_LOGIC_VECTOR(31 downto 0) := x"00000000"
 		);
@@ -214,7 +231,6 @@ package dprimitives is
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
 			--WISHBONE SLAVE interface
-			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			STB_I : in  STD_LOGIC;
 			ACK_O : out STD_LOGIC
