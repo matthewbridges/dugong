@@ -46,6 +46,8 @@ entity bram_sync_sp is
 		ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		STB_I : in  STD_LOGIC;
+		ACK_O : out STD_LOGIC;
 		WE_I  : in  STD_LOGIC
 	);
 end bram_sync_sp;
@@ -55,27 +57,34 @@ architecture Behavioral of bram_sync_sp is
 	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal mem     : ram_type;
 	signal mem_adr : integer := 0;
+	signal ack     : std_logic;
 
 begin
-	process(CLK_I)
+	process(CLK_I, RST_I, STB_I)
 	begin
-		--Perform Clock Rising Edge operations
-		if (rising_edge(CLK_I)) then
-			--RESET STATE
-			if (RST_I = '1') then
-				mem_adr <= 0;
+		--RESET STATE
+		if (RST_I = '1') then
+			ack <= '0';
+		else
+			if (STB_I = '0') then
+				ack <= '0';
 			else
-				--READING STATE
-				mem_adr <= to_integer(unsigned(ADR_I));
-				--WRITING STATE
-				if (WE_I = '1') then
-					mem(to_integer(unsigned(ADR_I))) <= DAT_I;
+				--Perform Clock Rising Edge operations
+				if (rising_edge(CLK_I)) then
+					--WRITING STATE
+					if ((STB_I and WE_I) = '1') then
+						mem(to_integer(unsigned(ADR_I))) <= DAT_I;
+					end if;
+					--READING STATE
+					mem_adr <= to_integer(unsigned(ADR_I));
+					ack     <= STB_I;
 				end if;
 			end if;
 		end if;
 	end process;
 
 	DAT_O <= mem(mem_adr);
+	ACK_O <= ack;
 
 end Behavioral;
 

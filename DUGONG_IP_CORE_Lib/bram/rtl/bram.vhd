@@ -55,19 +55,9 @@ entity bram is
 end bram;
 
 architecture Behavioral of bram is
+	signal stb : std_logic;
 begin
-	process(RST_I, CLK_I)
-	begin
-		--RST STATE
-		if (RST_I = '1') then
-			ACK_O <= '0';
-		else
-			--Perform Clock Rising Edge operations
-			if (rising_edge(CLK_I)) then
-				ACK_O <= STB_I and CYC_I;
-			end if;
-		end if;
-	end process;
+	stb <= STB_I and CYC_I;
 
 	mem : bram_sync_sp
 		generic map(
@@ -80,6 +70,8 @@ begin
 			ADR_I => ADR_I,
 			DAT_I => DAT_I,
 			DAT_O => DAT_O,
+			STB_I => stb,
+			ACK_O => ACK_O,
 			WE_I  => WE_I
 		);
 

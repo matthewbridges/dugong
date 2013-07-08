@@ -24,9 +24,18 @@
 -- Type:		IP CORE (4)
 -- Description: 	An IP core containing BRAM/s which can be used for temporary storage of general data	
 --
--- Compliance:		DUGONG V1.4
--- ID:			x 1-4-4-001
+-- Compliance:		DUGONG V0.3
+-- ID:			x 0-3-4-001
 ---------------------------------------------------------------------------------------------------------------
+--	ADDR	| NAME		| Type		--
+--	0	| BASE_ADDR	| WB_LATCH	--
+-- 	1	| HIGH_ADDR	| WB_LATCH	--
+-- 	2	| CORE_ID	| WB_LATCH	-- --SEE HEADER
+-- 	3	| xFEDCBA98	| WB_REG	-- --TEST_SIGNAL
+--	4	| BRAM		| BRAM_SYNC_SP	--
+--	~	| ""		| ""		--
+--------------------------------------------------
+
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -39,8 +48,8 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity bram_ip is
 	generic(
 		BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
-		CORE_DATA_WIDTH : NATURAL               := 32;
-		CORE_ADDR_WIDTH : NATURAL               := 10
+		CORE_DATA_WIDTH : NATURAL                           := 32;
+		CORE_ADDR_WIDTH : NATURAL                           := 10
 	);
 	port(
 		--System Control Inputs
@@ -85,6 +94,7 @@ begin
 	bus_logic : wb_s
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
+			CORE_ID         => x"00034001", -- SEE HEADER
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)

@@ -254,6 +254,8 @@ package dprimitives is
 			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
 			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			STB_I : in  STD_LOGIC;
+			ACK_O : out STD_LOGIC;
 			WE_I  : in  STD_LOGIC
 		);
 	end component;
