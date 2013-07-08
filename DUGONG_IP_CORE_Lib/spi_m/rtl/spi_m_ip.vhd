@@ -31,10 +31,10 @@
 -- ID:			x 0-3-4-003
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
---	0	| N/A		| WB_REG	--
--- 	1	| N/A		| WB_REG	--
--- 	2	| N/A		| WB_REG	--
--- 	3	| N/A		| WB_REG	--
+--	0	| BASE_ADDR	| WB_LATCH	--
+-- 	1	| HIGH_ADDR	| WB_LATCH	--
+-- 	2	| CORE_ID	| WB_LATCH	-- --SEE HEADER
+-- 	3	| xFEDCBA98	| WB_REG	-- --TEST_SIGNAL
 --	4	| SPI_OUT(n)	| WB_FIFO	--
 -- 	5	| SPI_IN(n-1)	| WB_LATCH	--
 -- 	6	| SPI_OUT(n-1)	| WB_LATCH	--
@@ -57,17 +57,18 @@ entity spi_m_ip is
 	);
 	port(
 		--System Control Inputs
-		CLK_I     : in  STD_LOGIC;
-		RST_I     : in  STD_LOGIC;
+		CLK_I       : in  STD_LOGIC;
+		RST_I       : in  STD_LOGIC;
 		--Slave to WB
-		WB_MS     : in  WB_MS_type;
-		WB_SM     : out WB_SM_type;
-		--Serial Peripheral Interface
-		SPI_CLK_I : in  STD_LOGIC;
-		SPI_CE    : in  STD_LOGIC;
-		SPI_MOSI  : out STD_LOGIC;
-		SPI_MISO  : in  STD_LOGIC;
-		SPI_N_SS  : out STD_LOGIC
+		WB_MS       : in  WB_MS_type;
+		WB_SM       : out WB_SM_type;
+		--SPI Interface
+		SPI_CLK_I   : in  STD_LOGIC;
+		SPI_CE      : in  STD_LOGIC;
+		SPI_BUS_REQ : out STD_LOGIC;
+		SPI_MOSI    : out STD_LOGIC;
+		SPI_MISO    : in  STD_LOGIC;
+		SPI_N_SS    : out STD_LOGIC
 	);
 end spi_m_ip;
 
@@ -87,22 +88,23 @@ architecture Behavioral of spi_m_ip is
 		);
 		port(
 			--System Control Inputs
-			CLK_I     : in  STD_LOGIC;
-			RST_I     : in  STD_LOGIC;
+			CLK_I       : in  STD_LOGIC;
+			RST_I       : in  STD_LOGIC;
 			--Wishbone Slave Lines
-			ADR_I     : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-			DAT_I     : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			DAT_O     : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			WE_I      : in  STD_LOGIC;
-			STB_I     : in  STD_LOGIC;
-			ACK_O     : out STD_LOGIC;
-			CYC_I     : in  STD_LOGIC;
+			ADR_I       : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+			DAT_I       : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			DAT_O       : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			WE_I        : in  STD_LOGIC;
+			STB_I       : in  STD_LOGIC;
+			ACK_O       : out STD_LOGIC;
+			CYC_I       : in  STD_LOGIC;
 			--SPI Interface
-			SPI_CLK_I : in  STD_LOGIC;
-			SPI_CE    : in  STD_LOGIC;
-			SPI_MOSI  : out STD_LOGIC;
-			SPI_MISO  : in  STD_LOGIC;
-			SPI_N_SS  : out STD_LOGIC
+			SPI_CLK_I   : in  STD_LOGIC;
+			SPI_CE      : in  STD_LOGIC;
+			SPI_BUS_REQ : out STD_LOGIC;
+			SPI_MOSI    : out STD_LOGIC;
+			SPI_MISO    : in  STD_LOGIC;
+			SPI_N_SS    : out STD_LOGIC
 		);
 	end component spi_m;
 
@@ -110,6 +112,7 @@ begin
 	bus_logic : wb_s
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
+			CORE_ID         => x"00034003", -- SEE HEADER
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
@@ -133,20 +136,21 @@ begin
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
-			CLK_I     => CLK_I,
-			RST_I     => RST_I,
-			ADR_I     => adr_i,
-			DAT_I     => dat_i,
-			DAT_O     => dat_o,
-			WE_I      => we_i,
-			STB_I     => stb_i,
-			ACK_O     => ack_o,
-			CYC_I     => cyc_i,
-			SPI_CLK_I => SPI_CLK_I,
-			SPI_CE    => SPI_CE,
-			SPI_MOSI  => SPI_MOSI,
-			SPI_MISO  => SPI_MISO,
-			SPI_N_SS  => SPI_N_SS
+			CLK_I       => CLK_I,
+			RST_I       => RST_I,
+			ADR_I       => adr_i,
+			DAT_I       => dat_i,
+			DAT_O       => dat_o,
+			WE_I        => we_i,
+			STB_I       => stb_i,
+			ACK_O       => ack_o,
+			CYC_I       => cyc_i,
+			SPI_CLK_I   => SPI_CLK_I,
+			SPI_CE      => SPI_CE,
+			SPI_BUS_REQ => SPI_BUS_REQ,
+			SPI_MOSI    => SPI_MOSI,
+			SPI_MISO    => SPI_MISO,
+			SPI_N_SS    => SPI_N_SS
 		);
 
 end Behavioral;
