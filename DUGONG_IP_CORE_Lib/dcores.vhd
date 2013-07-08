@@ -129,17 +129,18 @@ package dcores is
 		);
 		port(
 			--System Control Inputs
-			CLK_I     : in  STD_LOGIC;
-			RST_I     : in  STD_LOGIC;
+			CLK_I       : in  STD_LOGIC;
+			RST_I       : in  STD_LOGIC;
 			--Slave to WB
-			WB_MS     : in  WB_MS_type;
-			WB_SM     : out WB_SM_type;
-			--Serial Peripheral Interface
-			SPI_CLK_I : in  STD_LOGIC;
-			SPI_CE    : in  STD_LOGIC;
-			SPI_MOSI  : out STD_LOGIC;
-			SPI_MISO  : in  STD_LOGIC;
-			SPI_N_SS  : out STD_LOGIC
+			WB_MS       : in  WB_MS_type;
+			WB_SM       : out WB_SM_type;
+			--SPI Interface
+			SPI_CLK_I   : in  STD_LOGIC;
+			SPI_CE      : in  STD_LOGIC;
+			SPI_BUS_REQ : out STD_LOGIC;
+			SPI_MOSI    : out STD_LOGIC;
+			SPI_MISO    : in  STD_LOGIC;
+			SPI_N_SS    : out STD_LOGIC
 		);
 	end component spi_m_ip;
 
