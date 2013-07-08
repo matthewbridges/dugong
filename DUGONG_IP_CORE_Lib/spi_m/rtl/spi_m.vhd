@@ -51,22 +51,23 @@ entity spi_m is
 	);
 	port(
 		--System Control Inputs
-		CLK_I     : in  STD_LOGIC;
-		RST_I     : in  STD_LOGIC;
+		CLK_I       : in  STD_LOGIC;
+		RST_I       : in  STD_LOGIC;
 		--Wishbone Slave Lines
-		ADR_I     : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-		DAT_I     : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		DAT_O     : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		WE_I      : in  STD_LOGIC;
-		STB_I     : in  STD_LOGIC;
-		ACK_O     : out STD_LOGIC;
-		CYC_I     : in  STD_LOGIC;
+		ADR_I       : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+		DAT_I       : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		DAT_O       : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		WE_I        : in  STD_LOGIC;
+		STB_I       : in  STD_LOGIC;
+		ACK_O       : out STD_LOGIC;
+		CYC_I       : in  STD_LOGIC;
 		--SPI Interface
-		SPI_CLK_I : in  STD_LOGIC;
-		SPI_CE    : in  STD_LOGIC;
-		SPI_MOSI  : out STD_LOGIC;
-		SPI_MISO  : in  STD_LOGIC;
-		SPI_N_SS  : out STD_LOGIC
+		SPI_CLK_I   : in  STD_LOGIC;
+		SPI_CE      : in  STD_LOGIC;
+		SPI_BUS_REQ : out STD_LOGIC;
+		SPI_MOSI    : out STD_LOGIC;
+		SPI_MISO    : in  STD_LOGIC;
+		SPI_N_SS    : out STD_LOGIC
 	);
 end spi_m;
 
@@ -185,8 +186,7 @@ begin
 			--WISHBONE Latches
 			latch : wb_latch
 				generic map(
-					DATA_WIDTH   => CORE_DATA_WIDTH,
-					DEFAULT_DATA => x"00000000"
+					DATA_WIDTH   => CORE_DATA_WIDTH
 				)
 				port map(
 					CLK_I => CLK_I,
@@ -218,17 +218,22 @@ begin
 	begin
 		-- RESET STATE
 		if (RST_I = '1') then
-			idle     <= true;
-			fifo_stb <= '0';
-			shifting <= '0';
-			SPI_MOSI <= '0';
-			count    <= (others => '0');
+			idle        <= true;
+			fifo_stb    <= '0';
+			shifting    <= '0';
+			SPI_BUS_REQ <= '0';
+			SPI_MOSI    <= '0';
+			count       <= (others => '0');
 		else
 			if (rising_edge(SPI_CLK_I)) then
 				-- IDLE STATE
 				if (idle) then
 					transfer_bit <= CORE_DATA_WIDTH - 1;
-					if (SPI_CE = '1') then
+					if (SPI_CE = '0') then
+						if (fifo_empty = '0') then
+							SPI_BUS_REQ <= '1';
+						end if;
+					else
 						if (fifo_ack = '1') then
 							write_data <= user_Q(0);
 							idle       <= false;
@@ -243,6 +248,7 @@ begin
 						user_D(1) <= read_data;
 						user_D(2) <= write_data;
 						shifting  <= '0';
+						SPI_BUS_REQ <= '0';
 						SPI_MOSI  <= '0';
 						count     <= count + 1;
 						idle      <= true;
