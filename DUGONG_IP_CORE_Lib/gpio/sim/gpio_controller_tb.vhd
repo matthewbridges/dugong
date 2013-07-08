@@ -44,7 +44,6 @@ END gpio_controller_tb;
 ARCHITECTURE behavior OF gpio_controller_tb IS
 
 	-- Component Declaration for the Unit Under Test (UUT)
-
 	component gpio_controller
 		generic(
 			DATA_WIDTH          : natural := 16;
