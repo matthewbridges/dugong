@@ -20,19 +20,19 @@
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer:		MATTHEW BRIDGES
 --
--- Name:		WB_TEST_SLAVE_IP
+-- Name:		WB_TEST_SLAVE_IP (004)
 -- Type:		IP CORE (4)
 -- Description: 	An IP core for controlling GPIO of differing widths. Includes a streaming interface
 --			for asynchronous digital IO. This allows bypassing the WB Bus.	
 --
--- Compliance:		DUGONG V1.4
--- ID:			x 1-4-4-
+-- Compliance:		DUGONG V0.3
+-- ID:			x 0-3-4-004
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
---	0	| N/A		| WB_REG	--
--- 	1	| N/A		| WB_REG	--
--- 	2	| N/A		| WB_REG	--
--- 	3	| N/A		| WB_REG	--
+--	0	| BASE_ADDR	| WB_LATCH	--
+-- 	1	| HIGH_ADDR	| WB_LATCH	--
+-- 	2	| CORE_ID	| WB_LATCH	-- --SEE HEADER
+-- 	3	| xFEDCBA98	| WB_REG	-- --TEST_SIGNAL
 --	4	| FEEDBACK	| WB_REG	--
 --	~	| ""		| ""		--
 --------------------------------------------------
@@ -94,6 +94,7 @@ begin
 	bus_logic : wb_s
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
+			CORE_ID         => x"00034004", -- SEE HEADER
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
