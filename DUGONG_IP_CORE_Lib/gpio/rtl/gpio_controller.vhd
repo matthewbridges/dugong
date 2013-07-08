@@ -175,8 +175,7 @@ begin
 			--WISHBONE Latches
 			latch : wb_latch
 				generic map(
-					DATA_WIDTH   => CORE_DATA_WIDTH,
-					DEFAULT_DATA => x"00000000"
+					DATA_WIDTH   => CORE_DATA_WIDTH
 				)
 				port map(
 					CLK_I => CLK_I,
