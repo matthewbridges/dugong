@@ -29,6 +29,12 @@
 -- Compliance:		DUGONG V0.3
 -- ID:			x 0-3-2-002
 ---------------------------------------------------------------------------------------------------------------
+--	ADDR	| NAME		| Type		--
+--	0	| BASE_ADDR	| WB_LATCH	--
+-- 	1	| HIGH_ADDR	| WB_LATCH	--
+-- 	2	| CORE_ID	| WB_LATCH	--
+-- 	3	| xFEDCBA98	| WB_REG	--  --TEST_SIGNAL
+--------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -41,6 +47,7 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity wb_s is
 	generic(
 		BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+		CORE_ID         : UNSIGNED(31 downto 0)             := x"00032002"; -- SEE HEADER
 		CORE_DATA_WIDTH : NATURAL                           := 16;
 		CORE_ADDR_WIDTH : NATURAL                           := 3
 	);
@@ -63,7 +70,20 @@ entity wb_s is
 end wb_s;
 
 architecture Behavioral of wb_s is
-	--WB
+	--User memory architecture
+	type ram_type is array (0 to 3) of std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal core_mem            : ram_type := (others => (others => '0'));
+	constant core_mem_defaults : ram_type := (std_logic_vector(BASE_ADDR), std_logic_vector(BASE_ADDR + ((2 ** CORE_ADDR_WIDTH) - 1)), std_logic_vector(CORE_ID), x"FEDCBA98");
+
+	signal stb : std_logic_vector(0 to 3) := (others => '0');
+	signal ack : std_logic_vector(0 to 3) := (others => '0');
+
+	--Addressing Architecture
+	signal core_addr : unsigned(CORE_ADDR_WIDTH - 1 downto 0) := (others => '0');
+	signal core_sel  : std_logic                              := '0';
+	signal user_sel  : std_logic                              := '0';
+
+	--Wishbone Slave Lines
 	alias adr_ms  : std_logic_vector(ADDR_WIDTH - 1 downto 0) is WB_MS(ADDR_WIDTH - 1 downto 0);
 	alias dat_ms  : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_MS(DATA_WIDTH + ADDR_WIDTH - 1 downto ADDR_WIDTH);
 	signal dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0);
@@ -72,26 +92,37 @@ architecture Behavioral of wb_s is
 	alias cyc_ms  : std_logic is WB_MS(ADDR_WIDTH + DATA_WIDTH + 2);
 	signal ack_sm : std_logic;
 
-	--Addressing Architecture
-	signal core_addr : unsigned(CORE_ADDR_WIDTH - 1 downto 0) := (others => '0');
-	signal core_sel  : std_logic                              := '0';
-	signal user_sel  : std_logic                              := '0';
-
-	--User memory architecture
-	type ram_type is array (0 to 3) of std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal core_mem : ram_type                 := (others => (others => '0'));
-	signal stb      : std_logic_vector(0 to 3) := (others => '0');
-	signal ack      : std_logic_vector(0 to 3) := (others => '0');
-
 begin
 
 	--Core Address --> equals WB_ADR_MS(core_addr_width-1:0)
 	core_addr <= unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0));
 	core_sel  <= '1' when (unsigned(adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH)) = BASE_ADDR(ADDR_WIDTH + 1 downto CORE_ADDR_WIDTH + 2)) else '0';
-	user_sel  <= core_sel when core_addr > 3 else '0';
+	user_sel  <= core_sel when core_addr(CORE_ADDR_WIDTH - 1 downto 2) > 0 else '0'; --Equivalent to core_addr > 3
+
+	--Generate CORE Status Constants
+	bus_constants : for addr in 0 to 2 generate
+	begin
+		--Check for valid addr
+		stb(addr) <= (stb_ms and core_sel) when core_addr = addr else '0';
+
+		--WISHBONE Constants
+		wb_constant : wb_const
+			generic map(
+				DATA_WIDTH   => DATA_WIDTH,
+				DEFAULT_DATA => core_mem_defaults(addr)
+			)
+			port map(
+				CLK_I => CLK_I,
+				RST_I => RST_I,
+				DAT_O => core_mem(addr),
+				STB_I => stb(addr),
+				ACK_O => ack(addr)
+			);
+
+	end generate bus_constants;
 
 	--Generate Bus registers
-	bus_registers : for addr in 0 to 3 generate
+	bus_registers : for addr in 3 to 3 generate
 	begin
 		--Check for valid addr
 		stb(addr) <= (stb_ms and core_sel) when core_addr = addr else '0';
@@ -100,7 +131,7 @@ begin
 		reg : wb_register
 			generic map(
 				DATA_WIDTH   => DATA_WIDTH,
-				DEFAULT_DATA => x"AAAA7777"
+				DEFAULT_DATA => core_mem_defaults(addr)
 			)
 			port map(
 				CLK_I => CLK_I,
@@ -124,11 +155,28 @@ begin
 
 	--Generate WB Output Port buffers for each line
 	WB_SM <= ack_sm & dat_sm when core_sel = '1' else (others => '0');
-	--WB_SM <= ack_sm & "00" & adr_ms & "00" when core_sel = '1' else (others => '0');
 
 	--WB Input Ports
 	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);
-	ADR_I <= std_logic_vector(core_addr - 4) when ((user_sel and core_sel) = '1') else (others => '0');
+
+	--Synchronise Address sent to User_core
+	process(CLK_I, RST_I)
+	begin
+		--RST STATE
+		if (RST_I = '1') then
+			ADR_I <= (others => '0');
+		else
+			--Perform Falling Edge operations
+			if (falling_edge(CLK_I)) then
+				if (user_sel = '0') then
+					ADR_I <= (others => '0');
+				else
+					ADR_I <= std_logic_vector(core_addr - 4);
+				end if;
+			end if;
+		end if;
+	end process;
+
 	WE_I  <= we_ms;
 	STB_I <= stb_ms and user_sel;
 	cyc_I <= cyc_ms and user_sel;
