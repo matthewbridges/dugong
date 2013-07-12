@@ -42,9 +42,39 @@ package dprimitives is
 	subtype WB_SM_type is std_logic_vector(DATA_WIDTH downto 0);
 	type WB_SM_vector is array (natural range <>) of WB_SM_type;
 
+	subtype WORD is std_logic_vector(15 downto 0);
+	subtype DWORD is std_logic_vector(31 downto 0);
+	subtype QWORD is std_logic_vector(63 downto 0);
+
+	type WORD_vector is array (natural range <>) of WORD;
+	type DWORD_vector is array (natural range <>) of DWORD;
+	type QWORD_vector is array (natural range <>) of QWORD;
+
 	subtype ADDR_type is unsigned(ADDR_WIDTH - 1 downto 0);
 
 	constant DEFAULT_ADDR : ADDR_TYPE := (others => '0');
+
+	component sys_con is
+		port(
+			--System Clock Differential Inputs 100MHz
+			SYS_CLK_P      : in  STD_LOGIC;
+			SYS_CLK_N      : in  STD_LOGIC;
+			--System Clock Differential Outputs 100MHz
+			SYS_CLK_o      : out STD_LOGIC;
+			--System Reset Input
+			SYS_RST        : in  STD_LOGIC;
+			--System Status
+			SYS_PWR_ON     : out STD_LOGIC;
+			SYS_PLL_Locked : out STD_LOGIC;
+			--System Control Outputs
+			CLK_100MHz_P   : out STD_LOGIC;
+			CLK_100MHz_N   : out STD_LOGIC;
+			RST_O          : out STD_LOGIC;
+			--SPI Clock Outputs
+			CLK_10MHz_P    : out STD_LOGIC;
+			CLK_10MHz_N    : out STD_LOGIC
+		);
+	end component sys_con;
 
 	------------------------------
 	---- ARM SIDE INTERFACING ----
