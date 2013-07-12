@@ -171,7 +171,7 @@ begin
 				if (user_sel = '0') then
 					ADR_I <= (others => '0');
 				else
-					ADR_I <= std_logic_vector(core_addr - 4);
+					ADR_I <= std_logic_vector(core_addr);
 				end if;
 			end if;
 		end if;
