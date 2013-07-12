@@ -55,8 +55,8 @@ end bram_sync_sp;
 architecture Behavioral of bram_sync_sp is
 	--Shared memory
 	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal mem     : ram_type;
-	signal mem_adr : integer := 0;
+	signal mem : ram_type;
+	signal mem_adr : unsigned(ADDR_WIDTH - 1 downto 0);
 	signal ack     : std_logic;
 
 begin
@@ -76,14 +76,14 @@ begin
 						mem(to_integer(unsigned(ADR_I))) <= DAT_I;
 					end if;
 					--READING STATE
-					mem_adr <= to_integer(unsigned(ADR_I));
+					mem_adr <= unsigned(ADR_I);
 					ack     <= STB_I;
 				end if;
 			end if;
 		end if;
 	end process;
 
-	DAT_O <= mem(mem_adr);
+	DAT_O <= mem(to_integer(mem_adr));
 	ACK_O <= ack;
 
 end Behavioral;
