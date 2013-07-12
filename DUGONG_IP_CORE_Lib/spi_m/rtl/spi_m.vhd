@@ -120,14 +120,16 @@ begin
 	----------{ BUS LOGIC }----------
 	---------------------------------
 
-	--User Memory Address --> equals IP Address(core_addr_width-1:0) - 4
+	--User Memory Address space is equals from 4 up to IP Address(core_addr_width-1:0)
 	addr_generate : if (CORE_ADDR_WIDTH /= 3) generate
 	begin
-		wb_addr <= to_integer(unsigned(ADR_I));
+		-- Account for offset of 4 due to wb_s status registers
+		wb_addr <= to_integer(unsigned(ADR_I) - 4);
 	end generate addr_generate;
 
 	addr_generate_2 : if (CORE_ADDR_WIDTH = 3) generate
 	begin
+		-- Account for offset of 4 due to wb_s status registers
 		wb_addr <= to_integer(unsigned(ADR_I(CORE_ADDR_WIDTH - 2 downto 0))) when (ADR_I(CORE_ADDR_WIDTH - 1) = '1') else 0;
 	end generate addr_generate_2;
 
