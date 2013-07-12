@@ -43,17 +43,17 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 entity wb_test_slave is
 	generic(
-		DATA_WIDTH : natural := 32;
-		ADDR_WIDTH : natural := 20
+		CORE_DATA_WIDTH : natural := 32;
+		CORE_ADDR_WIDTH : natural := 20
 	);
 	port(
 		--System Control Inputs
 		CLK_I : in  STD_LOGIC;
 		RST_I : in  STD_LOGIC;
 		--Wishbone Slave Lines
-		ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-		DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		ADR_I : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+		DAT_I : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		DAT_O : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 		WE_I  : in  STD_LOGIC;
 		STB_I : in  STD_LOGIC;
 		ACK_O : out STD_LOGIC;
@@ -62,7 +62,13 @@ entity wb_test_slave is
 end wb_test_slave;
 
 architecture Behavioral of wb_test_slave is
+	subtype small_int is integer range 0 to 2 ** CORE_ADDR_WIDTH - 5; -- This is pointless, but reduces my warning count
+	signal wb_addr : small_int;         -- This is pointless, but reduces my warning count
+	signal stb     : std_logic;         -- This is pointless, but reduces my warning count
+
 begin
+	wb_addr <= to_integer(unsigned(ADR_I)); -- This is pointless, but reduces my warning count
+	stb     <= (STB_I and CYC_I) when (wb_addr /= 0) else '0'; -- This is pointless, but reduces my warning count
 
 	--WISHBONE Register
 	reg : wb_register
@@ -76,7 +82,7 @@ begin
 			DAT_I => DAT_I,
 			DAT_O => DAT_O,
 			WE_I  => WE_I,
-			STB_I => STB_I,
+			STB_I => stb,
 			ACK_O => ACK_O
 		);
 
