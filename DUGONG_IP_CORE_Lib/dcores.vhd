@@ -59,22 +59,19 @@ package dcores is
 
 	component clk_counter_ip
 		generic(
-			DATA_WIDTH      : NATURAL                       := 32;
-			ADDR_WIDTH      : NATURAL                       := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0)         := x"000";
-			CORE_DATA_WIDTH : NATURAL                       := 32;
-			CORE_ADDR_WIDTH : NATURAL                       := 3;
-			MASTER_CNT      : std_logic_vector(31 downto 0) := x"07530000"
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 32;
+			CORE_ADDR_WIDTH : NATURAL                           := 3
 		);
 		port(
 			--System Control Inputs
 			CLK_I       : in  STD_LOGIC;
 			RST_I       : in  STD_LOGIC;
-			--Slave to WHISHBONE
-			WB_I        : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O        : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			--Slave to WB
+			WB_MS       : in  WB_MS_type;
+			WB_SM       : out WB_SM_type;
 			--Test Clocks
-			TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** CORE_ADDR_WIDTH) - 6 downto 0)
+			TEST_CLOCKS : in  STD_LOGIC_VECTOR(2 downto 0)
 		);
 	end component clk_counter_ip;
 
@@ -144,6 +141,24 @@ package dcores is
 		);
 	end component spi_m_ip;
 
+	component wb_multi_latch_ip is
+		generic(
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 32;
+			CORE_ADDR_WIDTH : NATURAL                           := 3
+		);
+		port(
+			--System Control Inputs
+			CLK_I   : in  STD_LOGIC;
+			RST_I   : in  STD_LOGIC;
+			--Slave to WB
+			WB_MS   : in  WB_MS_type;
+			WB_SM   : out WB_SM_type;
+			--LATCH Inputs
+			LATCH_D : in  DWORD_vector(3 downto 0)
+		);
+	end component wb_multi_latch_ip;
+
 	component wb_test_slave_ip is
 		generic(
 			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
@@ -159,6 +174,44 @@ package dcores is
 			WB_SM : out WB_SM_type
 		);
 	end component wb_test_slave_ip;
+
+	------------------------------------
+	---- ADVANCED WISHBONE IP CORES ----
+	------------------------------------
+
+	component fmc150_controller_ip is
+		generic(
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 32;
+			CORE_ADDR_WIDTH : NATURAL                           := 4
+		);
+		port(
+			--System Control Inputs
+			CLK_I          : in  STD_LOGIC;
+			RST_I          : in  STD_LOGIC;
+			--Slave to WB
+			WB_MS          : in  WB_MS_type;
+			WB_SM          : out WB_SM_type;
+			--Serial Peripheral Interface
+			SPI_CLK_P_I    : in  STD_LOGIC;
+			SPI_CLK_N_I    : in  STD_LOGIC;
+			SPI_SCLK_O     : out STD_LOGIC;
+			SPI_MOSI_O     : out STD_LOGIC;
+			ADC_MISO_I     : in  STD_LOGIC;
+			ADC_N_SS_O     : out STD_LOGIC;
+			CDC_MISO_I     : in  STD_LOGIC;
+			CDC_N_SS_O     : out STD_LOGIC;
+			DAC_MISO_I     : in  STD_LOGIC;
+			DAC_N_SS_O     : out STD_LOGIC;
+			ADC_RST        : out STD_LOGIC;
+			CDC_REF_EN     : out STD_LOGIC;
+			CDC_N_RST      : out STD_LOGIC;
+			CDC_N_PD       : out STD_LOGIC;
+			CDC_PLL_STATUS : in  STD_LOGIC;
+			-- Debug
+			DEBUG          : out STD_LOGIC_VECTOR(31 downto 0)
+		);
+	end component fmc150_controller_ip;
 
 end package dcores;
 
