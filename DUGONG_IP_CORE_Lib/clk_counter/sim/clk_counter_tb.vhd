@@ -1,38 +1,41 @@
---------------------------------------------------------------------------------
--- Company: 
--- Engineer:
 --
--- Create Date:   16:01:03 09/14/2012
--- Design Name:   
--- Module Name:   /home/mbridges/Projects/Dugong/other/sim/clk_counter_tb.vhd
--- Project Name:  Dugong
--- Target Device:  
--- Tool versions:  
--- Description:   
--- 
--- VHDL Test Bench Created by ISE for module: clk_counter
--- 
--- Dependencies:
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
+-- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\
+--     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
+--      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
+--       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
+--        \ ___\///________\///___\///________\///____\///////////____\///_____\/////_________\/////________\
+--         \ __________________________________________\          \__________________________________________\
+--          |:------------------------------------------|: DUGONG :|-----------------------------------------:|
+--         / ==========================================/          /========================================= /
+--        / =============================================================================================== /
+--       / ================  Reconfigurable Hardware Interface for computatioN and radiO  ================ /
+--      / ===============================  http://www.rhinoplatform.org  ================================ /
+--     / =============================================================================================== /
 --
--- Notes: 
--- This testbench has been automatically generated using types std_logic and
--- std_logic_vector for the ports of the unit under test.  Xilinx recommends
--- that these types always be used for the top-level I/O of a design in order
--- to guarantee that the testbench will bind correctly to the post-implementation 
--- simulation model.
---------------------------------------------------------------------------------
-LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
+---------------------------------------------------------------------------------------------------------------
+-- Company:		UNIVERSITY OF CAPE TOWN
+-- Engineer: 		MATTHEW BRIDGES
+--
+-- Name:		CLK_COUNTER_TB
+-- Type:		TB (15)
+-- Description:
+--
+-- Compliance:		DUGONG V1.4
+-- ID:			x 1-4-F
+---------------------------------------------------------------------------------------------------------------
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---USE ieee.numeric_std.ALL;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
 
 ENTITY clk_counter_tb IS
+	generic(
+		CORE_DATA_WIDTH : natural := 32;
+		CORE_ADDR_WIDTH : natural := 3
+	);
 END clk_counter_tb;
 
 ARCHITECTURE behavior OF clk_counter_tb IS
@@ -40,56 +43,63 @@ ARCHITECTURE behavior OF clk_counter_tb IS
 	-- Component Declaration for the Unit Under Test (UUT)
 	component clk_counter
 		generic(
-			DATA_WIDTH : natural                       := 32;
-			ADDR_WIDTH : natural                       := 3;
-			MASTER_CNT : std_logic_vector(31 downto 0) := x"07530000"
+			CORE_DATA_WIDTH : natural := 32;
+			CORE_ADDR_WIDTH : natural := 3
 		);
 		port(
 			CLK_I       : in  STD_LOGIC;
 			RST_I       : in  STD_LOGIC;
-			DAT_I       : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O       : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			ADR_I       : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			STB_I       : in  STD_LOGIC;
+			ADR_I       : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+			DAT_I       : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			DAT_O       : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			WE_I        : in  STD_LOGIC;
+			STB_I       : in  STD_LOGIC;
 			ACK_O       : out STD_LOGIC;
-			TEST_CLOCKS : in  STD_LOGIC_VECTOR((2 ** ADDR_WIDTH) - 5 downto 0)
+			CYC_I       : in  STD_LOGIC;
+			TEST_CLOCKS : in  STD_LOGIC_VECTOR(2 downto 0)
 		);
 	end component clk_counter;
 
-	--Inputs
-	signal CLK_I       : std_logic                     := '0';
-	signal RST_I       : std_logic                     := '1';
-	signal DAT_I       : std_logic_vector(31 downto 0) := (others => '0');
-	signal ADR_I       : std_logic_vector(2 downto 0)  := (others => '0');
-	signal STB_I       : std_logic                     := '0';
-	signal WE_I        : std_logic                     := '0';
-	signal TEST_CLOCKS : std_logic_vector(3 downto 0)  := (others => '0');
+	--System Control Inputs:
+	signal CLK_I : std_logic := '0';
+	signal RST_I : std_logic := '1';
 
-	--Outputs
-	signal DAT_O : std_logic_vector(31 downto 0);
-	signal ACK_O : std_logic;
+	--Wishbone Slave interface
+	signal ADR_I : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0) := (others => '0');
+	signal DAT_I : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0) := (others => '0');
+	signal DAT_O : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+	signal WE_I  : STD_LOGIC                                      := '0';
+	signal STB_I : STD_LOGIC                                      := '0';
+	signal ACK_O : STD_LOGIC                                      := '0';
+	signal CYC_I : STD_LOGIC                                      := '0';
+
+	--SPI Interface
+	signal TEST_CLOCKS : STD_LOGIC_VECTOR(2 downto 0) := (others => '0');
 
 	-- Clock period definitions
 	constant CLK_I_period : time := 10 ns;
-	constant CLK_A_period : time := 1 ns;
+	constant CLK_0_period : time := 10 ns;
+	constant CLK_1_period : time := 10 ns;
+	constant CLK_2_period : time := 10 ns;
 
 BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
 	uut : clk_counter
 		generic map(
-			MASTER_CNT => x"0000000F"
+			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
+			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
 			CLK_I       => CLK_I,
 			RST_I       => RST_I,
+			ADR_I       => ADR_I,
 			DAT_I       => DAT_I,
 			DAT_O       => DAT_O,
-			ADR_I       => ADR_I,
-			STB_I       => STB_I,
 			WE_I        => WE_I,
+			STB_I       => STB_I,
 			ACK_O       => ACK_O,
+			CYC_I       => CYC_I,
 			TEST_CLOCKS => TEST_CLOCKS
 		);
 
@@ -103,25 +113,37 @@ BEGIN
 	end process;
 
 	-- Clock process definitions
-	CLK_A_process : process
+	CLK_0_process : process
 	begin
 		TEST_CLOCKS(0) <= '0';
-		TEST_CLOCKS(1) <= '0';
-		TEST_CLOCKS(2) <= '0';
-		TEST_CLOCKS(3) <= '0';
-		wait for CLK_A_period / 2;
+		wait for CLK_0_period / 2;
 		TEST_CLOCKS(0) <= '1';
+		wait for CLK_0_period / 2;
+	end process;
+
+	-- Clock process definitions
+	CLK_1_process : process
+	begin
+		TEST_CLOCKS(1) <= '0';
+		wait for CLK_1_period / 2;
 		TEST_CLOCKS(1) <= '1';
+		wait for CLK_1_period / 2;
+	end process;
+
+	-- Clock process definitions
+	CLK_2_process : process
+	begin
+		TEST_CLOCKS(2) <= '0';
+		wait for CLK_2_period / 2;
 		TEST_CLOCKS(2) <= '1';
-		TEST_CLOCKS(3) <= '1';
-		wait for CLK_A_period / 2;
+		wait for CLK_2_period / 2;
 	end process;
 
 	-- Stimulus process
 	wb_stim_proc : process
 	begin
-		-- hold reset state for 500 ns.
-		wait for 500 ns;
+		-- hold reset state for 100 ns.
+		wait for 100 ns;
 
 		RST_I <= '0';
 
@@ -129,89 +151,83 @@ BEGIN
 
 		-- insert stimulus here
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"00000000";           --Read from Master Count 
+		DAT_I <= x"00000000";           --Read from MASER_COUNT
 		ADR_I <= "011";                 --ADDR x3
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
+		CYC_I <= '1';
 		wait until rising_edge(ACK_O);
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
+		CYC_I <= '0';
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"00000000";           --Read from Counter 0 
+		DAT_I <= x"00000000";           --Read from COUNT[[0]
 		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
+		CYC_I <= '1';
 		wait until rising_edge(ACK_O);
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
+		CYC_I <= '0';
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"0000002F";           --Write to x000F to Master Count
+		DAT_I <= x"00000100";           --Write to MASTER_COUNT
 		ADR_I <= "011";                 --ADDR x3
 		WE_I  <= '1';                   --Write
 		STB_I <= '1';                   --Strobe
+		CYC_I <= '1';
 		wait until rising_edge(ACK_O);
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
-		WE_I  <= '0';
+		CYC_I <= '0';
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"00000000";           --Read from Counter 0 
+		DAT_I <= x"00000000";           --Read from COUNT[[0]
 		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
+		CYC_I <= '1';
 		wait until rising_edge(ACK_O);
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
-		DAT_I <= x"00000000";
-		wait until rising_edge(CLK_I);
-		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "000";                 --ADDR x0
-		WE_I  <= '0';                   --Read
-		STB_I <= '1';                   --Strobe
-		wait until rising_edge(ACK_O);
-		wait until rising_edge(CLK_I);
-		STB_I <= '0';                   --NULL
-		DAT_I <= x"00000000";
-		wait until rising_edge(CLK_I);
-		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "000";                 --ADDR x0
-		WE_I  <= '0';                   --Read
-		STB_I <= '1';                   --Strobe
-		wait until rising_edge(ACK_O);
-		wait until rising_edge(CLK_I);
-		STB_I <= '0';                   --NULL
+		CYC_I <= '0';
 		DAT_I <= x"00000000";
 
-		wait for CLK_I_period * 47;
+		wait for CLK_I_period * 256;
 
 		wait until rising_edge(CLK_I);
-		DAT_I <= x"00000000";           --Read from Counter 0 
+		DAT_I <= x"00000000";           --Read from COUNT[[0]
 		ADR_I <= "000";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
+		CYC_I <= '1';
 		wait until rising_edge(ACK_O);
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "000";                 --ADDR x0
+		ADR_I <= "001";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
+		CYC_I <= '1';
 		wait until rising_edge(ACK_O);
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
+		CYC_I <= '0';
 		DAT_I <= x"00000000";
 		wait until rising_edge(CLK_I);
 		DAT_I <= x"00000000";           --Read from Counter 0 
-		ADR_I <= "000";                 --ADDR x0
+		ADR_I <= "010";                 --ADDR x0
 		WE_I  <= '0';                   --Read
 		STB_I <= '1';                   --Strobe
+		CYC_I <= '1';
 		wait until rising_edge(ACK_O);
 		wait until rising_edge(CLK_I);
 		STB_I <= '0';                   --NULL
+		CYC_I <= '0';
 		DAT_I <= x"00000000";
 
 		wait;
