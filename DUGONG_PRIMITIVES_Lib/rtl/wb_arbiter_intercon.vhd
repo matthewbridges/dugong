@@ -105,6 +105,6 @@ begin
 
 	WB_MS_BUS <= WB_MS(master_sel) when (bus_busy = '1') else (others => '0');
 
-	WB_SM_BUS <= WB_SM(0) or WB_SM(1) or WB_SM(2) or WB_SM(3) or WB_SM(4);
+	WB_SM_BUS <= WB_SM(0) or WB_SM(1) or WB_SM(2) or WB_SM(3) or WB_SM(4) or WB_SM(5) or WB_SM(6) or WB_SM(7);
 
 end Behavioral;
