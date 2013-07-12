@@ -107,7 +107,7 @@ architecture Behavioral of spi_m is
 	signal fifo_empty : std_logic;
 
 	--SPI Specific Signals	
-	signal idle         : boolean;
+	signal busy         : std_logic;
 	signal shifting     : std_logic;
 	signal write_data   : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
 	signal read_data    : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
@@ -121,7 +121,15 @@ begin
 	---------------------------------
 
 	--User Memory Address --> equals IP Address(core_addr_width-1:0) - 4
-	wb_addr <= to_integer(unsigned(ADR_I));
+	addr_generate : if (CORE_ADDR_WIDTH /= 3) generate
+	begin
+		wb_addr <= to_integer(unsigned(ADR_I));
+	end generate addr_generate;
+
+	addr_generate_2 : if (CORE_ADDR_WIDTH = 3) generate
+	begin
+		wb_addr <= to_integer(unsigned(ADR_I(CORE_ADDR_WIDTH - 2 downto 0))) when (ADR_I(CORE_ADDR_WIDTH - 1) = '1') else 0;
+	end generate addr_generate_2;
 
 	--Generate WB registers
 	user_registers : if (NUMBER_OF_REGISTERS > 0) generate
@@ -186,7 +194,7 @@ begin
 			--WISHBONE Latches
 			latch : wb_latch
 				generic map(
-					DATA_WIDTH   => CORE_DATA_WIDTH
+					DATA_WIDTH => CORE_DATA_WIDTH
 				)
 				port map(
 					CLK_I => CLK_I,
@@ -218,7 +226,7 @@ begin
 	begin
 		-- RESET STATE
 		if (RST_I = '1') then
-			idle        <= true;
+			busy        <= '0';
 			fifo_stb    <= '0';
 			shifting    <= '0';
 			SPI_BUS_REQ <= '0';
@@ -227,7 +235,7 @@ begin
 		else
 			if (rising_edge(SPI_CLK_I)) then
 				-- IDLE STATE
-				if (idle) then
+				if (busy = '0') then
 					transfer_bit <= CORE_DATA_WIDTH - 1;
 					if (SPI_CE = '0') then
 						if (fifo_empty = '0') then
@@ -236,7 +244,7 @@ begin
 					else
 						if (fifo_ack = '1') then
 							write_data <= user_Q(0);
-							idle       <= false;
+							busy       <= '1';
 							fifo_stb   <= '0';
 						elsif (fifo_empty = '0') then
 							fifo_stb <= '1';
@@ -245,13 +253,13 @@ begin
 				--SHIFTING STATE
 				else
 					if (transfer_bit = -1) then
-						user_D(1) <= read_data;
-						user_D(2) <= write_data;
-						shifting  <= '0';
+						user_D(1)   <= read_data;
+						user_D(2)   <= write_data;
+						shifting    <= '0';
 						SPI_BUS_REQ <= '0';
-						SPI_MOSI  <= '0';
-						count     <= count + 1;
-						idle      <= true;
+						SPI_MOSI    <= '0';
+						count       <= count + 1;
+						busy        <= '0';
 					else
 						shifting     <= '1';
 						SPI_MOSI     <= write_data(transfer_bit);
