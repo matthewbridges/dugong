@@ -22,8 +22,7 @@
 --
 -- Name:		WB_TEST_SLAVE_IP (004)
 -- Type:		IP CORE (4)
--- Description: 	An IP core for controlling GPIO of differing widths. Includes a streaming interface
---			for asynchronous digital IO. This allows bypassing the WB Bus.	
+-- Description:
 --
 -- Compliance:		DUGONG V0.3
 -- ID:			x 0-3-4-004
@@ -53,11 +52,11 @@ entity wb_test_slave_ip is
 	);
 	port(
 		--System Control Inputs
-		CLK_I      : in    STD_LOGIC;
-		RST_I      : in    STD_LOGIC;
+		CLK_I : in  STD_LOGIC;
+		RST_I : in  STD_LOGIC;
 		--Slave to WB
-		WB_MS      : in    WB_MS_type;
-		WB_SM      : out   WB_SM_type
+		WB_MS : in  WB_MS_type;
+		WB_SM : out WB_SM_type
 	);
 end wb_test_slave_ip;
 
@@ -72,17 +71,17 @@ architecture Behavioral of wb_test_slave_ip is
 
 	component wb_test_slave is
 		generic(
-			DATA_WIDTH : natural := 32;
-			ADDR_WIDTH : natural := 20
+			CORE_DATA_WIDTH : natural := 32;
+			CORE_ADDR_WIDTH : natural := 20
 		);
 		port(
 			--System Control Inputs
 			CLK_I : in  STD_LOGIC;
 			RST_I : in  STD_LOGIC;
 			--Wishbone Slave Lines
-			ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
-			DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			ADR_I : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+			DAT_I : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			DAT_O : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			WE_I  : in  STD_LOGIC;
 			STB_I : in  STD_LOGIC;
 			ACK_O : out STD_LOGIC;
@@ -114,21 +113,20 @@ begin
 
 	user_logic : wb_test_slave
 		generic map(
-			DATA_WIDTH => CORE_DATA_WIDTH,
-			ADDR_WIDTH => CORE_ADDR_WIDTH
+			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
+			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
 		port map(
 			CLK_I => CLK_I,
 			RST_I => RST_I,
-			ADR_I => ADR_I,
-			DAT_I => DAT_I,
-			DAT_O => DAT_O,
-			WE_I  => WE_I,
-			STB_I => STB_I,
-			ACK_O => ACK_O,
-			CYC_I => CYC_I
+			ADR_I => adr_i,
+			DAT_I => dat_i,
+			DAT_O => dat_o,
+			WE_I  => we_i,
+			STB_I => stb_i,
+			ACK_O => ack_o,
+			CYC_I => cyc_i
 		);
-
 end Behavioral;
 
 
