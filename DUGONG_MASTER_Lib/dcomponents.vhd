@@ -35,24 +35,6 @@ library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 package dcomponents is
-	component sys_con
-		port(
-			--System Clock Differential Inputs 100MHz
-			SYS_CLK_P      : in  STD_LOGIC;
-			SYS_CLK_N      : in  STD_LOGIC;
-			--System Clock Differential Outputs 100MHz
-			SYS_CLK_o      : out STD_LOGIC;
-			--System Reset Input
-			SYS_RST        : in  STD_LOGIC;
-			--System Status
-			SYS_PWR_ON     : out STD_LOGIC;
-			SYS_PLL_Locked : out STD_LOGIC;
-			--System Control Outputs
-			CLK_100MHZ     : out STD_LOGIC;
-			CLK_100MHZ_n   : out STD_LOGIC;
-			RST_O          : out STD_LOGIC
-		);
-	end component;
 
 	component gpmc_wb_bridge is
 		port(
