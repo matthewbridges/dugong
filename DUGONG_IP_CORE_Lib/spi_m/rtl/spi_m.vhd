@@ -46,21 +46,21 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 entity spi_m is
 	generic(
-		CORE_DATA_WIDTH : natural := 32;
-		CORE_ADDR_WIDTH : natural := 3
+		SPI_DATA_WIDTH : natural   := 32;
+		SPI_CPHA       : std_logic := '0';
+		SPI_BIG_ENDIAN : std_logic := '1'
 	);
 	port(
 		--System Control Inputs
-		CLK_I       : in  STD_LOGIC;
 		RST_I       : in  STD_LOGIC;
-		--Wishbone Slave Lines
-		ADR_I       : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-		DAT_I       : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		DAT_O       : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		WE_I        : in  STD_LOGIC;
-		STB_I       : in  STD_LOGIC;
-		ACK_O       : out STD_LOGIC;
-		CYC_I       : in  STD_LOGIC;
+		--Bus Logic Interface
+		USER_D1     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		USER_D2     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		USER_D3     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		USER_Q0     : in  STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		FIFO_STB    : out STD_LOGIC;
+		FIFO_ACK    : in  STD_LOGIC;
+		FIFO_EMPTY  : in  STD_LOGIC;
 		--SPI Interface
 		SPI_CLK_I   : in  STD_LOGIC;
 		SPI_CE      : in  STD_LOGIC;
@@ -72,153 +72,19 @@ entity spi_m is
 end spi_m;
 
 architecture Behavioral of spi_m is
-	subtype small_int is integer range 0 to 2 ** CORE_ADDR_WIDTH - 5;
-	type t is array (0 to (2 ** CORE_ADDR_WIDTH) - 5) of small_int;
-
-	---------------------------------
-	--DEFINE MEMORY STRUCTURE HERE --
-	---------------------------------
-	constant NUMBER_OF_REGISTERS : natural := 0;
-	constant NUMBER_OF_FIFOS     : natural := 1;
-	constant user_addr           : t       := (0, 1, 2, 3); --Addresses of registers followed by Addresses of FIFOs followed by Addresses of Latches
-	--------------------------------------------------
-	--	ADDR	| NAME		| Type		--
-	--	0	| SPI_OUT(n)	| WB_REG	--
-	-- 	1	| SPI_IN(n-1)	| WB_LATCH	--
-	-- 	2	| SPI_OUT(n-1)	| WB_LATCH	--
-	-- 	3	| XFER_COUNT	| WB_LATCH	--
-	--------------------------------------------------
-
-	----------------------------------------
-	--END OF MEMEORY STRUCTURE DEFINITION --
-	----------------------------------------		
-
-	--User memory architecture
-	type ram_type is array (0 to (2 ** CORE_ADDR_WIDTH) - 5) of std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
-	signal user_D   : ram_type                                                := (others => (others => '0'));
-	signal user_Q   : ram_type                                                := (others => (others => '0'));
-	signal user_stb : std_logic_vector(((2 ** CORE_ADDR_WIDTH) - 5) downto 0) := (others => '0');
-	signal user_ack : std_logic_vector(((2 ** CORE_ADDR_WIDTH) - 5) downto 0) := (others => '0');
-
-	signal wb_addr : small_int;
-
-	signal fifo_stb   : std_logic;
-	signal fifo_ack   : std_logic;
-	signal fifo_empty : std_logic;
-
 	--SPI Specific Signals	
-	signal busy         : std_logic;
-	signal shifting     : std_logic;
-	signal write_data   : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
-	signal read_data    : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
-	signal transfer_bit : integer;
+	signal busy               : std_logic;
+	signal mosi_busy          : std_logic;
+	signal miso_busy          : std_logic;
+	signal miso_busy_advanced : std_logic;
+	signal write_data         : std_logic_vector(SPI_DATA_WIDTH - 1 downto 0);
+	signal read_data          : std_logic_vector(SPI_DATA_WIDTH - 1 downto 0);
+	signal transfer_bit       : unsigned(min_num_of_bits(SPI_DATA_WIDTH - 1) - 1 downto 0);
+	signal transfer_complete  : std_logic;
 
-	signal count : unsigned(CORE_DATA_WIDTH - 1 downto 0);
+	signal count : unsigned(SPI_DATA_WIDTH - 1 downto 0);
 
 begin
-	---------------------------------
-	----------{ BUS LOGIC }----------
-	---------------------------------
-
-	--User Memory Address space is equals from 4 up to IP Address(core_addr_width-1:0)
-	addr_generate : if (CORE_ADDR_WIDTH /= 3) generate
-	begin
-		-- Account for offset of 4 due to wb_s status registers
-		wb_addr <= to_integer(unsigned(ADR_I) - 4);
-	end generate addr_generate;
-
-	addr_generate_2 : if (CORE_ADDR_WIDTH = 3) generate
-	begin
-		-- Account for offset of 4 due to wb_s status registers
-		wb_addr <= to_integer(unsigned(ADR_I(CORE_ADDR_WIDTH - 2 downto 0))) when (ADR_I(CORE_ADDR_WIDTH - 1) = '1') else 0;
-	end generate addr_generate_2;
-
-	--Generate WB registers
-	user_registers : if (NUMBER_OF_REGISTERS > 0) generate
-	begin
-		user_registers : for i in 0 to (NUMBER_OF_REGISTERS - 1) generate
-		begin
-			--WISHBONE Register
-			reg : wb_register
-				generic map(
-					DATA_WIDTH   => CORE_DATA_WIDTH,
-					DEFAULT_DATA => x"00000000"
-				)
-				port map(
-					CLK_I => CLK_I,
-					RST_I => RST_I,
-					DAT_I => user_D(user_addr(i)),
-					DAT_O => user_Q(user_addr(i)),
-					WE_I  => WE_I,
-					STB_I => user_stb(user_addr(i)),
-					ACK_O => user_ack(user_addr(i))
-				);
-
-			user_D(user_addr(i)) <= DAT_I;
-		end generate user_registers;
-	end generate user_registers;
-
-	--Generate WB FIFOs
-	user_fifos : if (NUMBER_OF_FIFOs > 0) generate
-	begin
-		user_fifos : for i in NUMBER_OF_REGISTERS to (NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS - 1) generate
-		begin
-			--WISHBONE FIFOs
-			fifo : wb_fifo
-				generic map(
-					DATA_WIDTH => CORE_DATA_WIDTH,
-					ADDR_WIDTH => 4
-				)
-				port map(
-					RST_I    => RST_I,
-					WR_CLK_I => CLK_I,
-					WR_DAT_I => user_D(user_addr(i)),
-					WR_WE_I  => WE_I,
-					WR_STB_I => user_stb(user_addr(i)),
-					WR_ACK_O => user_ack(user_addr(i)),
-					RD_CLK_I => SPI_CLK_I,
-					RD_DAT_O => user_Q(user_addr(i)),
-					RD_STB_I => fifo_stb,
-					RD_ACK_O => fifo_ack,
-					FULL     => open,
-					EMPTY    => fifo_empty
-				);
-
-			user_D(user_addr(i)) <= DAT_I;
-		end generate user_fifos;
-	end generate user_fifos;
-
-	--Generate WB Latches
-	user_latches : if ((2 ** CORE_ADDR_WIDTH) - 4) /= NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS generate
-	begin
-		user_latches : for i in NUMBER_OF_REGISTERS + NUMBER_OF_FIFOS to ((2 ** CORE_ADDR_WIDTH) - 5) generate
-		begin
-			--WISHBONE Latches
-			latch : wb_latch
-				generic map(
-					DATA_WIDTH => CORE_DATA_WIDTH
-				)
-				port map(
-					CLK_I => CLK_I,
-					RST_I => RST_I,
-					DAT_I => user_D(user_addr(i)),
-					DAT_O => user_Q(user_addr(i)),
-					STB_I => user_stb(user_addr(i)),
-					ACK_O => user_ack(user_addr(i))
-				);
-		end generate user_latches;
-	end generate user_latches;
-
-	--Generate user Strobe lines
-	user_registers_control : for i in 0 to ((2 ** CORE_ADDR_WIDTH) - 5) generate
-	begin
-		--Check for valid addr
-		user_stb(i) <= (STB_I and CYC_I) when (wb_addr = i) else '0';
-	end generate user_registers_control;
-
-	DAT_O <= user_Q(wb_addr);
-	ACK_O <= user_ack(wb_addr);
-
 	----------------------------------
 	----------{ USER LOGIC }----------
 	----------------------------------
@@ -229,44 +95,36 @@ begin
 		-- RESET STATE
 		if (RST_I = '1') then
 			busy        <= '0';
-			fifo_stb    <= '0';
-			shifting    <= '0';
+			FIFO_STB    <= '0';
 			SPI_BUS_REQ <= '0';
-			SPI_MOSI    <= '0';
 			count       <= (others => '0');
 		else
 			if (rising_edge(SPI_CLK_I)) then
 				-- IDLE STATE
 				if (busy = '0') then
-					transfer_bit <= CORE_DATA_WIDTH - 1;
 					if (SPI_CE = '0') then
-						if (fifo_empty = '0') then
+						if (FIFO_EMPTY = '0') then
 							SPI_BUS_REQ <= '1';
 						end if;
 					else
-						if (fifo_ack = '1') then
-							write_data <= user_Q(0);
+						if (FIFO_ACK = '1') then
+							write_data <= USER_Q0;
 							busy       <= '1';
-							fifo_stb   <= '0';
-						elsif (fifo_empty = '0') then
-							fifo_stb <= '1';
+							FIFO_STB   <= '0';
+						elsif (FIFO_EMPTY = '0') then
+							FIFO_STB <= '1';
 						end if;
 					end if;
 				--SHIFTING STATE
 				else
-					if (transfer_bit = -1) then
-						user_D(1)   <= read_data;
-						user_D(2)   <= write_data;
-						shifting    <= '0';
-						SPI_BUS_REQ <= '0';
-						SPI_MOSI    <= '0';
-						count       <= count + 1;
-						busy        <= '0';
-					else
-						shifting     <= '1';
-						SPI_MOSI     <= write_data(transfer_bit);
-						--Decrement Transfer bit;
-						transfer_bit <= transfer_bit - 1;
+					if (transfer_complete = '1') then
+						if ((mosi_busy and miso_busy and miso_busy_advanced) = '0') then
+							USER_D1     <= read_data;
+							USER_D2     <= write_data;
+							SPI_BUS_REQ <= '0';
+							count       <= count + 1;
+							busy        <= '0';
+						end if;
 					end if;
 				end if;
 			end if;
@@ -278,20 +136,113 @@ begin
 	begin
 		-- RESET STATE
 		if (RST_I = '1') then
-			read_data <= (others => '0');
+			mosi_busy          <= '0';
+			miso_busy          <= '0';
+			miso_busy_advanced <= '0';
+			read_data          <= (others => '0');
+			SPI_MOSI           <= '0';
 		else
-			if (falling_edge(SPI_CLK_I)) then
-				--SHIFTING STATE
-				if (shifting = '1') then
-					read_data(transfer_bit + 1) <= SPI_MISO;
+			--Perform Clock Rising Edge operations
+			if (SPI_CLK_I'event and SPI_CLK_I = (SPI_CPHA)) then
+				if (busy = '0') then
+				else
+					if (transfer_complete = '1') then
+						mosi_busy <= '0';
+						SPI_MOSI  <= '0';
+					else
+						mosi_busy <= '1';
+						SPI_MOSI  <= write_data(to_integer(transfer_bit));
+					end if;
+				end if;
+			end if;
+
+			--Perform Clock Falling Edge operations
+			if (SPI_CLK_I'event and SPI_CLK_I = (not SPI_CPHA)) then
+				if (busy = '0') then
+					read_data <= (others => '0');
+				else
+					if (transfer_complete = '1') then
+						miso_busy          <= '0';
+						miso_busy_advanced <= '0';
+					else
+						miso_busy          <= mosi_busy;
+						miso_busy_advanced <= not mosi_busy;
+						if (mosi_busy = '1') then
+							read_data(to_integer(transfer_bit)) <= SPI_MISO;
+						end if;
+					end if;
 				end if;
 			end if;
 		end if;
 	end process;
 
-	SPI_N_SS <= not shifting;
+	--Generate Downward Counter
+	Bit_counter_DOWN : if (SPI_BIG_ENDIAN = '1') generate
+	begin
+		--Downward Counter Process
+		process(SPI_CLK_I, RST_I)
+		begin
+			-- RESET STATE
+			if (RST_I = '1') then
+				transfer_bit      <= (others => '0');
+				transfer_complete <= '0';
+			else
+				--Perform Clock Falling Edge operations
+				if (SPI_CLK_I'event and SPI_CLK_I = (not SPI_CPHA)) then
+					if (busy = '0') then
+						transfer_bit      <= to_unsigned(SPI_DATA_WIDTH - 1, min_num_of_bits(SPI_DATA_WIDTH - 1));
+						transfer_complete <= '0';
+					else
+						if (transfer_bit = 0) then
+							transfer_complete <= '1';
+						elsif (mosi_busy = '1') then
+							transfer_bit <= transfer_bit - 1; --Decrement Transfer bit;
+						end if;
+					end if;
+				end if;
+			end if;
+		end process;
+	end generate Bit_counter_DOWN;
 
-	user_D(3) <= std_logic_vector(count);
+	--Generate Upward Counter
+	Bit_counter_UP : if (SPI_BIG_ENDIAN = '0') generate
+	begin
+		--Upward Counter Process
+		process(SPI_CLK_I, RST_I)
+		begin
+			-- RESET STATE
+			if (RST_I = '1') then
+				transfer_bit      <= (others => '0');
+				transfer_complete <= '0';
+			else
+				--Perform Clock Falling Edge operations
+				if (SPI_CLK_I'event and SPI_CLK_I = (not SPI_CPHA)) then
+					if (busy = '0') then
+						transfer_bit      <= (others => '0');
+						transfer_complete <= '0';
+					else
+						if (transfer_bit = SPI_DATA_WIDTH - 1) then
+							transfer_complete <= '1';
+						elsif (mosi_busy = '1') then
+							transfer_bit <= transfer_bit + 1; --Decrement Transfer bit;
+						end if;
+					end if;
+				end if;
+			end if;
+		end process;
+	end generate Bit_Counter_UP;
+
+	CPHA_0_N_SS : if (SPI_CPHA = '0') generate
+	begin
+		SPI_N_SS <= not (mosi_busy);-- or miso_busy);
+	end generate CPHA_0_N_SS;
+
+	CPHA_1_N_SS : if (SPI_CPHA = '1') generate
+	begin
+		SPI_N_SS <= not (mosi_busy or miso_busy_advanced);
+	end generate CPHA_1_N_SS;
+
+	USER_D3 <= std_logic_vector(count);
 
 end Behavioral;
 
