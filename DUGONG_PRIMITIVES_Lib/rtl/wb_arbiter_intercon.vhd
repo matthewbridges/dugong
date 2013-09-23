@@ -40,7 +40,7 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity wb_arbiter_intercon is
 	generic(
 		NUMBER_OF_MASTERS : NATURAL := 2;
-		NUMBER_OF_SLAVES  : NATURAL := 5
+		NUMBER_OF_SLAVES  : NATURAL := 9
 	);
 	port(
 		--System Control Inputs
@@ -79,25 +79,30 @@ begin
 		if (RST_I = '1') then
 			bus_busy   <= '0';
 			master_sel <= 0;
-			WB_GNT_O   <= "00";
+			WB_GNT_O   <= (others => '0');
 		else
 			--Perform Rising Edge operations
 			if (falling_edge(CLK_I)) then
 				if (bus_busy = '0') then
-					bus_busy <= wb_cyc(0) or wb_cyc(1);
-					case (wb_cyc) is
-						when "01" => master_sel <= 0;
-							WB_GNT_O          <= "01";
-						when "10" => master_sel   <= 1;
-							WB_GNT_O          <= "10";
-						when "11" => master_sel   <= 0;
-							WB_GNT_O          <= "01";
-						when others => master_sel <= 0;
-							WB_GNT_O          <= "00";
-					end case;
+					--Give bus to Master = master_sel if it wants it
+					if (wb_cyc(master_sel) = '1') then
+						WB_GNT_O(master_sel) <= '1';
+						bus_busy             <= '1';
+					end if;
 				elsif (wb_cyc(master_sel) = '0') then
 					bus_busy <= '0';
-					WB_GNT_O <= "00";
+					WB_GNT_O <= (others => '0');
+				end if;
+			end if;
+
+			if (rising_edge(CLK_I)) then
+				if (bus_busy = '0') then
+					--Increment master_sel
+					if (master_sel = NUMBER_OF_MASTERS - 1) then
+						master_sel <= 0;
+					else
+						master_sel <= master_sel + 1;
+					end if;
 				end if;
 			end if;
 		end if;
@@ -105,6 +110,6 @@ begin
 
 	WB_MS_BUS <= WB_MS(master_sel) when (bus_busy = '1') else (others => '0');
 
-	WB_SM_BUS <= WB_SM(0) or WB_SM(1) or WB_SM(2) or WB_SM(3) or WB_SM(4) or WB_SM(5) or WB_SM(6) or WB_SM(7);
+	WB_SM_BUS <= WB_SM(0) or WB_SM(1) or WB_SM(2) or WB_SM(3) or WB_SM(4) or WB_SM(5) or WB_SM(6) or WB_SM(7) or WB_SM(8);
 
 end Behavioral;
