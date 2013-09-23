@@ -73,7 +73,7 @@ architecture Behavioral of wb_s is
 	--User memory architecture
 	type ram_type is array (0 to 3) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal core_mem            : ram_type := (others => (others => '0'));
-	constant core_mem_defaults : ram_type := (std_logic_vector(BASE_ADDR), std_logic_vector(BASE_ADDR + ((2 ** CORE_ADDR_WIDTH) - 1)), std_logic_vector(CORE_ID), x"FEDCBA98");
+	constant core_mem_defaults : ram_type := (std_logic_vector(BASE_ADDR), std_logic_vector(BASE_ADDR + (((2 ** CORE_ADDR_WIDTH)*4) - 1)), std_logic_vector(CORE_ID), x"FEDCBA98");
 
 	signal stb : std_logic_vector(0 to 3) := (others => '0');
 	signal ack : std_logic_vector(0 to 3) := (others => '0');
