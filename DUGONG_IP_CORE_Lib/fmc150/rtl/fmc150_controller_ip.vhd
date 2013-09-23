@@ -45,50 +45,60 @@ entity fmc150_controller_ip is
 	generic(
 		BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
 		CORE_DATA_WIDTH : NATURAL                           := 32;
-		CORE_ADDR_WIDTH : NATURAL                           := 4
+		CORE_ADDR_WIDTH : NATURAL                           := 4;
+		SPI_CPOL        : std_logic                         := '0'
 	);
 	port(
 		--System Control Inputs
-		CLK_I          : in  STD_LOGIC;
-		RST_I          : in  STD_LOGIC;
+		CLK_I       : in    STD_LOGIC;
+		RST_I       : in    STD_LOGIC;
 		--Slave to WB
-		WB_MS          : in  WB_MS_type;
-		WB_SM          : out WB_SM_type;
+		WB_MS       : in    WB_MS_type;
+		WB_SM       : out   WB_SM_type;
 		--Serial Peripheral Interface
-		SPI_CLK_P_I    : in  STD_LOGIC;
-		SPI_CLK_N_I    : in  STD_LOGIC;
-		SPI_SCLK_O     : out STD_LOGIC;
-		SPI_MOSI_O     : out STD_LOGIC;
-		ADC_MISO_I     : in  STD_LOGIC;
-		ADC_N_SS_O     : out STD_LOGIC;
-		CDC_MISO_I     : in  STD_LOGIC;
-		CDC_N_SS_O     : out STD_LOGIC;
-		DAC_MISO_I     : in  STD_LOGIC;
-		DAC_N_SS_O     : out STD_LOGIC;
-		ADC_RST        : out STD_LOGIC;
-		CDC_REF_EN     : out STD_LOGIC;
-		CDC_N_RST      : out STD_LOGIC;
-		CDC_N_PD       : out STD_LOGIC;
-		CDC_PLL_STATUS : in  STD_LOGIC;
+		SPI_CLK_P_I : in    STD_LOGIC;
+		SPI_CLK_N_I : in    STD_LOGIC;
+		SPI_SCLK_O  : out   STD_LOGIC;
+		SPI_MOSI_O  : out   STD_LOGIC;
+		ADC_MISO_I  : in    STD_LOGIC;
+		ADC_N_SS_O  : out   STD_LOGIC;
+		CDC_MISO_I  : in    STD_LOGIC;
+		CDC_N_SS_O  : out   STD_LOGIC;
+		DAC_MISO_I  : in    STD_LOGIC;
+		DAC_N_SS_O  : out   STD_LOGIC;
+		MON_MISO_I  : in    STD_LOGIC;
+		MON_N_SS_O  : out   STD_LOGIC;
+		FMC150_GPIO : inout STD_LOGIC_VECTOR(7 downto 0);
+		--		ADC_RST        : inout STD_LOGIC;
+		--		TXENABLE       : inout STD_LOGIC;
+		--		CDC_REF_EN     : inout STD_LOGIC;
+		--		CDC_N_RST      : inout STD_LOGIC;
+		--		CDC_N_PD       : inout STD_LOGIC;
+		--		CDC_PLL_STATUS : inout STD_LOGIC;
+		--		MON_N_RST      : inout STD_LOGIC;
+		--		MON_N_INT      : inout STD_LOGIC;
 		-- Debug
-		DEBUG          : out STD_LOGIC_VECTOR(31 downto 0)
+		DEBUG       : out   STD_LOGIC_VECTOR(31 downto 0)
 	);
 end entity fmc150_controller_ip;
 
 architecture RTL of fmc150_controller_ip is
-	constant NUMBER_OF_SPI_MASTERS : natural := 3;
-	signal wb_sm_internal          : WB_SM_vector(NUMBER_OF_SPI_MASTERS - 1 downto 0); --3 SPI SLAVES
+	constant NUMBER_OF_IP_SLAVES : natural := 5;
+	signal wb_sm_internal        : WB_SM_vector(NUMBER_OF_IP_SLAVES - 1 downto 0); --3 SPI SLAVES
 
+	constant NUMBER_OF_SPI_MASTERS : natural := 4;
 	subtype master_num is natural range 0 to NUMBER_OF_SPI_MASTERS - 1;
 	signal master_sel   : master_num := 0;
 	signal spi_bus_busy : std_logic;
+	signal spi_clk_rst  : std_logic;
 	signal spi_bus_req  : std_logic_vector(NUMBER_OF_SPI_MASTERS - 1 downto 0);
 	signal spi_ce       : std_logic_vector(NUMBER_OF_SPI_MASTERS - 1 downto 0);
 	signal spi_mosi     : std_logic_vector(NUMBER_OF_SPI_MASTERS - 1 downto 0);
+	signal spi_n_ss     : std_logic_vector(NUMBER_OF_SPI_MASTERS - 1 downto 0);
 
 begin
 	--ROUND ROBIN ARBITRATION
-	process(CLK_I, RST_I)
+	process(SPI_CLK_P_I, RST_I)
 	begin
 		--RST STATE
 		if (RST_I = '1') then
@@ -97,7 +107,7 @@ begin
 			spi_ce       <= (others => '0');
 		else
 			--Perform Rising Edge operations
-			if (rising_edge(CLK_I)) then
+			if (falling_edge(SPI_CLK_P_I)) then
 				if (spi_bus_busy = '0') then
 					--Give bus to Master = master_sel if it wants it
 					if (spi_bus_req(master_sel) = '1') then
@@ -107,6 +117,11 @@ begin
 				elsif (spi_bus_req(master_sel) = '0') then
 					spi_bus_busy <= '0';
 					spi_ce       <= (others => '0');
+				end if;
+			end if;
+
+			if (rising_edge(SPI_CLK_P_I)) then
+				if (spi_bus_busy = '0') then
 					--Increment master_sel
 					if (master_sel = NUMBER_OF_SPI_MASTERS - 1) then
 						master_sel <= 0;
@@ -122,7 +137,8 @@ begin
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
 			CORE_DATA_WIDTH => 32,
-			CORE_ADDR_WIDTH => 3
+			SPI_CPHA        => '0',
+			SPI_BIG_ENDIAN  => '0'
 		)
 		port map(
 			CLK_I       => CLK_I,
@@ -134,14 +150,17 @@ begin
 			SPI_BUS_REQ => spi_bus_req(0),
 			SPI_MOSI    => spi_mosi(0),
 			SPI_MISO    => CDC_MISO_I,
-			SPI_N_SS    => CDC_N_SS_O
+			SPI_N_SS    => spi_n_ss(0)
 		);
+
+	CDC_N_SS_O <= spi_n_ss(0);
 
 	ADS62P49_ctrl : spi_m_ip
 		generic map(
 			BASE_ADDR       => BASE_ADDR + 32,
 			CORE_DATA_WIDTH => 16,
-			CORE_ADDR_WIDTH => 3
+			SPI_CPHA        => '0',
+			SPI_BIG_ENDIAN  => '1'
 		)
 		port map(
 			CLK_I       => CLK_I,
@@ -153,14 +172,17 @@ begin
 			SPI_BUS_REQ => spi_bus_req(1),
 			SPI_MOSI    => spi_mosi(1),
 			SPI_MISO    => ADC_MISO_I,
-			SPI_N_SS    => ADC_N_SS_O
+			SPI_N_SS    => spi_n_ss(1)
 		);
+
+	ADC_N_SS_O <= spi_n_ss(1);
 
 	DAC3283_ctrl : spi_m_ip
 		generic map(
 			BASE_ADDR       => BASE_ADDR + 64,
 			CORE_DATA_WIDTH => 16,
-			CORE_ADDR_WIDTH => 3
+			SPI_CPHA        => '0',
+			SPI_BIG_ENDIAN  => '1'
 		)
 		port map(
 			CLK_I       => CLK_I,
@@ -172,36 +194,73 @@ begin
 			SPI_BUS_REQ => spi_bus_req(2),
 			SPI_MOSI    => spi_mosi(2),
 			SPI_MISO    => DAC_MISO_I,
-			SPI_N_SS    => DAC_N_SS_O
+			SPI_N_SS    => spi_n_ss(2)
 		);
 
-	WB_SM <= wb_sm_internal(0) or wb_sm_internal(1) or wb_sm_internal(2);
+	DAC_N_SS_O <= spi_n_ss(2);
+
+	AMC7823_ctrl : spi_m_ip
+		generic map(
+			BASE_ADDR       => BASE_ADDR + 96,
+			CORE_DATA_WIDTH => 32,
+			SPI_CPHA        => '1',
+			SPI_BIG_ENDIAN  => '1'
+		)
+		port map(
+			CLK_I       => CLK_I,
+			RST_I       => RST_I,
+			WB_MS       => WB_MS,
+			WB_SM       => wb_sm_internal(3),
+			SPI_CLK_I   => SPI_CLK_P_I,
+			SPI_CE      => spi_ce(3),
+			SPI_BUS_REQ => spi_bus_req(3),
+			SPI_MOSI    => spi_mosi(3),
+			SPI_MISO    => MON_MISO_I,
+			SPI_N_SS    => spi_n_ss(3)
+		);
+
+	MON_N_SS_O <= spi_n_ss(3);
 
 	SPI_MOSI_O <= spi_mosi(master_sel);
+
+	spi_clk_rst <= spi_n_ss(0) and spi_n_ss(1) and spi_n_ss(2) and spi_n_ss(3);
 
 	--ODDR for Clock Forwarding
 	SPI_CLK_ODDR2 : ODDR2
 		generic map(
 			DDR_ALIGNMENT => "NONE",    -- Sets output alignment to "NONE", "C0", "C1"
-			INIT          => '0',       -- Sets initial state of the Q output to '0' or '1'
-			SRTYPE        => "SYNC"     -- Specifies "SYNC" or "ASYNC" set/reset
+			INIT          => to_bit(SPI_CPOL), -- Sets initial state of the Q output to '0' or '1'
+			SRTYPE        => "ASYNC"    -- Specifies "SYNC" or "ASYNC" set/reset
 		)
 		port map(
 			Q  => SPI_SCLK_O,           -- 1-bit output data
 			C0 => SPI_CLK_P_I,          -- 1-bit clock input
 			C1 => SPI_CLK_N_I,          -- 1-bit clock input
-			CE => spi_bus_busy,         -- 1-bit clock enable input
-			D0 => '0',                  -- 1-bit data input (associated with C0)
-			D1 => '1',                  -- 1-bit data input (associated with C1)
-			R  => RST_I,                -- 1-bit reset input
+			CE => '1',                  -- 1-bit clock enable input
+			D0 => not SPI_CPOL,         -- 1-bit data input (associated with C0)
+			D1 => SPI_CPOL,             -- 1-bit data input (associated with C1)
+			R  => spi_clk_rst,          -- 1-bit reset input
 			S  => '0'                   -- 1-bit set input
 		);
 
-	ADC_RST    <= RST_I;
-	CDC_REF_EN <= '1';
-	CDC_N_RST  <= not RST_I;
-	CDC_N_PD   <= not RST_I;
+	FMC150_GPIO_CONTROLLER : gpio_controller_ip
+		generic map(
+			BASE_ADDR       => BASE_ADDR + 128,
+			CORE_DATA_WIDTH => 8
+		)
+		port map(
+			CLK_I      => CLK_I,
+			RST_I      => RST_I,
+			WB_MS      => WB_MS,
+			WB_SM      => wb_sm_internal(4),
+			GPIO_AUX_O => open,
+			GPIO_AUX_I => (others => '0'),
+			GPIO_B     => FMC150_GPIO   --MON_N_INT & MON_N_RST & ADC_RST & TXENABLE & CDC_PLL_STATUS & CDC_REF_EN & CDC_N_PD & CDC_N_RST
+		);
 
-	DEBUG(10 downto 0) <= CDC_PLL_STATUS & spi_mosi & spi_ce & spi_bus_req & spi_bus_busy;
+	WB_SM <= wb_sm_internal(0) or wb_sm_internal(1) or wb_sm_internal(2) or wb_sm_internal(3) or wb_sm_internal(4);
+
+	DEBUG(31 downto 18) <= wb_sm_internal(2)(DATA_WIDTH) & wb_sm_internal(1)(DATA_WIDTH) & wb_sm_internal(0)(DATA_WIDTH) & WB_MS(DATA_WIDTH + 2 downto DATA_WIDTH - 1) & WB_MS(6 downto 0);
+	DEBUG(17 downto 0)  <= spi_n_ss & spi_mosi & spi_ce & spi_bus_req & spi_clk_rst & spi_bus_busy;
 
 end architecture RTL;
