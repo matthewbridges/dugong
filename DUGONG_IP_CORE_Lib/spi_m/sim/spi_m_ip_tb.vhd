@@ -66,16 +66,23 @@ BEGIN
 
 	-- Instantiate the Unit Under Test (UUT)
 	uut : spi_m_ip
-		port map(CLK_I       => CLK_I,
-			 RST_I       => RST_I,
-			 WB_MS       => WB_MS,
-			 WB_SM       => WB_SM,
-			 SPI_CLK_I   => SPI_CLK_I,
-			 SPI_CE      => SPI_CE,
-			 SPI_BUS_REQ => SPI_BUS_REQ,
-			 SPI_MOSI    => SPI_MOSI,
-			 SPI_MISO    => SPI_MISO,
-			 SPI_N_SS    => SPI_N_SS);
+		generic map(
+			CORE_DATA_WIDTH => 32,
+			SPI_CPHA        => '1',
+			SPI_BIG_ENDIAN  => '1'
+		)
+		port map(
+			CLK_I       => CLK_I,
+			RST_I       => RST_I,
+			WB_MS       => WB_MS,
+			WB_SM       => WB_SM,
+			SPI_CLK_I   => SPI_CLK_I,
+			SPI_CE      => SPI_CE,
+			SPI_BUS_REQ => SPI_BUS_REQ,
+			SPI_MOSI    => SPI_MOSI,
+			SPI_MISO    => SPI_MISO,
+			SPI_N_SS    => SPI_N_SS
+		);
 
 	-- Clock process definitions
 	CLK_I_process : process
@@ -123,9 +130,9 @@ BEGIN
 		wait until rising_edge(WB_SM(DATA_WIDTH));
 		wait until rising_edge(CLK_I);
 		WB_MS <= "000" & x"00000000" & x"0000000"; --NULL
---
---		wait until rising_edge(CLK_I);
---		WB_MS <= "111" & x"FEDCAB98" & x"0000007"; --Write xFEDCAB98 to 008
+		--
+		--		wait until rising_edge(CLK_I);
+		--		WB_MS <= "111" & x"FEDCAB98" & x"0000007"; --Write xFEDCAB98 to 008
 
 		wait;
 	end process;
