@@ -155,7 +155,7 @@ begin
 			fifo : wb_fifo
 				generic map(
 					DATA_WIDTH => CORE_DATA_WIDTH,
-					ADDR_WIDTH => 4
+					FIFO_DEPTH => 4
 				)
 				port map(
 					RST_I    => RST_I,
@@ -223,18 +223,20 @@ begin
 			if (rising_edge(CLK_I)) then
 				if (rst_count = '1') then
 					master_count <= unsigned(user_Q(3)); --Signal Propagation Bug
-					read_count   <= '0';
 					rst_count    <= '0';
-				-- READING STATE
-				elsif (read_count = '1') then
-					user_D(0) <= std_logic_vector(count(0));
-					user_D(1) <= std_logic_vector(count(1));
-					user_D(2) <= std_logic_vector(count(2));
-					rst_count <= '1';
 				elsif (master_count = 0) then
-					read_count <= '1';
+					-- READING STATE
+					if (read_count = '1') then
+						user_D(0) <= std_logic_vector(count(0));
+						user_D(1) <= std_logic_vector(count(1));
+						user_D(2) <= std_logic_vector(count(2));
+						rst_count <= '1';
+					else
+						read_count <= '1';
+					end if;
 				else
 					master_count <= master_count - 1;
+					read_count   <= '0';
 				end if;
 			end if;
 		end if;
