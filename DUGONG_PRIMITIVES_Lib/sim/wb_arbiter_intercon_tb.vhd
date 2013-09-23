@@ -36,7 +36,7 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity wb_arbiter_intercon_tb is
 	generic(
 		NUMBER_OF_MASTERS : NATURAL := 2;
-		NUMBER_OF_SLAVES  : NATURAL := 4
+		NUMBER_OF_SLAVES  : NATURAL := 9
 	);
 end entity wb_arbiter_intercon_tb;
 
@@ -89,7 +89,6 @@ begin
 		WB_SM(0)(DATA_WIDTH)              <= '1';
 		WB_SM(0)(DATA_WIDTH - 1 downto 0) <= x"FFFFEEEE";
 		wait until falling_edge(WB_MS_BUS(1 + DATA_WIDTH + ADDR_WIDTH));
-		wait until rising_edge(CLK_I);
 		WB_SM(0)(DATA_WIDTH)              <= '0';
 		WB_SM(0)(DATA_WIDTH - 1 downto 0) <= x"00000000";
 	end process;
