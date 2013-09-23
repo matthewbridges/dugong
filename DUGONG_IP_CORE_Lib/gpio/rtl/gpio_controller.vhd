@@ -156,7 +156,7 @@ begin
 			fifo : wb_fifo
 				generic map(
 					DATA_WIDTH => CORE_DATA_WIDTH,
-					ADDR_WIDTH => 4
+					FIFO_DEPTH => 4
 				)
 				port map(
 					RST_I    => RST_I,
@@ -216,7 +216,7 @@ begin
 	gpio_control_buffers : for gpio_num in 0 to CORE_DATA_WIDTH - 1 generate
 		--Multiplexer for Auxiliary input
 		gpio_o(gpio_num)     <= GPIO_AUX_I(gpio_num) when user_Q(3)(gpio_num) = '1' else user_Q(0)(gpio_num);
-		--Auxiliary output  only if Output Enable is true
+		--Auxiliary output only if Output Enable is false
 		GPIO_AUX_O(gpio_num) <= '0' when user_Q(2)(gpio_num) = '1' else gpio_i(gpio_num);
 
 		--Tri-state Buffer
@@ -224,7 +224,7 @@ begin
 		gpio_i(gpio_num) <= GPIO_B(gpio_num);
 	end generate gpio_control_buffers;
 
-	user_D(1) <= gpio_o;
+	user_D(1) <= gpio_i;
 
 end Behavioral;
 
