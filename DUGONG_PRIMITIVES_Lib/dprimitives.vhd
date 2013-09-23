@@ -54,6 +54,8 @@ package dprimitives is
 
 	constant DEFAULT_ADDR : ADDR_TYPE := (others => '0');
 
+	function min_num_of_bits(highest_number : natural) return natural;
+
 	component sys_con is
 		port(
 			--System Clock Differential Inputs 100MHz
@@ -211,7 +213,7 @@ package dprimitives is
 	component wb_fifo is
 		generic(
 			DATA_WIDTH : NATURAL := 32;
-			ADDR_WIDTH : NATURAL := 4   --FIFO DEPTH = ADDR_WIDTH^2
+			FIFO_DEPTH : NATURAL := 4
 		);
 		port(
 			--System Control Inputs:
@@ -220,7 +222,7 @@ package dprimitives is
 			--WISHBONE SLAVE interface (WRITE-ONLY)
 			WR_CLK_I : in  STD_LOGIC;
 			WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			WR_WE_I  : in  std_logic;
+			WR_WE_I  : in  STD_LOGIC;
 			WR_STB_I : in  STD_LOGIC;
 			WR_ACK_O : out STD_LOGIC;
 			--READ PORT
@@ -290,7 +292,63 @@ package dprimitives is
 		);
 	end component;
 
+	component wb_bram_sync_dp_simple is
+		generic(
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 10
+		);
+		port(
+			--System Control Inputs:
+			RST_I   : in  STD_LOGIC;
+			--PORT A
+			A_CLK_I : in  STD_LOGIC;
+			A_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			A_ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			A_WE_I  : in  STD_LOGIC;
+			A_STB_I : in  STD_LOGIC;
+			A_ACK_O : out STD_LOGIC;
+			--PORT B
+			B_CLK_I : in  STD_LOGIC;
+			B_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			B_ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			B_STB_I : in  STD_LOGIC;
+			B_ACK_O : out STD_LOGIC
+		);
+	end component wb_bram_sync_dp_simple;
+
+	component bram_sync_dp_true is
+		generic(
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 10
+		);
+		port(
+			--PORT A
+			A_CLK_I : in  STD_LOGIC;
+			A_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			A_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			A_ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			A_WE_I  : in  STD_LOGIC;
+			--PORT B
+			B_CLK_I : in  STD_LOGIC;
+			B_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			B_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			B_ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			B_WE_I  : in  STD_LOGIC
+		);
+	end component bram_sync_dp_true;
+
 end package dprimitives;
 
 package body dprimitives is
+	function min_num_of_bits(highest_number : natural) return natural is
+		variable num       : natural := 0;
+		variable remainder : natural := highest_number;
+	begin
+		while (remainder >= 1) loop
+			remainder := remainder / 2;
+			num       := num + 1;
+		end loop;
+
+		return num;
+	end function;
 end package body dprimitives;
