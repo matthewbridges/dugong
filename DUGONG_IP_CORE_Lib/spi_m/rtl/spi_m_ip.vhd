@@ -53,7 +53,9 @@ entity spi_m_ip is
 	generic(
 		BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
 		CORE_DATA_WIDTH : NATURAL                           := 32;
-		CORE_ADDR_WIDTH : NATURAL                           := 3
+		CORE_ADDR_WIDTH : NATURAL                           := 3;
+		SPI_CPHA        : std_logic                         := '0';
+		SPI_BIG_ENDIAN  : std_logic                         := '1'
 	);
 	port(
 		--System Control Inputs
@@ -81,10 +83,12 @@ architecture Behavioral of spi_m_ip is
 	signal ack_o : STD_LOGIC;
 	signal cyc_i : STD_LOGIC;
 
-	component spi_m
+	component spi_m_core
 		generic(
-			CORE_DATA_WIDTH : natural := 32;
-			CORE_ADDR_WIDTH : natural := 3
+			CORE_DATA_WIDTH : natural   := 32;
+			CORE_ADDR_WIDTH : natural   := 3;
+			SPI_CPHA        : std_logic := '0';
+			SPI_BIG_ENDIAN  : std_logic := '1'
 		);
 		port(
 			--System Control Inputs
@@ -106,7 +110,7 @@ architecture Behavioral of spi_m_ip is
 			SPI_MISO    : in  STD_LOGIC;
 			SPI_N_SS    : out STD_LOGIC
 		);
-	end component spi_m;
+	end component spi_m_core;
 
 begin
 	bus_logic : wb_s
@@ -130,10 +134,12 @@ begin
 			CYC_I => cyc_i
 		);
 
-	user_logic : spi_m
+	user_logic : spi_m_core
 		generic map(
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
-			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
+			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH,
+			SPI_CPHA        => SPI_CPHA,
+			SPI_BIG_ENDIAN  => SPI_BIG_ENDIAN
 		)
 		port map(
 			CLK_I       => CLK_I,
