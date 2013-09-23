@@ -66,8 +66,10 @@ begin
 				--Perform Clock Rising Edge operations
 				if (rising_edge(CLK_I)) then
 					--WRITING STATE
-					Q   <= DAT_I;
-					ack <= STB_I;
+					if (ack = '0') then --Effectively a Sample and Hold
+						Q   <= DAT_I;
+						ack <= '1';
+					end if;
 				end if;
 			end if;
 		end if;
