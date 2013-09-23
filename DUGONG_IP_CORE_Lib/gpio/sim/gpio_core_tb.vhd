@@ -203,7 +203,8 @@ BEGIN
 		CYC_I  <= '0';
 		DAT_I  <= x"0000";
 		ADR_I  <= "000";
-		GPIO_B <= x"0000";
+		GPIO_B <= (others => 'Z');
+
 		wait;
 	end process;
 
