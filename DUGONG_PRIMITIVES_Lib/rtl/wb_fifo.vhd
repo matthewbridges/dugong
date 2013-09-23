@@ -33,10 +33,13 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
+
 entity wb_fifo is
 	generic(
 		DATA_WIDTH : NATURAL := 32;
-		ADDR_WIDTH : NATURAL := 4       --FIFO DEPTH = ADDR_WIDTH^2
+		FIFO_DEPTH : NATURAL := 4
 	);
 	port(
 		--System Control Inputs:
@@ -45,7 +48,7 @@ entity wb_fifo is
 		--WISHBONE SLAVE interface (WRITE-ONLY)
 		WR_CLK_I : in  STD_LOGIC;
 		WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		WR_WE_I  : in  std_logic;
+		WR_WE_I  : in  STD_LOGIC;
 		WR_STB_I : in  STD_LOGIC;
 		WR_ACK_O : out STD_LOGIC;
 		--READ PORT
@@ -61,17 +64,20 @@ entity wb_fifo is
 end wb_fifo;
 
 architecture Behavioral of wb_fifo is
-	-- Shared memory
-	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal mem : ram_type;
+	constant FIFO_ADDR_WIDTH : natural := min_num_of_bits(FIFO_DEPTH) - 1;
+	subtype fifo_ptr_type is unsigned(FIFO_ADDR_WIDTH downto 0);
+	signal wr_ptr : fifo_ptr_type := (others => '0');
+	signal rd_ptr : fifo_ptr_type := (others => '0');
 
-	signal wr_ack : std_logic;
-	signal rd_Q   : std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal rd_ack : std_logic;
+	signal wr_addr : std_logic_vector(FIFO_ADDR_WIDTH downto 0);
+	signal rd_addr : std_logic_vector(FIFO_ADDR_WIDTH downto 0);
 
-	subtype fifo_ptr_type is unsigned(ADDR_WIDTH downto 0);
-	signal WR_ptr : fifo_ptr_type := (others => '0');
-	signal RD_ptr : fifo_ptr_type := (others => '0');
+	signal wr_stb  : std_logic;
+	signal wr_ack  : std_logic;
+	signal wr_done : std_logic;
+	signal rd_stb  : std_logic;
+	signal rd_ack  : std_logic;
+	signal rd_done : std_logic;
 
 	signal collision_flag : std_logic;
 	signal full_flag      : std_logic;
@@ -84,29 +90,27 @@ begin
 	begin
 		--RESET STATE
 		if (RST_I = '1') then
-			WR_ptr <= (others => '0');
-			wr_ack <= '0';
+			wr_ptr  <= (others => '0');
+			wr_addr <= (others => '0');
+			wr_done <= '0';
 		else
-			if (WR_STB_I = '0') then
-				wr_ack <= '0';
-			else
-				--Perform Clock Rising Edge operations
-				if (rising_edge(WR_CLK_I)) then
-					if (wr_ack = '0') then
-						if (full_flag = '0') then
-							--WRITING STATE
-							if ((WR_STB_I and WR_WE_I) = '1') then
-								mem(to_integer(WR_ptr(ADDR_WIDTH - 1 downto 0))) <= WR_DAT_I;
-								WR_ptr                                           <= WR_ptr + 1;
-							end if;
-						end if;
-						wr_ack <= WR_STB_I;
+			--Perform Clock Rising Edge operations
+			if (rising_edge(WR_CLK_I)) then
+				if (wr_stb = '1') then
+					--WRITING STATE
+					if (wr_done = '0') then
+						wr_ptr  <= WR_ptr + 1;
+						wr_done <= '1';
 					end if;
+				else
+					wr_addr <= std_logic_vector(wr_ptr);
+					wr_done <= '0';
 				end if;
 			end if;
 		end if;
 	end process;
 
+	wr_stb   <= (WR_STB_I and WR_WE_I) when (full_flag = '0') else '0';
 	WR_ACK_O <= wr_ack;
 
 	--READ Port
@@ -114,35 +118,52 @@ begin
 	begin
 		--RESET STATE
 		if (RST_I = '1') then
-			RD_ptr <= (others => '0');
-			rd_ack <= '0';
+			rd_ptr  <= (others => '0');
+			rd_addr <= (others => '0');
+			rd_done <= '0';
 		else
-			if (RD_STB_I = '0') then
-				rd_ack <= '0';
-			else
-				--Perform Clock Rising Edge operations
-				if (rising_edge(RD_CLK_I)) then
-					if (rd_ack = '0') then
-						if (empty_flag = '0') then
-							rd_Q <= mem(to_integer(RD_ptr(ADDR_WIDTH - 1 downto 0)));
-							--READING STATE
-							if (RD_STB_I = '1') then
-								RD_ptr <= RD_ptr + 1;
-							end if;
-						end if;
-						rd_ack <= RD_STB_I;
+			--Perform Clock Rising Edge operations
+			if (rising_edge(RD_CLK_I)) then
+				--READING STATE
+				if (rd_stb = '1') then
+					if (rd_done = '0') then
+						rd_ptr  <= rd_ptr + 1;
+						rd_done <= '1';
 					end if;
+				else
+					rd_addr <= std_logic_vector(rd_ptr);
+					rd_done <= '0';
 				end if;
 			end if;
 		end if;
 	end process;
 
-	RD_DAT_O <= rd_Q;
+	rd_stb   <= (RD_STB_I) when (empty_flag = '0') else '0';
 	RD_ACK_O <= rd_ack;
 
-	collision_flag <= '1' when (RD_ptr(ADDR_WIDTH - 1 downto 0) = WR_ptr(ADDR_WIDTH - 1 downto 0)) else '0';
-	empty_flag     <= collision_flag when (RD_ptr(ADDR_WIDTH) = WR_ptr(ADDR_WIDTH)) else '0';
-	full_flag      <= collision_flag when (RD_ptr(ADDR_WIDTH) /= WR_ptr(ADDR_WIDTH)) else '0';
+	collision_flag <= '1' when (rd_addr(FIFO_ADDR_WIDTH - 1 downto 0) = wr_addr(FIFO_ADDR_WIDTH - 1 downto 0)) else '0';
+	empty_flag     <= collision_flag and not (rd_addr(FIFO_ADDR_WIDTH) xor wr_addr(FIFO_ADDR_WIDTH));
+	full_flag      <= collision_flag and (rd_addr(FIFO_ADDR_WIDTH) xor wr_addr(FIFO_ADDR_WIDTH));
+
+	mem : wb_bram_sync_dp_simple
+		generic map(
+			DATA_WIDTH => DATA_WIDTH,
+			ADDR_WIDTH => FIFO_ADDR_WIDTH
+		)
+		port map(
+			RST_I   => RST_I,
+			A_CLK_I => WR_CLK_I,
+			A_DAT_I => WR_DAT_I,
+			A_ADR_I => wr_addr(FIFO_ADDR_WIDTH - 1 downto 0),
+			A_WE_I  => WR_WE_I,
+			A_STB_I => wr_stb,
+			A_ACK_O => wr_ack,
+			B_CLK_I => RD_CLK_I,
+			B_DAT_O => RD_DAT_O,
+			B_ADR_I => rd_addr(FIFO_ADDR_WIDTH - 1 downto 0),
+			B_STB_I => rd_stb,
+			B_ACK_O => rd_ack
+		);
 
 	FULL  <= full_flag;
 	EMPTY <= empty_flag;
