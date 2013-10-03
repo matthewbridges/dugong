@@ -93,7 +93,7 @@ begin
 			E_COUNT_O => E_COUNT_O
 		);
 
-	GPMC_interface : gpmc_m
+	GPMC_interface : gpmc_s
 		generic map(
 			GPMC_ADDR_WIDTH => 28
 		)
