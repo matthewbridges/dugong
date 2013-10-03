@@ -40,7 +40,7 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 entity wb_arbiter_intercon is
 	generic(
 		NUMBER_OF_MASTERS : NATURAL := 2;
-		NUMBER_OF_SLAVES  : NATURAL := 9
+		NUMBER_OF_SLAVES  : NATURAL := 3
 	);
 	port(
 		--System Control Inputs
@@ -63,53 +63,73 @@ architecture Behavioral of wb_arbiter_intercon is
 	subtype master_num is natural range 0 to NUMBER_OF_MASTERS - 1;
 	signal master_sel : master_num := 0;
 
-	signal bus_busy : std_logic;
+	signal bus_busy : std_logic := '0';
+
+	signal temp_sm : WB_SM_vector(NUMBER_OF_SLAVES - 1 downto 0);
 
 begin
-	--Generate wb_cyc registers
-	wb_cyc_registers : for i in 0 to NUMBER_OF_MASTERS - 1 generate
+	single_master_system : if NUMBER_OF_MASTERS = 1 generate
 	begin
-		wb_cyc(i) <= WB_MS(i)(2 + ADDR_WIDTH + DATA_WIDTH);
-	end generate wb_cyc_registers;
+		WB_GNT_O(0) <= '1';
+		WB_MS_BUS   <= WB_MS(0);
+	end generate single_master_system;
 
-	--Multiplexer
-	process(CLK_I, RST_I)
+	multi_master_system : if NUMBER_OF_MASTERS > 1 generate
 	begin
-		--RST STATE
-		if (RST_I = '1') then
-			bus_busy   <= '0';
-			master_sel <= 0;
-			WB_GNT_O   <= (others => '0');
-		else
-			--Perform Rising Edge operations
-			if (falling_edge(CLK_I)) then
-				if (bus_busy = '0') then
-					--Give bus to Master = master_sel if it wants it
-					if (wb_cyc(master_sel) = '1') then
-						WB_GNT_O(master_sel) <= '1';
-						bus_busy             <= '1';
-					end if;
-				elsif (wb_cyc(master_sel) = '0') then
-					bus_busy <= '0';
-					WB_GNT_O <= (others => '0');
-				end if;
-			end if;
+		--Generate wb_cyc registers
+		wb_cyc_registers : for i in 0 to NUMBER_OF_MASTERS - 1 generate
+		begin
+			wb_cyc(i) <= WB_MS(i)(2 + ADDR_WIDTH + DATA_WIDTH);
+		end generate wb_cyc_registers;
 
-			if (rising_edge(CLK_I)) then
-				if (bus_busy = '0') then
-					--Increment master_sel
-					if (master_sel = NUMBER_OF_MASTERS - 1) then
-						master_sel <= 0;
-					else
-						master_sel <= master_sel + 1;
+		--Arbiter
+		process(CLK_I, RST_I)
+		begin
+			--RST STATE
+			if (RST_I = '1') then
+				bus_busy   <= '0';
+				master_sel <= 0;
+				WB_GNT_O   <= (others => '0');
+			else
+				--Perform Rising Edge operations
+				if (falling_edge(CLK_I)) then
+					if (bus_busy = '0') then
+						--Give bus to Master = master_sel if it wants it
+						if (wb_cyc(master_sel) = '1') then
+							WB_GNT_O(master_sel) <= '1';
+							bus_busy             <= '1';
+						end if;
+					elsif (wb_cyc(master_sel) = '0') then
+						bus_busy <= '0';
+						WB_GNT_O <= (others => '0');
 					end if;
 				end if;
+
+				if (rising_edge(CLK_I)) then
+					if (bus_busy = '0') then
+						--Increment master_sel
+						if (master_sel = NUMBER_OF_MASTERS - 1) then
+							master_sel <= 0;
+						else
+							master_sel <= master_sel + 1;
+						end if;
+					end if;
+				end if;
 			end if;
-		end if;
-	end process;
+		end process;
 
-	WB_MS_BUS <= WB_MS(master_sel) when (bus_busy = '1') else (others => '0');
+		WB_MS_BUS <= WB_MS(master_sel) when (bus_busy = '1') else (others => '0');
 
-	WB_SM_BUS <= WB_SM(0) or WB_SM(1) or WB_SM(2) or WB_SM(3) or WB_SM(4) or WB_SM(5) or WB_SM(6) or WB_SM(7) or WB_SM(8);
+	end generate multi_master_system;
+
+	--Create OR-Gate Tree for Wishbone Slave to Master Lines
+	temp_sm(0) <= WB_SM(0);
+	--Generate wb_sm OR-Gates
+	wb_sm_or_gates : for i in 1 to NUMBER_OF_SLAVES - 1 generate
+	begin
+		temp_sm(i) <= WB_SM(i) or temp_sm(i - 1);
+	end generate wb_sm_or_gates;
+	--Output the Result
+	WB_SM_BUS <= temp_sm(NUMBER_OF_SLAVES - 1);
 
 end Behavioral;
