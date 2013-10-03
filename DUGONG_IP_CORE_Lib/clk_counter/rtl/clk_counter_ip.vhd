@@ -20,14 +20,13 @@
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 		MATTHEW BRIDGES
 --
--- Name:		CLK_COUNTER_IP (00)
+-- Name:		CLK_COUNTER_IP (007)
 -- Type:		IP CORE (4)
 -- Description: 	An IP core used to measure the relative frequency of clocks in a system. The value of
---			Master count is set by the master, else it will just be counting to 0. There is a 1 cycle
---			over count as a result of signal propagation.
+--			Master count is set by the master, else it will just be counting to 0.
 --
--- Compliance:		DUGONG V0.3
--- ID:			x 0-3-4-007
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-4-007
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
 --	0	| BASE_ADDR	| WB_LATCH	--
@@ -75,7 +74,7 @@ architecture Behavioral of clk_counter_ip is
 	signal ack_o : STD_LOGIC;
 	signal cyc_i : STD_LOGIC;
 
-	component clk_counter
+	component clk_counter_core
 		generic(
 			CORE_DATA_WIDTH : natural := 32;
 			CORE_ADDR_WIDTH : natural := 3
@@ -95,13 +94,13 @@ architecture Behavioral of clk_counter_ip is
 			--Test Clocks
 			TEST_CLOCKS : in  STD_LOGIC_VECTOR(2 downto 0)
 		);
-	end component clk_counter;
+	end component clk_counter_core;
 
 begin
 	bus_logic : wb_s
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
-			CORE_ID         => x"00034007", -- SEE HEADER
+			CORE_ID         => x"00054007", -- SEE HEADER
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
@@ -119,7 +118,7 @@ begin
 			CYC_I => cyc_i
 		);
 
-	user_logic : clk_counter
+	user_logic : clk_counter_core
 		generic map(
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
