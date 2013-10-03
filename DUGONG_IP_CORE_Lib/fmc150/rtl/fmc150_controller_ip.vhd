@@ -243,19 +243,19 @@ begin
 			S  => '0'                   -- 1-bit set input
 		);
 
-	FMC150_GPIO_CONTROLLER : gpio_controller_ip
+	FMC150_GPIO_CONTROLLER : gpio_ip
 		generic map(
 			BASE_ADDR       => BASE_ADDR + 128,
 			CORE_DATA_WIDTH => 8
 		)
 		port map(
-			CLK_I      => CLK_I,
-			RST_I      => RST_I,
-			WB_MS      => WB_MS,
-			WB_SM      => wb_sm_internal(4),
-			GPIO_AUX_O => open,
-			GPIO_AUX_I => (others => '0'),
-			GPIO_B     => FMC150_GPIO   --MON_N_INT & MON_N_RST & ADC_RST & TXENABLE & CDC_PLL_STATUS & CDC_REF_EN & CDC_N_PD & CDC_N_RST
+			CLK_I        => CLK_I,
+			RST_I        => RST_I,
+			WB_MS        => WB_MS,
+			WB_SM        => wb_sm_internal(4),
+			GPIO_AUX_IN  => open,
+			GPIO_AUX_OUT => (others => '0'),
+			GPIO_B       => FMC150_GPIO --MON_N_INT & MON_N_RST & ADC_RST & TXENABLE & CDC_PLL_STATUS & CDC_REF_EN & CDC_N_PD & CDC_N_RST
 		);
 
 	WB_SM <= wb_sm_internal(0) or wb_sm_internal(1) or wb_sm_internal(2) or wb_sm_internal(3) or wb_sm_internal(4);
