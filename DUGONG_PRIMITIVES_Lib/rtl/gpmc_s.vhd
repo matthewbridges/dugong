@@ -20,7 +20,7 @@
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 		MATTHEW BRIDGES
 --
--- Name:		GPMC_M (011) -- Should technically be GPMC_S, since it is a slave on the GPMC bus
+-- Name:		GPMC_S (011) -- Should technically be GPMC_S, since it is a slave on the GPMC bus
 -- Type:		PRIMITIVE (2)
 -- Description:		This primitive performs all the task required to convert the signals from the ARM's GPMC
 --			into Wishbone Master signals. Performance is not optimal, however, the system is able to
@@ -38,7 +38,7 @@ library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 --NB The DATA_WIDTH and ADDR_WIDTH constants are set in the dprimitives package
-entity gpmc_m is
+entity gpmc_s is
 	generic(
 		GPMC_ADDR_WIDTH : natural := 28
 	);
@@ -67,9 +67,9 @@ entity gpmc_m is
 		--Debugging Signal
 		DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0)
 	);
-end gpmc_m;
+end gpmc_s;
 
-architecture Behavioral of gpmc_m is
+architecture Behavioral of gpmc_s is
 	--WB Master Lines
 	signal adr_ms : std_logic_vector(GPMC_ADDR_WIDTH - 1 downto 0);
 	signal dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0);
