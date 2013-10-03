@@ -97,7 +97,7 @@ package dcores is
 		);
 	end component dds_core_ip;
 
-	component gpio_controller_ip
+	component gpio_ip
 		generic(
 			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
 			CORE_DATA_WIDTH : NATURAL                           := 16;
@@ -105,18 +105,18 @@ package dcores is
 		);
 		port(
 			--System Control Inputs
-			CLK_I      : in    STD_LOGIC;
-			RST_I      : in    STD_LOGIC;
+			CLK_I        : in    STD_LOGIC;
+			RST_I        : in    STD_LOGIC;
 			--Slave to WB
-			WB_MS      : in    WB_MS_type;
-			WB_SM      : out   WB_SM_type;
+			WB_MS        : in    WB_MS_type;
+			WB_SM        : out   WB_SM_type;
 			--GPIO Auxiliary Interface
-			GPIO_AUX_O : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			GPIO_AUX_I : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			GPIO_AUX_IN  : out   STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			GPIO_AUX_OUT : in    STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			--GPIO Interface
-			GPIO_B     : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+			GPIO_B       : inout STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
-	end component gpio_controller_ip;
+	end component gpio_ip;
 
 	component spi_m_ip
 		generic(
