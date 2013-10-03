@@ -52,22 +52,22 @@ entity spi_m is
 	);
 	port(
 		--System Control Inputs
-		RST_I       : in  STD_LOGIC;
+		RST_I         : in  STD_LOGIC;
 		--Bus Logic Interface
-		USER_D1     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		USER_D2     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		USER_D3     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		USER_Q0     : in  STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		FIFO_STB    : out STD_LOGIC;
-		FIFO_ACK    : in  STD_LOGIC;
-		FIFO_EMPTY  : in  STD_LOGIC;
+		TX_DATA_I     : in  STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		RX_DATA_O     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		TX_FEEDBACK_O : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		XFER_COUNT_O  : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		FIFO_STB      : out STD_LOGIC;
+		FIFO_ACK      : in  STD_LOGIC;
+		FIFO_EMPTY    : in  STD_LOGIC;
 		--SPI Interface
-		SPI_CLK_I   : in  STD_LOGIC;
-		SPI_CE      : in  STD_LOGIC;
-		SPI_BUS_REQ : out STD_LOGIC;
-		SPI_MOSI    : out STD_LOGIC;
-		SPI_MISO    : in  STD_LOGIC;
-		SPI_N_SS    : out STD_LOGIC
+		SPI_CLK_I     : in  STD_LOGIC;
+		SPI_CE        : in  STD_LOGIC;
+		SPI_BUS_REQ   : out STD_LOGIC;
+		SPI_MOSI      : out STD_LOGIC;
+		SPI_MISO      : in  STD_LOGIC;
+		SPI_N_SS      : out STD_LOGIC
 	);
 end spi_m;
 
@@ -108,7 +108,7 @@ begin
 						end if;
 					else
 						if (FIFO_ACK = '1') then
-							write_data <= USER_Q0;
+							write_data <= TX_DATA_I;
 							busy       <= '1';
 							FIFO_STB   <= '0';
 						elsif (FIFO_EMPTY = '0') then
@@ -119,11 +119,11 @@ begin
 				else
 					if (transfer_complete = '1') then
 						if ((mosi_busy and miso_busy and miso_busy_advanced) = '0') then
-							USER_D1     <= read_data;
-							USER_D2     <= write_data;
-							SPI_BUS_REQ <= '0';
-							count       <= count + 1;
-							busy        <= '0';
+							RX_DATA_O     <= read_data;
+							TX_FEEDBACK_O <= write_data;
+							SPI_BUS_REQ   <= '0';
+							count         <= count + 1;
+							busy          <= '0';
 						end if;
 					end if;
 				end if;
@@ -234,7 +234,7 @@ begin
 
 	CPHA_0_N_SS : if (SPI_CPHA = '0') generate
 	begin
-		SPI_N_SS <= not (mosi_busy);-- or miso_busy);
+		SPI_N_SS <= not (mosi_busy);    -- or miso_busy);
 	end generate CPHA_0_N_SS;
 
 	CPHA_1_N_SS : if (SPI_CPHA = '1') generate
@@ -242,7 +242,7 @@ begin
 		SPI_N_SS <= not (mosi_busy or miso_busy_advanced);
 	end generate CPHA_1_N_SS;
 
-	USER_D3 <= std_logic_vector(count);
+	XFER_COUNT_O <= std_logic_vector(count);
 
 end Behavioral;
 
