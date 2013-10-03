@@ -82,7 +82,7 @@ package dprimitives is
 	---- ARM SIDE INTERFACING ----
 	------------------------------ 
 
-	component gpmc_m is
+	component gpmc_s is
 		generic(
 			GPMC_ADDR_WIDTH : natural := 28
 		);
@@ -111,7 +111,7 @@ package dprimitives is
 			--Debugging Signal
 			DEBUG           : out   STD_LOGIC_VECTOR(31 downto 0)
 		);
-	end component gpmc_m;
+	end component gpmc_s;
 
 	-----------------------------
 	---- WB SIDE INTERFACING ----
