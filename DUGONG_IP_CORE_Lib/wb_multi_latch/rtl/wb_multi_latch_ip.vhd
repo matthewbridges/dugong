@@ -24,8 +24,8 @@
 -- Type:		IP_CORE (4)
 -- Description: 	
 --
--- Compliance:		DUGONG V0.3
--- ID:			x 0-3-4-008
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-4-008
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
 --	0	| BASE_ADDR	| WB_LATCH	--
@@ -94,7 +94,7 @@ begin
 	bus_logic : wb_s
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
-			CORE_ID         => x"00034008", -- SEE HEADER
+			CORE_ID         => x"00054008", -- SEE HEADER
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
