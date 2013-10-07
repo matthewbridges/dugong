@@ -118,7 +118,7 @@ begin
 			CYC_I => cyc_i
 		);
 
-	user_logic : clk_counter_core
+	user_core : clk_counter_core
 		generic map(
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH

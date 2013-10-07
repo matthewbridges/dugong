@@ -124,7 +124,7 @@ begin
 			CYC_I => cyc_i
 		);
 
-	user_logic : gpio_core
+	user_core : gpio_core
 		generic map(
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
