@@ -73,7 +73,7 @@ architecture Behavioral of wb_s is
 	--User memory architecture
 	type ram_type is array (0 to 3) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal core_mem            : ram_type := (others => (others => '0'));
-	constant core_mem_defaults : ram_type := (std_logic_vector(BASE_ADDR), std_logic_vector(BASE_ADDR + (((2 ** CORE_ADDR_WIDTH)*4) - 1)), std_logic_vector(CORE_ID), x"FEDCBA98");
+	constant core_mem_defaults : ram_type := (std_logic_vector(BASE_ADDR), std_logic_vector(BASE_ADDR + (((2 ** CORE_ADDR_WIDTH) * 4) - 1)), std_logic_vector(CORE_ID), x"FEDCBA98");
 
 	signal stb : std_logic_vector(0 to 3) := (others => '0');
 	signal ack : std_logic_vector(0 to 3) := (others => '0');
@@ -96,8 +96,8 @@ begin
 
 	--Core Address --> equals WB_ADR_MS(core_addr_width-1:0)
 	core_addr <= unsigned(adr_ms(CORE_ADDR_WIDTH - 1 downto 0));
-	core_sel  <= '1' when (unsigned(adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH)) = BASE_ADDR(ADDR_WIDTH + 1 downto CORE_ADDR_WIDTH + 2)) else '0';
-	user_sel  <= core_sel when core_addr(CORE_ADDR_WIDTH - 1 downto 2) > 0 else '0'; --Equivalent to core_addr > 3
+	core_sel  <= '1' when (adr_ms(ADDR_WIDTH - 1 downto CORE_ADDR_WIDTH) = std_logic_vector(BASE_ADDR(ADDR_WIDTH + 1 downto CORE_ADDR_WIDTH + 2))) else '0';
+	user_sel  <= '0' when (adr_ms(CORE_ADDR_WIDTH - 1 downto 2) = std_logic_vector(BASE_ADDR(CORE_ADDR_WIDTH - 1 downto 2))) else core_sel; --Equivalent to core_addr > 3
 
 	--Generate CORE Status Constants
 	bus_constants : for addr in 0 to 2 generate
