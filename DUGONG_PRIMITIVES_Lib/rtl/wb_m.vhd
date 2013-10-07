@@ -101,7 +101,7 @@ begin
 							lock           <= '1';
 						end if;
 					--TIMEOUT STATE
-					elsif (cycle_count = 10) then
+					elsif (cycle_count = 8) then
 						error <= '1';
 						if (lock = '0') then
 							error_count <= error_count + 1;
