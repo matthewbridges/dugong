@@ -21,14 +21,17 @@
 -- Engineer: 		MATTHEW BRIDGES
 --
 -- Name:		SPI_M (003)
--- Type:		CORE (3)
--- Description: 	A core which forwards SPI data out to OFF-CHIP SPI slaves. Has a generic CORE_DATA_WIDTH
+-- Type:		USER_LOGIC (5)
+-- Description: 	Logic which forwards SPI data out to OFF-CHIP SPI slaves. Has a generic CORE_DATA_WIDTH
 --			which corresponds to the length of the SPI data transfer. No assumptions are made as to
 --			the content of the data. The input has a FIFO, however, it is up to the user to ensure 
 --			that the data rate does not exceed the SPI's capacity. Excess data is just ignored.
 --
--- Compliance:		DUGONG V0.3
--- ID:			x 0-3-3-003
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-3-003
+--
+-- Last Modified:	11-OCT-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
 --	0	| SPI_OUT(n)	| WB_FIFO	--
@@ -52,22 +55,19 @@ entity spi_m is
 	);
 	port(
 		--System Control Inputs
-		RST_I         : in  STD_LOGIC;
+		RST_I           : in  STD_LOGIC;
 		--Bus Logic Interface
-		TX_DATA_I     : in  STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		RX_DATA_O     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		TX_FEEDBACK_O : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		XFER_COUNT_O  : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		FIFO_STB      : out STD_LOGIC;
-		FIFO_ACK      : in  STD_LOGIC;
-		FIFO_EMPTY    : in  STD_LOGIC;
+		TX_DATA_I       : in  STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		RX_DATA_O       : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		TX_FEEDBACK_O   : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		XFER_COUNT_O    : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		TX_DATA_VALID_I : in  STD_LOGIC;
 		--SPI Interface
-		SPI_CLK_I     : in  STD_LOGIC;
-		SPI_CE        : in  STD_LOGIC;
-		SPI_BUS_REQ   : out STD_LOGIC;
-		SPI_MOSI      : out STD_LOGIC;
-		SPI_MISO      : in  STD_LOGIC;
-		SPI_N_SS      : out STD_LOGIC
+		SPI_CLK_I       : in  STD_LOGIC;
+		SPI_BUSY        : out STD_LOGIC;
+		SPI_MOSI        : out STD_LOGIC;
+		SPI_MISO        : in  STD_LOGIC;
+		SPI_N_SS        : out STD_LOGIC
 	);
 end spi_m;
 
@@ -90,30 +90,20 @@ begin
 	----------------------------------
 
 	--SPI Instruction generation process
-	process(SPI_CLK_I, RST_I)
+	process(SPI_CLK_I)
 	begin
-		-- RESET STATE
-		if (RST_I = '1') then
-			busy        <= '0';
-			FIFO_STB    <= '0';
-			SPI_BUS_REQ <= '0';
-			count       <= (others => '0');
-		else
-			if (rising_edge(SPI_CLK_I)) then
+		if (rising_edge(SPI_CLK_I)) then
+			-- RESET STATE
+			if (RST_I = '1') then
+				write_data <= (others => '0');
+				busy       <= '0';
+				count      <= (others => '0');
+			else
 				-- IDLE STATE
 				if (busy = '0') then
-					if (SPI_CE = '0') then
-						if (FIFO_EMPTY = '0') then
-							SPI_BUS_REQ <= '1';
-						end if;
-					else
-						if (FIFO_ACK = '1') then
-							write_data <= TX_DATA_I;
-							busy       <= '1';
-							FIFO_STB   <= '0';
-						elsif (FIFO_EMPTY = '0') then
-							FIFO_STB <= '1';
-						end if;
+					if (TX_DATA_VALID_I = '1') then
+						write_data <= TX_DATA_I;
+						busy       <= '1';
 					end if;
 				--SHIFTING STATE
 				else
@@ -121,7 +111,6 @@ begin
 						if ((mosi_busy and miso_busy and miso_busy_advanced) = '0') then
 							RX_DATA_O     <= read_data;
 							TX_FEEDBACK_O <= write_data;
-							SPI_BUS_REQ   <= '0';
 							count         <= count + 1;
 							busy          <= '0';
 						end if;
@@ -130,6 +119,8 @@ begin
 			end if;
 		end if;
 	end process;
+
+	SPI_BUSY <= busy;
 
 	--SPI Shifter Process
 	process(SPI_CLK_I, RST_I)
@@ -245,4 +236,3 @@ begin
 	XFER_COUNT_O <= std_logic_vector(count);
 
 end Behavioral;
-
