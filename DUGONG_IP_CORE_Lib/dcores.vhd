@@ -75,27 +75,25 @@ package dcores is
 		);
 	end component clk_counter_ip;
 
-	component dds_core_ip
+	component dds_ip
 		generic(
-			DATA_WIDTH      : NATURAL               := 32;
-			ADDR_WIDTH      : NATURAL               := 12;
-			BASE_ADDR       : UNSIGNED(11 downto 0) := x"000";
-			CORE_DATA_WIDTH : NATURAL               := 16;
-			CORE_ADDR_WIDTH : NATURAL               := 3
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 16;
+			CORE_ADDR_WIDTH : NATURAL                           := 3
 		);
 		port(
 			--System Control Inputs
 			CLK_I     : in  STD_LOGIC;
 			RST_I     : in  STD_LOGIC;
-			--Slave to WHISHBONE
-			WB_I      : in  STD_LOGIC_VECTOR(2 + ADDR_WIDTH + DATA_WIDTH downto 0);
-			WB_O      : out STD_LOGIC_VECTOR(DATA_WIDTH downto 0);
+			--Slave to WB
+			WB_MS     : in  WB_MS_type;
+			WB_SM     : out WB_SM_type;
 			--Signal Channel Outputs
 			DSP_CLK_I : in  STD_LOGIC;
 			CH_A_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 			CH_B_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 		);
-	end component dds_core_ip;
+	end component dds_ip;
 
 	component gpio_ip
 		generic(
@@ -135,8 +133,9 @@ package dcores is
 			WB_SM       : out WB_SM_type;
 			--SPI Interface
 			SPI_CLK_I   : in  STD_LOGIC;
-			SPI_CE      : in  STD_LOGIC;
 			SPI_BUS_REQ : out STD_LOGIC;
+			SPI_ENABLE  : in  STD_LOGIC;
+			SPI_BUSY    : out STD_LOGIC;
 			SPI_MOSI    : out STD_LOGIC;
 			SPI_MISO    : in  STD_LOGIC;
 			SPI_N_SS    : out STD_LOGIC
