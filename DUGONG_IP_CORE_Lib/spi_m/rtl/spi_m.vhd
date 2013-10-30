@@ -55,19 +55,19 @@ entity spi_m is
 	);
 	port(
 		--System Control Inputs
-		RST_I           : in  STD_LOGIC;
+		RST_I         : in  STD_LOGIC;
 		--Bus Logic Interface
-		TX_DATA_I       : in  STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		RX_DATA_O       : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		TX_FEEDBACK_O   : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		XFER_COUNT_O    : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-		TX_DATA_VALID_I : in  STD_LOGIC;
+		TX_DATA_I     : in  STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		RX_DATA_O     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		TX_FEEDBACK_O : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		XFER_COUNT_O  : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
 		--SPI Interface
-		SPI_CLK_I       : in  STD_LOGIC;
-		SPI_BUSY        : out STD_LOGIC;
-		SPI_MOSI        : out STD_LOGIC;
-		SPI_MISO        : in  STD_LOGIC;
-		SPI_N_SS        : out STD_LOGIC
+		SPI_CLK_I     : in  STD_LOGIC;
+		SPI_ENABLE    : in  STD_LOGIC;
+		SPI_BUSY      : out STD_LOGIC;
+		SPI_MOSI      : out STD_LOGIC;
+		SPI_MISO      : in  STD_LOGIC;
+		SPI_N_SS      : out STD_LOGIC
 	);
 end spi_m;
 
@@ -101,7 +101,7 @@ begin
 			else
 				-- IDLE STATE
 				if (busy = '0') then
-					if (TX_DATA_VALID_I = '1') then
+					if (SPI_ENABLE = '1') then
 						write_data <= TX_DATA_I;
 						busy       <= '1';
 					end if;
