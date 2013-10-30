@@ -1,3 +1,6 @@
+--
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
+-- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
 --  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
 --   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\
 --    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\
@@ -24,8 +27,11 @@
 --			the content of the data. The input has a FIFO, however, it is up to the user to ensure 
 --			that the data rate does not exceed the SPI's capacity. Excess data is just ignored.
 --
--- Compliance:		DUGONG V0.3
--- ID:			x 0-3-3-003
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-3-003
+--
+-- Last Modified:	11-OCT-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
 --	0	| SPI_OUT(n)	| WB_FIFO	--
@@ -62,8 +68,9 @@ entity spi_m_core is
 		CYC_I       : in  STD_LOGIC;
 		--SPI Interface
 		SPI_CLK_I   : in  STD_LOGIC;
-		SPI_CE      : in  STD_LOGIC;
 		SPI_BUS_REQ : out STD_LOGIC;
+		SPI_ENABLE  : in  STD_LOGIC;
+		SPI_BUSY    : out STD_LOGIC;
 		SPI_MOSI    : out STD_LOGIC;
 		SPI_MISO    : in  STD_LOGIC;
 		SPI_N_SS    : out STD_LOGIC
@@ -105,9 +112,11 @@ architecture Behavioral of spi_m_core is
 
 	signal wb_addr : small_int;
 
-	signal fifo_stb   : std_logic;
-	signal fifo_ack   : std_logic;
-	signal fifo_empty : std_logic;
+	signal fifo_clk   : std_logic_vector(NUMBER_OF_FIFOS - 1 downto 0);
+	signal fifo_stb   : std_logic_vector(NUMBER_OF_FIFOS - 1 downto 0);
+	signal fifo_ack   : std_logic_vector(NUMBER_OF_FIFOS - 1 downto 0);
+	signal fifo_empty : std_logic_vector(NUMBER_OF_FIFOS - 1 downto 0);
+	signal fifo_full  : std_logic_vector(NUMBER_OF_FIFOS - 1 downto 0);
 
 	----------------------------------
 	----------{ USER LOGIC }----------
@@ -127,18 +136,21 @@ architecture Behavioral of spi_m_core is
 			RX_DATA_O     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
 			TX_FEEDBACK_O : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
 			XFER_COUNT_O  : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
-			FIFO_STB      : out STD_LOGIC;
-			FIFO_ACK      : in  STD_LOGIC;
-			FIFO_EMPTY    : in  STD_LOGIC;
 			--SPI Interface
 			SPI_CLK_I     : in  STD_LOGIC;
-			SPI_CE        : in  STD_LOGIC;
-			SPI_BUS_REQ   : out STD_LOGIC;
+			SPI_ENABLE    : in  STD_LOGIC;
+			SPI_BUSY      : out STD_LOGIC;
 			SPI_MOSI      : out STD_LOGIC;
 			SPI_MISO      : in  STD_LOGIC;
 			SPI_N_SS      : out STD_LOGIC
 		);
 	end component spi_m;
+
+	signal busy          : STD_LOGIC;
+	signal pending       : STD_LOGIC;
+	signal enable        : STD_LOGIC;
+	signal tx_data       : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
+	signal tx_data_valid : STD_LOGIC;
 
 begin
 	---------------------------------
@@ -190,12 +202,12 @@ begin
 					WR_WE_I  => WE_I,
 					WR_STB_I => user_stb(user_addr(i)),
 					WR_ACK_O => user_ack(user_addr(i)),
-					RD_CLK_I => SPI_CLK_I,
+					RD_CLK_I => fifo_clk(i),
 					RD_DAT_O => user_Q(user_addr(i)),
-					RD_STB_I => fifo_stb,
-					RD_ACK_O => fifo_ack,
-					FULL     => open,
-					EMPTY    => fifo_empty
+					RD_STB_I => fifo_stb(i),
+					RD_ACK_O => fifo_ack(i),
+					FULL     => fifo_full(i),
+					EMPTY    => fifo_empty(i)
 				);
 
 			user_D(user_addr(i)) <= DAT_I;
@@ -237,6 +249,38 @@ begin
 	----------{ USER LOGIC }----------
 	----------------------------------
 
+	fifo_clk(0) <= SPI_CLK_I;
+
+	--SPI Instruction generation process
+	process(SPI_CLK_I)
+	begin
+		if (rising_edge(SPI_CLK_I)) then
+			-- RESET STATE
+			if (RST_I = '1') then
+				fifo_stb(0)   <= '0';
+				tx_data       <= (others => '0');
+				tx_data_valid <= '0';
+			else
+				if (tx_data_valid = '0') then
+					if (fifo_ack(0) = '1') then
+						fifo_stb(0)   <= '0';
+						tx_data       <= user_Q(0);
+						tx_data_valid <= '1';
+						pending       <= busy;
+					else
+						fifo_stb(0) <= (not fifo_empty(0));
+					end if;
+				elsif (busy = '1' and pending = '0') then
+					tx_data_valid <= '0';
+				elsif (busy = '0') then
+					pending <= '0';
+				end if;
+			end if;
+		end if;
+	end process;
+
+	SPI_BUS_REQ <= tx_data_valid;
+
 	user_logic : spi_m
 		generic map(
 			SPI_DATA_WIDTH => CORE_DATA_WIDTH,
@@ -245,19 +289,18 @@ begin
 		)
 		port map(
 			RST_I         => RST_I,
-			TX_DATA_I     => user_Q(0),
-			RX_DATA_O     => user_D(1),
-			TX_FEEDBACK_O => user_D(2),
-			XFER_COUNT_O  => user_D(3),
-			FIFO_STB      => fifo_stb,
-			FIFO_ACK      => fifo_ack,
-			FIFO_EMPTY    => fifo_empty,
+			TX_DATA_I     => tx_data,
+			RX_DATA_O     => user_d(1),
+			TX_FEEDBACK_O => user_d(2),
+			XFER_COUNT_O  => user_d(3),
 			SPI_CLK_I     => SPI_CLK_I,
-			SPI_CE        => SPI_CE,
-			SPI_BUS_REQ   => SPI_BUS_REQ,
+			SPI_ENABLE    => SPI_ENABLE,
+			SPI_BUSY      => busy,
 			SPI_MOSI      => SPI_MOSI,
 			SPI_MISO      => SPI_MISO,
 			SPI_N_SS      => SPI_N_SS
 		);
+
+	SPI_BUSY <= busy;
 
 end Behavioral;
