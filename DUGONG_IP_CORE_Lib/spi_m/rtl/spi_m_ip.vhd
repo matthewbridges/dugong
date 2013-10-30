@@ -27,8 +27,11 @@
 --			the content of the data. The input has a FIFO, however, it is up to the user to ensure 
 --			that the data rate does not exceed the SPI's capacity. Excess data is just ignored.
 --
--- Compliance:		DUGONG V0.3
--- ID:			x 0-3-4-003
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-4-003
+--
+-- Last Modified:	11-OCT-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
 --	0	| BASE_ADDR	| WB_LATCH	--
@@ -66,8 +69,9 @@ entity spi_m_ip is
 		WB_SM       : out WB_SM_type;
 		--SPI Interface
 		SPI_CLK_I   : in  STD_LOGIC;
-		SPI_CE      : in  STD_LOGIC;
 		SPI_BUS_REQ : out STD_LOGIC;
+		SPI_ENABLE  : in  STD_LOGIC;
+		SPI_BUSY    : out STD_LOGIC;
 		SPI_MOSI    : out STD_LOGIC;
 		SPI_MISO    : in  STD_LOGIC;
 		SPI_N_SS    : out STD_LOGIC
@@ -104,8 +108,9 @@ architecture Behavioral of spi_m_ip is
 			CYC_I       : in  STD_LOGIC;
 			--SPI Interface
 			SPI_CLK_I   : in  STD_LOGIC;
-			SPI_CE      : in  STD_LOGIC;
 			SPI_BUS_REQ : out STD_LOGIC;
+			SPI_ENABLE  : in  STD_LOGIC;
+			SPI_BUSY    : out STD_LOGIC;
 			SPI_MOSI    : out STD_LOGIC;
 			SPI_MISO    : in  STD_LOGIC;
 			SPI_N_SS    : out STD_LOGIC
@@ -116,7 +121,7 @@ begin
 	bus_logic : wb_s
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
-			CORE_ID         => x"00034003", -- SEE HEADER
+			CORE_ID         => x"00054003", -- SEE HEADER
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
@@ -134,7 +139,7 @@ begin
 			CYC_I => cyc_i
 		);
 
-	user_logic : spi_m_core
+	user_core : spi_m_core
 		generic map(
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH,
@@ -152,8 +157,9 @@ begin
 			ACK_O       => ack_o,
 			CYC_I       => cyc_i,
 			SPI_CLK_I   => SPI_CLK_I,
-			SPI_CE      => SPI_CE,
 			SPI_BUS_REQ => SPI_BUS_REQ,
+			SPI_ENABLE  => SPI_ENABLE,
+			SPI_BUSY    => SPI_BUSY,
 			SPI_MOSI    => SPI_MOSI,
 			SPI_MISO    => SPI_MISO,
 			SPI_N_SS    => SPI_N_SS
