@@ -38,9 +38,9 @@
 -- 	1	| HIGH_ADDR	| WB_LATCH	--
 -- 	2	| CORE_ID	| WB_LATCH	-- --SEE HEADER
 -- 	3	| xFEDCBA98	| WB_REG	-- --TEST_SIGNAL
---	4	| SPI_OUT(n)	| WB_FIFO	--
--- 	5	| SPI_IN(n-1)	| WB_LATCH	--
--- 	6	| SPI_OUT(n-1)	| WB_LATCH	--
+--	4	| TX_DATA	| WB_FIFO	--
+-- 	5	| RX_DATA	| WB_LATCH	--
+-- 	6	| TX_FEEDBACK	| WB_LATCH	--
 -- 	7	| XFER_COUNT	| WB_LATCH	--
 --------------------------------------------------
 

@@ -33,11 +33,11 @@
 -- Last Modified:	11-OCT-2013
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
---	ADDR	| NAME		| Type		--
---	0	| SPI_OUT(n)	| WB_FIFO	--
--- 	1	| SPI_IN(n-1)	| WB_LATCH	--
--- 	2	| SPI_OUT(n-1)	| WB_LATCH	--
--- 	3	| XFER_COUNT	| WB_LATCH	--
+--	PORT	| NAME		| DIRECTION	--
+--	0	| TX_DATA	| IN		--
+-- 	1	| RX_DATA	| OUT		--
+-- 	2	| TX_FEEDBACK	| OUT		--
+-- 	3	| XFER_COUNT	| OUT		--
 --------------------------------------------------
 
 library IEEE;
