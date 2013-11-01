@@ -26,6 +26,9 @@
 --
 -- Compliance:		DUGONG V0.3
 -- ID:			x 0-3-1-001
+--
+-- Last Modified:	31-OCT-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -122,23 +125,29 @@ package dcores is
 			CORE_DATA_WIDTH : NATURAL                           := 32;
 			CORE_ADDR_WIDTH : NATURAL                           := 3;
 			SPI_CPHA        : std_logic                         := '0';
+			SPI_CPOL        : std_logic                         := '0';
+			SPI_SCLK_OUT_EN : std_logic                         := '1';
 			SPI_BIG_ENDIAN  : std_logic                         := '1'
 		);
 		port(
 			--System Control Inputs
-			CLK_I       : in  STD_LOGIC;
-			RST_I       : in  STD_LOGIC;
+			CLK_I         : in  STD_LOGIC;
+			RST_I         : in  STD_LOGIC;
 			--Slave to WB
-			WB_MS       : in  WB_MS_type;
-			WB_SM       : out WB_SM_type;
+			WB_MS         : in  WB_MS_type;
+			WB_SM         : out WB_SM_type;
+			--SPI Control Signals
+			SPI_CLK_P_I   : in  STD_LOGIC;
+			SPI_CLK_N_I   : in  STD_LOGIC;
+			SPI_BUS_REQ_O : out STD_LOGIC;
+			SPI_ENABLE_I  : in  STD_LOGIC;
+			SPI_BUSY_O    : out STD_LOGIC;
+			SPI_CPOL_O    : out STD_LOGIC;
 			--SPI Interface
-			SPI_CLK_I   : in  STD_LOGIC;
-			SPI_BUS_REQ : out STD_LOGIC;
-			SPI_ENABLE  : in  STD_LOGIC;
-			SPI_BUSY    : out STD_LOGIC;
-			SPI_MOSI    : out STD_LOGIC;
-			SPI_MISO    : in  STD_LOGIC;
-			SPI_N_SS    : out STD_LOGIC
+			SPI_SCLK      : out STD_LOGIC;
+			SPI_MOSI      : out STD_LOGIC;
+			SPI_MISO      : in  STD_LOGIC;
+			SPI_nSS       : out STD_LOGIC
 		);
 	end component spi_m_ip;
 
