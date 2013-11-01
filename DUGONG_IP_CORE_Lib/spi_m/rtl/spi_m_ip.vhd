@@ -30,7 +30,7 @@
 -- Compliance:		DUGONG V0.5
 -- ID:			x 0-5-4-003
 --
--- Last Modified:	11-OCT-2013
+-- Last Modified:	31-OCT-2013
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
@@ -58,23 +58,29 @@ entity spi_m_ip is
 		CORE_DATA_WIDTH : NATURAL                           := 32;
 		CORE_ADDR_WIDTH : NATURAL                           := 3;
 		SPI_CPHA        : std_logic                         := '0';
+		SPI_CPOL        : std_logic                         := '0';
+		SPI_SCLK_OUT_EN : std_logic                         := '1';
 		SPI_BIG_ENDIAN  : std_logic                         := '1'
 	);
 	port(
 		--System Control Inputs
-		CLK_I       : in  STD_LOGIC;
-		RST_I       : in  STD_LOGIC;
+		CLK_I         : in  STD_LOGIC;
+		RST_I         : in  STD_LOGIC;
 		--Slave to WB
-		WB_MS       : in  WB_MS_type;
-		WB_SM       : out WB_SM_type;
+		WB_MS         : in  WB_MS_type;
+		WB_SM         : out WB_SM_type;
+		--SPI Control Signals
+		SPI_CLK_P_I   : in  STD_LOGIC;
+		SPI_CLK_N_I   : in  STD_LOGIC;
+		SPI_BUS_REQ_O : out STD_LOGIC;
+		SPI_ENABLE_I  : in  STD_LOGIC;
+		SPI_BUSY_O    : out STD_LOGIC;
+		SPI_CPOL_O    : out STD_LOGIC;
 		--SPI Interface
-		SPI_CLK_I   : in  STD_LOGIC;
-		SPI_BUS_REQ : out STD_LOGIC;
-		SPI_ENABLE  : in  STD_LOGIC;
-		SPI_BUSY    : out STD_LOGIC;
-		SPI_MOSI    : out STD_LOGIC;
-		SPI_MISO    : in  STD_LOGIC;
-		SPI_N_SS    : out STD_LOGIC
+		SPI_SCLK      : out STD_LOGIC;
+		SPI_MOSI      : out STD_LOGIC;
+		SPI_MISO      : in  STD_LOGIC;
+		SPI_nSS       : out STD_LOGIC
 	);
 end spi_m_ip;
 
@@ -92,28 +98,34 @@ architecture Behavioral of spi_m_ip is
 			CORE_DATA_WIDTH : natural   := 32;
 			CORE_ADDR_WIDTH : natural   := 3;
 			SPI_CPHA        : std_logic := '0';
+			SPI_CPOL        : std_logic := '0';
+			SPI_SCLK_OUT_EN : std_logic := '1';
 			SPI_BIG_ENDIAN  : std_logic := '1'
 		);
 		port(
 			--System Control Inputs
-			CLK_I       : in  STD_LOGIC;
-			RST_I       : in  STD_LOGIC;
+			CLK_I         : in  STD_LOGIC;
+			RST_I         : in  STD_LOGIC;
 			--Wishbone Slave Lines
-			ADR_I       : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-			DAT_I       : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			DAT_O       : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-			WE_I        : in  STD_LOGIC;
-			STB_I       : in  STD_LOGIC;
-			ACK_O       : out STD_LOGIC;
-			CYC_I       : in  STD_LOGIC;
+			ADR_I         : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+			DAT_I         : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			DAT_O         : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			WE_I          : in  STD_LOGIC;
+			STB_I         : in  STD_LOGIC;
+			ACK_O         : out STD_LOGIC;
+			CYC_I         : in  STD_LOGIC;
+			--SPI Control Signals
+			SPI_CLK_P_I   : in  STD_LOGIC;
+			SPI_CLK_N_I   : in  STD_LOGIC;
+			SPI_BUS_REQ_O : out STD_LOGIC;
+			SPI_ENABLE_I  : in  STD_LOGIC;
+			SPI_BUSY_O    : out STD_LOGIC;
+			SPI_CPOL_O    : out STD_LOGIC;
 			--SPI Interface
-			SPI_CLK_I   : in  STD_LOGIC;
-			SPI_BUS_REQ : out STD_LOGIC;
-			SPI_ENABLE  : in  STD_LOGIC;
-			SPI_BUSY    : out STD_LOGIC;
-			SPI_MOSI    : out STD_LOGIC;
-			SPI_MISO    : in  STD_LOGIC;
-			SPI_N_SS    : out STD_LOGIC
+			SPI_SCLK      : out STD_LOGIC;
+			SPI_MOSI      : out STD_LOGIC;
+			SPI_MISO      : in  STD_LOGIC;
+			SPI_nSS       : out STD_LOGIC
 		);
 	end component spi_m_core;
 
@@ -144,25 +156,30 @@ begin
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH,
 			SPI_CPHA        => SPI_CPHA,
+			SPI_CPOL        => SPI_CPOL,
+			SPI_SCLK_OUT_EN => SPI_SCLK_OUT_EN,
 			SPI_BIG_ENDIAN  => SPI_BIG_ENDIAN
 		)
 		port map(
-			CLK_I       => CLK_I,
-			RST_I       => RST_I,
-			ADR_I       => adr_i,
-			DAT_I       => dat_i,
-			DAT_O       => dat_o,
-			WE_I        => we_i,
-			STB_I       => stb_i,
-			ACK_O       => ack_o,
-			CYC_I       => cyc_i,
-			SPI_CLK_I   => SPI_CLK_I,
-			SPI_BUS_REQ => SPI_BUS_REQ,
-			SPI_ENABLE  => SPI_ENABLE,
-			SPI_BUSY    => SPI_BUSY,
-			SPI_MOSI    => SPI_MOSI,
-			SPI_MISO    => SPI_MISO,
-			SPI_N_SS    => SPI_N_SS
+			CLK_I         => CLK_I,
+			RST_I         => RST_I,
+			ADR_I         => adr_i,
+			DAT_I         => dat_i,
+			DAT_O         => dat_o,
+			WE_I          => we_i,
+			STB_I         => stb_i,
+			ACK_O         => ack_o,
+			CYC_I         => cyc_i,
+			SPI_CLK_P_I   => SPI_CLK_P_I,
+			SPI_CLK_N_I   => SPI_CLK_N_I,
+			SPI_BUS_REQ_O => SPI_BUS_REQ_O,
+			SPI_ENABLE_I  => SPI_ENABLE_I,
+			SPI_BUSY_O    => SPI_BUSY_O,
+			SPI_CPOL_O    => SPI_CPOL_O,
+			SPI_SCLK      => SPI_SCLK,
+			SPI_MOSI      => SPI_MOSI,
+			SPI_MISO      => SPI_MISO,
+			SPI_nSS       => SPI_nSS
 		);
 
 end Behavioral;

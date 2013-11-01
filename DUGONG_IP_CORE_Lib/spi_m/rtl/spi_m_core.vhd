@@ -30,7 +30,7 @@
 -- Compliance:		DUGONG V0.5
 -- ID:			x 0-5-3-003
 --
--- Last Modified:	11-OCT-2013
+-- Last Modified:	31-OCT-2013
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
@@ -52,28 +52,34 @@ entity spi_m_core is
 		CORE_DATA_WIDTH : natural   := 32;
 		CORE_ADDR_WIDTH : natural   := 3;
 		SPI_CPHA        : std_logic := '0';
+		SPI_CPOL        : std_logic := '0';
+		SPI_SCLK_OUT_EN : std_logic := '1';
 		SPI_BIG_ENDIAN  : std_logic := '1'
 	);
 	port(
 		--System Control Inputs
-		CLK_I       : in  STD_LOGIC;
-		RST_I       : in  STD_LOGIC;
+		CLK_I         : in  STD_LOGIC;
+		RST_I         : in  STD_LOGIC;
 		--Wishbone Slave Lines
-		ADR_I       : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
-		DAT_I       : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		DAT_O       : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
-		WE_I        : in  STD_LOGIC;
-		STB_I       : in  STD_LOGIC;
-		ACK_O       : out STD_LOGIC;
-		CYC_I       : in  STD_LOGIC;
+		ADR_I         : in  STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
+		DAT_I         : in  STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		DAT_O         : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+		WE_I          : in  STD_LOGIC;
+		STB_I         : in  STD_LOGIC;
+		ACK_O         : out STD_LOGIC;
+		CYC_I         : in  STD_LOGIC;
+		--SPI Control Signals
+		SPI_CLK_P_I   : in  STD_LOGIC;
+		SPI_CLK_N_I   : in  STD_LOGIC;
+		SPI_BUS_REQ_O : out STD_LOGIC;
+		SPI_ENABLE_I  : in  STD_LOGIC;
+		SPI_BUSY_O    : out STD_LOGIC;
+		SPI_CPOL_O    : out STD_LOGIC;
 		--SPI Interface
-		SPI_CLK_I   : in  STD_LOGIC;
-		SPI_BUS_REQ : out STD_LOGIC;
-		SPI_ENABLE  : in  STD_LOGIC;
-		SPI_BUSY    : out STD_LOGIC;
-		SPI_MOSI    : out STD_LOGIC;
-		SPI_MISO    : in  STD_LOGIC;
-		SPI_N_SS    : out STD_LOGIC
+		SPI_SCLK      : out STD_LOGIC;
+		SPI_MOSI      : out STD_LOGIC;
+		SPI_MISO      : in  STD_LOGIC;
+		SPI_nSS       : out STD_LOGIC
 	);
 end spi_m_core;
 
@@ -124,9 +130,11 @@ architecture Behavioral of spi_m_core is
 
 	component spi_m is
 		generic(
-			SPI_DATA_WIDTH : natural   := 32;
-			SPI_CPHA       : std_logic := '0';
-			SPI_BIG_ENDIAN : std_logic := '1'
+			SPI_DATA_WIDTH  : natural   := 32;
+			SPI_CPHA        : std_logic := '0';
+			SPI_CPOL        : std_logic := '0';
+			SPI_SCLK_OUT_EN : std_logic := '1';
+			SPI_BIG_ENDIAN  : std_logic := '1'
 		);
 		port(
 			--System Control Inputs
@@ -136,13 +144,17 @@ architecture Behavioral of spi_m_core is
 			RX_DATA_O     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
 			TX_FEEDBACK_O : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
 			XFER_COUNT_O  : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+			--SPI Control Signals
+			SPI_CLK_P_I   : in  STD_LOGIC;
+			SPI_CLK_N_I   : in  STD_LOGIC;
+			SPI_ENABLE_I  : in  STD_LOGIC;
+			SPI_BUSY_O    : out STD_LOGIC;
+			SPI_CPOL_O    : out STD_LOGIC;
 			--SPI Interface
-			SPI_CLK_I     : in  STD_LOGIC;
-			SPI_ENABLE    : in  STD_LOGIC;
-			SPI_BUSY      : out STD_LOGIC;
+			SPI_SCLK      : out STD_LOGIC;
 			SPI_MOSI      : out STD_LOGIC;
 			SPI_MISO      : in  STD_LOGIC;
-			SPI_N_SS      : out STD_LOGIC
+			SPI_nSS       : out STD_LOGIC
 		);
 	end component spi_m;
 
@@ -249,12 +261,12 @@ begin
 	----------{ USER LOGIC }----------
 	----------------------------------
 
-	fifo_clk(0) <= SPI_CLK_I;
+	fifo_clk(0) <= SPI_CLK_P_I;
 
 	--SPI Instruction generation process
-	process(SPI_CLK_I)
+	process(SPI_CLK_P_I)
 	begin
-		if (rising_edge(SPI_CLK_I)) then
+		if (rising_edge(SPI_CLK_P_I)) then
 			-- RESET STATE
 			if (RST_I = '1') then
 				fifo_stb(0)   <= '0';
@@ -279,13 +291,15 @@ begin
 		end if;
 	end process;
 
-	SPI_BUS_REQ <= tx_data_valid;
+	SPI_BUS_REQ_O <= tx_data_valid;
 
 	user_logic : spi_m
 		generic map(
-			SPI_DATA_WIDTH => CORE_DATA_WIDTH,
-			SPI_CPHA       => SPI_CPHA,
-			SPI_BIG_ENDIAN => SPI_BIG_ENDIAN
+			SPI_DATA_WIDTH  => CORE_DATA_WIDTH,
+			SPI_CPHA        => SPI_CPHA,
+			SPI_CPOL        => SPI_CPOL,
+			SPI_SCLK_OUT_EN => SPI_SCLK_OUT_EN,
+			SPI_BIG_ENDIAN  => SPI_BIG_ENDIAN
 		)
 		port map(
 			RST_I         => RST_I,
@@ -293,14 +307,17 @@ begin
 			RX_DATA_O     => user_d(1),
 			TX_FEEDBACK_O => user_d(2),
 			XFER_COUNT_O  => user_d(3),
-			SPI_CLK_I     => SPI_CLK_I,
-			SPI_ENABLE    => SPI_ENABLE,
-			SPI_BUSY      => busy,
+			SPI_CLK_P_I   => SPI_CLK_P_I,
+			SPI_CLK_N_I   => SPI_CLK_N_I,
+			SPI_ENABLE_I  => SPI_ENABLE_I,
+			SPI_BUSY_O    => busy,
+			SPI_CPOL_O    => SPI_CPOL_O,
+			SPI_SCLK      => SPI_SCLK,
 			SPI_MOSI      => SPI_MOSI,
 			SPI_MISO      => SPI_MISO,
-			SPI_N_SS      => SPI_N_SS
+			SPI_nSS       => SPI_nSS
 		);
 
-	SPI_BUSY <= busy;
+	SPI_BUSY_O <= busy;
 
 end Behavioral;

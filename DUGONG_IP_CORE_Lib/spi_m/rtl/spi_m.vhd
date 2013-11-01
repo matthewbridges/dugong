@@ -30,7 +30,7 @@
 -- Compliance:		DUGONG V0.5
 -- ID:			x 0-5-3-003
 --
--- Last Modified:	11-OCT-2013
+-- Last Modified:	31-OCT-2013
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 --	PORT	| NAME		| DIRECTION	--
@@ -47,11 +47,16 @@ use IEEE.NUMERIC_STD.ALL;
 library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
+library unisim;
+use unisim.vcomponents.all;
+
 entity spi_m is
 	generic(
-		SPI_DATA_WIDTH : natural   := 32;
-		SPI_CPHA       : std_logic := '0';
-		SPI_BIG_ENDIAN : std_logic := '1'
+		SPI_DATA_WIDTH  : natural   := 32;
+		SPI_CPHA        : std_logic := '0';
+		SPI_CPOL        : std_logic := '0';
+		SPI_SCLK_OUT_EN : std_logic := '1';
+		SPI_BIG_ENDIAN  : std_logic := '1'
 	);
 	port(
 		--System Control Inputs
@@ -61,26 +66,36 @@ entity spi_m is
 		RX_DATA_O     : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
 		TX_FEEDBACK_O : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
 		XFER_COUNT_O  : out STD_LOGIC_VECTOR(SPI_DATA_WIDTH - 1 downto 0);
+		--SPI Control Signals
+		SPI_CLK_P_I   : in  STD_LOGIC;
+		SPI_CLK_N_I   : in  STD_LOGIC;
+		SPI_ENABLE_I  : in  STD_LOGIC;
+		SPI_BUSY_O    : out STD_LOGIC;
+		SPI_CPOL_O    : out STD_LOGIC;
 		--SPI Interface
-		SPI_CLK_I     : in  STD_LOGIC;
-		SPI_ENABLE    : in  STD_LOGIC;
-		SPI_BUSY      : out STD_LOGIC;
+		SPI_SCLK      : out STD_LOGIC;
 		SPI_MOSI      : out STD_LOGIC;
 		SPI_MISO      : in  STD_LOGIC;
-		SPI_N_SS      : out STD_LOGIC
+		SPI_nSS       : out STD_LOGIC
 	);
 end spi_m;
 
 architecture Behavioral of spi_m is
 	--SPI Specific Signals	
-	signal busy               : std_logic;
-	signal mosi_busy          : std_logic;
-	signal miso_busy          : std_logic;
-	signal miso_busy_advanced : std_logic;
-	signal write_data         : std_logic_vector(SPI_DATA_WIDTH - 1 downto 0);
-	signal read_data          : std_logic_vector(SPI_DATA_WIDTH - 1 downto 0);
-	signal transfer_bit       : unsigned(min_num_of_bits(SPI_DATA_WIDTH - 1) - 1 downto 0);
-	signal transfer_complete  : std_logic;
+	signal busy       : std_logic;
+	signal write_data : std_logic_vector(SPI_DATA_WIDTH - 1 downto 0);
+	signal read_data  : std_logic_vector(SPI_DATA_WIDTH - 1 downto 0);
+
+	signal clock_active : std_logic;
+
+	signal transfer_active   : std_logic;
+	signal transfer_bit      : unsigned(min_num_of_bits(SPI_DATA_WIDTH - 1) - 1 downto 0);
+	signal transfer_bit_buf  : unsigned(min_num_of_bits(SPI_DATA_WIDTH - 1) - 1 downto 0);
+	signal transfer_complete : std_logic;
+	signal shifting          : std_logic;
+
+	signal nSS_P : std_logic;
+	signal nSS_N : std_logic;
 
 	signal count : unsigned(SPI_DATA_WIDTH - 1 downto 0);
 
@@ -89,105 +104,72 @@ begin
 	----------{ USER LOGIC }----------
 	----------------------------------
 
+	SPI_CPOL_O <= SPI_CPOL;
+
 	--SPI Instruction generation process
-	process(SPI_CLK_I)
+	process(SPI_CLK_N_I)
 	begin
-		if (rising_edge(SPI_CLK_I)) then
+		if (rising_edge(SPI_CLK_N_I)) then
 			-- RESET STATE
 			if (RST_I = '1') then
-				write_data <= (others => '0');
-				busy       <= '0';
-				count      <= (others => '0');
+				write_data    <= (others => '0');
+				busy          <= '0';
+				RX_DATA_O     <= (others => '0');
+				TX_FEEDBACK_O <= (others => '0');
+				count         <= (others => '0');
 			else
 				-- IDLE STATE
 				if (busy = '0') then
-					if (SPI_ENABLE = '1') then
+					if (SPI_ENABLE_I = '1') then
 						write_data <= TX_DATA_I;
 						busy       <= '1';
 					end if;
 				--SHIFTING STATE
 				else
-					if (transfer_complete = '1') then
-						if ((mosi_busy and miso_busy and miso_busy_advanced) = '0') then
-							RX_DATA_O     <= read_data;
-							TX_FEEDBACK_O <= write_data;
-							count         <= count + 1;
-							busy          <= '0';
-						end if;
+					if (transfer_active = '0') then
+						busy          <= '0';
+						RX_DATA_O     <= read_data;
+						TX_FEEDBACK_O <= write_data;
+						count         <= count + 1;
 					end if;
 				end if;
 			end if;
 		end if;
 	end process;
 
-	SPI_BUSY <= busy;
+	SPI_BUSY_O <= busy;
 
-	--SPI Shifter Process
-	process(SPI_CLK_I, RST_I)
-	begin
-		-- RESET STATE
-		if (RST_I = '1') then
-			mosi_busy          <= '0';
-			miso_busy          <= '0';
-			miso_busy_advanced <= '0';
-			read_data          <= (others => '0');
-			SPI_MOSI           <= '0';
-		else
-			--Perform Clock Rising Edge operations
-			if (SPI_CLK_I'event and SPI_CLK_I = (SPI_CPHA)) then
-				if (busy = '0') then
-				else
-					if (transfer_complete = '1') then
-						mosi_busy <= '0';
-						SPI_MOSI  <= '0';
-					else
-						mosi_busy <= '1';
-						SPI_MOSI  <= write_data(to_integer(transfer_bit));
-					end if;
-				end if;
-			end if;
-
-			--Perform Clock Falling Edge operations
-			if (SPI_CLK_I'event and SPI_CLK_I = (not SPI_CPHA)) then
-				if (busy = '0') then
-					read_data <= (others => '0');
-				else
-					if (transfer_complete = '1') then
-						miso_busy          <= '0';
-						miso_busy_advanced <= '0';
-					else
-						miso_busy          <= mosi_busy;
-						miso_busy_advanced <= not mosi_busy;
-						if (mosi_busy = '1') then
-							read_data(to_integer(transfer_bit)) <= SPI_MISO;
-						end if;
-					end if;
-				end if;
-			end if;
-		end if;
-	end process;
+	XFER_COUNT_O <= std_logic_vector(count);
 
 	--Generate Downward Counter
 	Bit_counter_DOWN : if (SPI_BIG_ENDIAN = '1') generate
 	begin
 		--Downward Counter Process
-		process(SPI_CLK_I, RST_I)
+		process(SPI_CLK_P_I)
 		begin
-			-- RESET STATE
-			if (RST_I = '1') then
-				transfer_bit      <= (others => '0');
-				transfer_complete <= '0';
-			else
-				--Perform Clock Falling Edge operations
-				if (SPI_CLK_I'event and SPI_CLK_I = (not SPI_CPHA)) then
-					if (busy = '0') then
-						transfer_bit      <= to_unsigned(SPI_DATA_WIDTH - 1, min_num_of_bits(SPI_DATA_WIDTH - 1));
-						transfer_complete <= '0';
-					else
-						if (transfer_bit = 0) then
+			if (rising_edge(SPI_CLK_P_I)) then
+				-- RESET STATE
+				if (RST_I = '1') then
+					transfer_bit      <= (others => '0');
+					transfer_active   <= '0';
+					transfer_complete <= '1';
+					clock_active      <= SPI_CPOL;
+				else
+					if (transfer_active = '1') then
+						if (transfer_complete = '1') then
+							transfer_active <= '0';
+						elsif (transfer_bit = 0) then
 							transfer_complete <= '1';
-						elsif (mosi_busy = '1') then
-							transfer_bit <= transfer_bit - 1; --Decrement Transfer bit;
+							clock_active      <= SPI_CPOL;
+						else
+							transfer_bit <= transfer_bit - 1; --Decrement Transfer bit;						
+						end if;
+					else
+						if (busy = '1') then
+							transfer_bit      <= to_unsigned(SPI_DATA_WIDTH - 1, min_num_of_bits(SPI_DATA_WIDTH - 1));
+							transfer_active   <= '1';
+							transfer_complete <= '0';
+							clock_active      <= not SPI_CPOL;
 						end if;
 					end if;
 				end if;
@@ -199,40 +181,112 @@ begin
 	Bit_counter_UP : if (SPI_BIG_ENDIAN = '0') generate
 	begin
 		--Upward Counter Process
-		process(SPI_CLK_I, RST_I)
+		process(SPI_CLK_P_I)
 		begin
-			-- RESET STATE
-			if (RST_I = '1') then
-				transfer_bit      <= (others => '0');
-				transfer_complete <= '0';
-			else
-				--Perform Clock Falling Edge operations
-				if (SPI_CLK_I'event and SPI_CLK_I = (not SPI_CPHA)) then
-					if (busy = '0') then
-						transfer_bit      <= (others => '0');
-						transfer_complete <= '0';
-					else
-						if (transfer_bit = SPI_DATA_WIDTH - 1) then
+			if (rising_edge(SPI_CLK_P_I)) then
+				-- RESET STATE
+				if (RST_I = '1') then
+					transfer_bit      <= (others => '0');
+					transfer_active   <= '0';
+					transfer_complete <= '1';
+					clock_active      <= SPI_CPOL;
+				else
+					if (transfer_active = '1') then
+						if (transfer_complete = '1') then
+							transfer_active <= '0';
+						elsif (transfer_bit = SPI_DATA_WIDTH - 1) then
 							transfer_complete <= '1';
-						elsif (mosi_busy = '1') then
-							transfer_bit <= transfer_bit + 1; --Decrement Transfer bit;
+							clock_active      <= SPI_CPOL;
+						else
+							transfer_bit <= transfer_bit + 1; --Increment Transfer bit;						
 						end if;
+					elsif (busy = '1') then
+						transfer_bit      <= (others => '0');
+						transfer_active   <= '1';
+						transfer_complete <= '0';
+						clock_active      <= not SPI_CPOL;
 					end if;
 				end if;
 			end if;
 		end process;
 	end generate Bit_Counter_UP;
 
-	CPHA_0_N_SS : if (SPI_CPHA = '0') generate
+	--SPI Shifter Process
+	process(SPI_CLK_P_I)
 	begin
-		SPI_N_SS <= not (mosi_busy);    -- or miso_busy);
-	end generate CPHA_0_N_SS;
+		--Perform Clock Rising Edge operations
+		if (SPI_CLK_P_I'event and SPI_CLK_P_I = (SPI_CPHA)) then
+			-- RESET STATE
+			if (RST_I = '1') then
+				SPI_MOSI         <= 'Z';
+				transfer_bit_buf <= (others => '0');
+			else
+				if (transfer_complete = '0') then
+					SPI_MOSI         <= write_data(to_integer(transfer_bit));
+					transfer_bit_buf <= transfer_bit;
+					shifting         <= '1';
+				else
+					SPI_MOSI <= 'Z';
+					shifting <= '0';
+				end if;
+			end if;
+		end if;
+		--Perform Clock Falling Edge operations
+		if (SPI_CLK_P_I'event and SPI_CLK_P_I = (not SPI_CPHA)) then
+			-- RESET STATE
+			if (RST_I = '1') then
+				read_data <= (others => '0');
+			else
+				if (shifting = '1') then
+					read_data(to_integer(transfer_bit_buf)) <= SPI_MISO;
+				end if;
+			end if;
+		end if;
+	end process;
 
-	CPHA_1_N_SS : if (SPI_CPHA = '1') generate
+	process(SPI_CLK_N_I)
 	begin
-		SPI_N_SS <= not (mosi_busy or miso_busy_advanced);
-	end generate CPHA_1_N_SS;
+		if (rising_edge(SPI_CLK_N_I)) then
+			nSS_N <= transfer_complete;
+		end if;
+	end process;
 
-	XFER_COUNT_O <= std_logic_vector(count);
+	--Create 180 degree phase shifted slave select signal
+	process(SPI_CLK_P_I)
+	begin
+		if (rising_edge(SPI_CLK_P_I)) then
+			nSS_P <= nSS_N;
+		end if;
+	end process;
+
+	SPI_nSS <= (nSS_P and nSS_N);
+
+	--Generate SPI_SCLK Output Buffer
+	SCLK_Output_Buffer : if (SPI_SCLK_OUT_EN = '1') generate
+	begin
+		--ODDR for Clock Forwarding
+		SPI_SCLK_ODDR2 : ODDR2
+			generic map(
+				DDR_ALIGNMENT => "C0",  -- Sets output alignment to "NONE", "C0", "C1"
+				INIT          => '0', -- Sets initial state of the Q output to '0' or '1'
+				SRTYPE        => "ASYNC" -- Specifies "SYNC" or "ASYNC" set/reset
+			)
+			port map(
+				Q  => SPI_SCLK,         -- 1-bit output data
+				C0 => SPI_CLK_P_I,      -- 1-bit clock input
+				C1 => SPI_CLK_N_I,      -- 1-bit clock input
+				CE => '1',              -- 1-bit clock enable input
+				D0 => clock_active,     -- 1-bit data input (associated with C0)
+				D1 => SPI_CPOL,         -- 1-bit data input (associated with C1)
+				R  => RST_I,            -- 1-bit reset input
+				S  => '0'               -- 1-bit set input
+			);
+	end generate SCLK_Output_Buffer;
+
+	--Generate SPI_SCLK Output Status Signal
+	SCLK_Output_Status : if (SPI_SCLK_OUT_EN = '0') generate
+	begin
+		SPI_SCLK <= clock_active;
+	end generate SCLK_Output_Status;
 
 end Behavioral;
