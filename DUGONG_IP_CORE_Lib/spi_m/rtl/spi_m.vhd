@@ -218,7 +218,7 @@ begin
 		if (SPI_CLK_P_I'event and SPI_CLK_P_I = (SPI_CPHA)) then
 			-- RESET STATE
 			if (RST_I = '1') then
-				SPI_MOSI         <= 'Z';
+				SPI_MOSI         <= '0';
 				transfer_bit_buf <= (others => '0');
 			else
 				if (transfer_complete = '0') then
@@ -226,7 +226,7 @@ begin
 					transfer_bit_buf <= transfer_bit;
 					shifting         <= '1';
 				else
-					SPI_MOSI <= 'Z';
+					SPI_MOSI <= '0';
 					shifting <= '0';
 				end if;
 			end if;

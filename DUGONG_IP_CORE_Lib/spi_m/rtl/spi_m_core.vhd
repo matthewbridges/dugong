@@ -160,7 +160,6 @@ architecture Behavioral of spi_m_core is
 
 	signal busy          : STD_LOGIC;
 	signal pending       : STD_LOGIC;
-	signal enable        : STD_LOGIC;
 	signal tx_data       : std_logic_vector(CORE_DATA_WIDTH - 1 downto 0);
 	signal tx_data_valid : STD_LOGIC;
 
