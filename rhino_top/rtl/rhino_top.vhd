@@ -27,6 +27,9 @@
 --
 -- Compliance:		DUGONG V0.5
 -- ID:			x 0-5-F-001
+--
+-- Last Modified:	08-NOV-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -56,7 +59,6 @@ entity rhino_top is
 		SYS_CLK_N       : in    STD_LOGIC;
 		SYS_RST         : in    STD_LOGIC;
 		--System Control Outputs
-		SYS_CLK_o       : out   STD_LOGIC;
 		SYS_PWR_ON      : out   STD_LOGIC;
 		SYS_PLL_Locked  : out   STD_LOGIC;
 		--GPMC Interface
@@ -141,15 +143,14 @@ begin
 		port map(
 			SYS_CLK_P      => SYS_CLK_P,
 			SYS_CLK_N      => SYS_CLK_N,
-			SYS_CLK_o      => SYS_CLK_o,
 			SYS_RST        => SYS_RST,
 			SYS_PWR_ON     => SYS_PWR_ON,
 			SYS_PLL_Locked => SYS_PLL_Locked,
 			CLK_100MHz_P   => sys_con_clk,
 			CLK_100MHz_N   => sys_con_clk_n,
 			RST_O          => sys_con_rst,
-			CLK_10MHz_P    => clk_10MHz_p,
-			CLK_10MHz_N    => clk_10MHz_n
+			CLK_10MHz_P    => open,
+			CLK_10MHz_N    => open
 		);
 
 	--------------------------
