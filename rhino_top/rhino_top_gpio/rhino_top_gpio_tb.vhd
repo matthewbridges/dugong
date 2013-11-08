@@ -25,7 +25,10 @@
 -- Description:
 --
 -- Compliance:		DUGONG V0.5
--- ID:			x 
+-- ID:			x 0-5-F-002
+--
+-- Last Modified:	08-NOV-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -52,7 +55,6 @@ architecture RTL of rhino_top_gpio_tb is
 			SYS_CLK_N       : in    STD_LOGIC;
 			SYS_RST         : in    STD_LOGIC;
 			--System Control Outputs
-			SYS_CLK_o       : out   STD_LOGIC;
 			SYS_PWR_ON      : out   STD_LOGIC;
 			SYS_PLL_Locked  : out   STD_LOGIC;
 			--GPMC Interface
@@ -76,7 +78,6 @@ architecture RTL of rhino_top_gpio_tb is
 	signal SYS_CLK_N       : STD_LOGIC                     := '1';
 	signal SYS_RST         : STD_LOGIC                     := '1';
 	--System Control Outputs
-	signal SYS_CLK_o       : STD_LOGIC;
 	signal SYS_PWR_ON      : STD_LOGIC;
 	signal SYS_PLL_Locked  : STD_LOGIC;
 	--GPMC Interface
@@ -107,7 +108,6 @@ begin
 			SYS_CLK_P       => SYS_CLK_P,
 			SYS_CLK_N       => SYS_CLK_N,
 			SYS_RST         => SYS_RST,
-			SYS_CLK_o       => SYS_CLK_o,
 			SYS_PWR_ON      => SYS_PWR_ON,
 			SYS_PLL_Locked  => SYS_PLL_Locked,
 			GPMC_CLK_I      => GPMC_CLK_I,

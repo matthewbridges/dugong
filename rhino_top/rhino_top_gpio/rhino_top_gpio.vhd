@@ -28,6 +28,9 @@
 --
 -- Compliance:		DUGONG V0.5
 -- ID:			x 0-5-F-002
+--
+-- Last Modified:	08-NOV-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -56,7 +59,6 @@ entity rhino_top_gpio is
 		SYS_CLK_N       : in    STD_LOGIC;
 		SYS_RST         : in    STD_LOGIC;
 		--System Control Outputs
-		SYS_CLK_o       : out   STD_LOGIC;
 		SYS_PWR_ON      : out   STD_LOGIC;
 		SYS_PLL_Locked  : out   STD_LOGIC;
 		--GPMC Interface
@@ -102,7 +104,6 @@ begin
 		port map(
 			SYS_CLK_P      => SYS_CLK_P,
 			SYS_CLK_N      => SYS_CLK_N,
-			SYS_CLK_o      => SYS_CLK_o,
 			SYS_RST        => SYS_RST,
 			SYS_PWR_ON     => SYS_PWR_ON,
 			SYS_PLL_Locked => SYS_PLL_Locked,
@@ -132,7 +133,7 @@ begin
 			GPMC_nWE_I      => GPMC_nWE_I,
 			GPMC_nOE_I      => GPMC_nOE_I,
 			GPMC_WAIT_O     => GPMC_WAIT_O,
-			DEBUG           => open,
+			DEBUG           => debug_arm(2),
 			T_COUNT_O       => debug_arm(0),
 			E_COUNT_O       => debug_arm(1)
 		);
@@ -206,7 +207,6 @@ begin
 			LATCH_D => debug_arm
 		);
 		
-		debug_arm(2) <= debug_arm(0);
-		debug_arm(3) <= debug_arm(0);
+		debug_arm(3) <= debug_arm(2);
 
 end architecture RTL;
