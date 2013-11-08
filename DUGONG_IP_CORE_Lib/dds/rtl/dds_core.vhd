@@ -20,19 +20,19 @@
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 		MATTHEW BRIDGES
 --
--- Name:		DDS (005)
+-- Name:		DDS_CORE (005)
 -- Type:		CORE (3)
 -- Description: 	
 --
--- Compliance:		DUGONG V0.3
--- ID:			x 0-3-3-005
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-3-005
 ---------------------------------------------------------------------------------------------------------------
---	ADDR	| NAME		| Type		--
---	0	| SINE_OUT	| WB_LATCH	--
--- 	1	| COS_OUT	| WB_LATCH	--
--- 	2	| FTW		| WB_REG	--
--- 	3	| PHASE		| WB_REG	--
---------------------------------------------------
+--	ADDR	| NAME			| Type		--
+--	0	| SIN_OUT		| WB_LATCH	--
+-- 	1	| COS_OUT		| WB_LATCH	--
+-- 	2	| PHASE_INCREMENT	| WB_REG	--
+-- 	3	| PHASE_OFFSET		| WB_REG	--
+----------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -106,9 +106,8 @@ architecture Behavioral of dds_core is
 
 	component dds is
 		generic(
-			AMPL_WIDTH     : natural := 16;
-			PHASE_WIDTH    : natural := 16;
-			LUT_ADDR_WIDTH : natural := 6
+			AMPL_WIDTH  : natural := 16;
+			PHASE_WIDTH : natural := 16
 		);
 		port(
 			--System Control Inputs
@@ -129,18 +128,7 @@ begin
 	----------{ BUS LOGIC }----------
 	---------------------------------
 
-	--User Memory Address space is equals from 4 up to IP Address(core_addr_width-1:0)
-	addr_generate : if (CORE_ADDR_WIDTH /= 3) generate
-	begin
-		-- Account for offset of 4 due to wb_s status registers
-		wb_addr <= to_integer(unsigned(ADR_I) - 4);
-	end generate addr_generate;
-
-	addr_generate_2 : if (CORE_ADDR_WIDTH = 3) generate
-	begin
-		-- Account for offset of 4 due to wb_s status registers
-		wb_addr <= to_integer(unsigned(ADR_I(CORE_ADDR_WIDTH - 2 downto 0))) when (ADR_I(CORE_ADDR_WIDTH - 1) = '1') else 0;
-	end generate addr_generate_2;
+	wb_addr <= to_integer(unsigned(ADR_I));
 
 	--Generate WB registers
 	user_registers : if (NUMBER_OF_REGISTERS > 0) generate
@@ -234,9 +222,8 @@ begin
 
 	user_logic : dds
 		generic map(
-			AMPL_WIDTH     => 16,
-			PHASE_WIDTH    => 16,
-			LUT_ADDR_WIDTH => 6
+			AMPL_WIDTH  => 16,
+			PHASE_WIDTH => 16
 		)
 		port map(
 			CLK_I           => DSP_CLK_I,
@@ -254,6 +241,3 @@ begin
 	CH_B_O <= cos_out;
 
 end Behavioral;
-
-
-

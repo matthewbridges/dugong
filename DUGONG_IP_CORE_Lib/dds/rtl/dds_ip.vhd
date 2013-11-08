@@ -20,12 +20,12 @@
 -- Company:		UNIVERSITY OF CAPE TOWN
 -- Engineer: 		MATTHEW BRIDGES
 --
--- Name:		
+-- Name:		DDS_IP (005)
 -- Type:		IP_CORE (4)
--- Description: 	An 
+-- Description: 	
 --
--- Compliance:		DUGONG V0.3
--- ID:			x 0-
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-4-005
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
 --	0	| BASE_ADDR	| WB_LATCH	--
@@ -46,10 +46,10 @@ library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 --NB The DATA_WIDTH and ADDR_WIDTH constants are set in the dprimitives package
-entity dds_core_ip is
+entity dds_ip is
 	generic(
 		BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
-		CORE_DATA_WIDTH : NATURAL                           := 32;
+		CORE_DATA_WIDTH : NATURAL                           := 16;
 		CORE_ADDR_WIDTH : NATURAL                           := 3
 	);
 	port(
@@ -64,9 +64,9 @@ entity dds_core_ip is
 		CH_A_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 		CH_B_O    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
 	);
-end dds_core_ip;
+end dds_ip;
 
-architecture Behavioral of dds_core_ip is
+architecture Behavioral of dds_ip is
 	signal adr_i : STD_LOGIC_VECTOR(CORE_ADDR_WIDTH - 1 downto 0);
 	signal dat_i : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
 	signal dat_o : STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
@@ -103,7 +103,7 @@ begin
 	bus_logic : wb_s
 		generic map(
 			BASE_ADDR       => BASE_ADDR,
-			CORE_ID         => x"00034003", -- SEE HEADER
+			CORE_ID         => x"00054005", -- SEE HEADER
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
 		)
@@ -121,7 +121,7 @@ begin
 			CYC_I => cyc_i
 		);
 
-	user_logic : dds_core
+	user_core : dds_core
 		generic map(
 			CORE_DATA_WIDTH => CORE_DATA_WIDTH,
 			CORE_ADDR_WIDTH => CORE_ADDR_WIDTH
