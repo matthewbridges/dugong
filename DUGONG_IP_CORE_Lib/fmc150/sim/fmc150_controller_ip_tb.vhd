@@ -56,13 +56,13 @@ architecture Behavioral of fmc150_controller_ip_tb is
 	signal SPI_CLK_N_I : STD_LOGIC                    := '1';
 	signal SPI_SCLK_O  : STD_LOGIC;
 	signal SPI_MOSI_O  : STD_LOGIC;
-	signal ADC_MISO_I  : STD_LOGIC                    := '0';
+	signal ADC_MISO_I  : STD_LOGIC                    := 'Z';
 	signal ADC_N_SS_O  : STD_LOGIC;
-	signal CDC_MISO_I  : STD_LOGIC                    := '0';
+	signal CDC_MISO_I  : STD_LOGIC                    := 'Z';
 	signal CDC_N_SS_O  : STD_LOGIC;
-	signal DAC_MISO_I  : STD_LOGIC                    := '0';
+	signal DAC_MISO_I  : STD_LOGIC                    := 'Z';
 	signal DAC_N_SS_O  : STD_LOGIC;
-	signal MON_MISO_I  : STD_LOGIC                    := '0';
+	signal MON_MISO_I  : STD_LOGIC                    := 'Z';
 	signal MON_N_SS_O  : STD_LOGIC;
 	signal FMC150_GPIO : STD_LOGIC_VECTOR(7 downto 0) := (others => 'Z');
 	signal DEBUG       : STD_LOGIC_VECTOR(31 downto 0);
@@ -119,8 +119,8 @@ begin
 	-- Stimulus process
 	wb_master_proc : process
 	begin
-		-- hold reset state for 100 ns.
-		wait for 100 ns;
+		-- hold reset state for 500 ns.
+		wait for 500 ns;
 
 		RST_I <= '0';
 		WB_MS <= "111" & x"FEDCBA98" & x"FFFFFFF";
@@ -169,9 +169,96 @@ begin
 		wait until rising_edge(CLK_I);
 		WB_MS <= "000" & x"00000000" & x"0000000"; --NULL
 
+		wait until rising_edge(CLK_I);
+		WB_MS <= "111" & x"000000FF" & x"0000026"; --Write xFEDCAB98 to 014
+		wait until rising_edge(WB_SM(DATA_WIDTH));
+		wait until rising_edge(CLK_I);
+		WB_MS <= "000" & x"00000000" & x"0000000"; --NULL
+
+		wait until rising_edge(CLK_I);
+		WB_MS <= "111" & x"000000AA" & x"0000024"; --Write xFEDCAB98 to 014
+		wait until rising_edge(WB_SM(DATA_WIDTH));
+		wait until rising_edge(CLK_I);
+		WB_MS <= "000" & x"00000000" & x"0000000"; --NULL
+
 		wait;
 	end process;
 
-	CDC_MISO_I <= SPI_MOSI_O;
+	-- Stimulus process
+	CDC_spi_stim_proc : process
+	begin
+		wait until falling_edge(CDC_N_SS_O);
+		CDC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 4;
+		CDC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 8;
+		CDC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 6;
+		CDC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 6;
+		CDC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 4;
+		CDC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 4;
+		CDC_MISO_I <= 'Z';
+	end process;
+
+	-- Stimulus process
+	ADC_spi_stim_proc : process
+	begin
+		wait until falling_edge(ADC_N_SS_O);
+		ADC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 4;
+		ADC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 4;
+		ADC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 2;
+		ADC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 2;
+		ADC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 3;
+		ADC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 1;
+		ADC_MISO_I <= 'Z';
+	end process;
+
+	-- Stimulus process
+	DAC_spi_stim_proc : process
+	begin
+		wait until falling_edge(DAC_N_SS_O);
+		DAC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 4;
+		DAC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 4;
+		DAC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 3;
+		DAC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 1;
+		DAC_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 2;
+		DAC_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 2;
+		DAC_MISO_I <= 'Z';
+	end process;
+
+	-- Stimulus process
+	MON_spi_stim_proc : process
+	begin
+		wait until falling_edge(MON_N_SS_O);
+		wait for SPI_CLK_I_period / 2;
+		MON_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 4;
+		MON_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 8;
+		MON_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 4;
+		MON_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 4;
+		MON_MISO_I <= '0';
+		wait for SPI_CLK_I_period * 6;
+		MON_MISO_I <= '1';
+		wait for SPI_CLK_I_period * 6;
+		MON_MISO_I <= 'Z';
+	end process;
 
 end;
