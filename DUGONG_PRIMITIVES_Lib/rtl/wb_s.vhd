@@ -25,9 +25,12 @@
 -- Description:		A primitive which performs the bus logic of all IP Core slaves on the wishbone bus. It can
 --			take on generic data and address widths and a generic Address. DATA_WIDTH and ADDRESS_WIDTH
 --			should be set by the top level module and coincide with the widths of the Master.
--- 
--- Compliance:		DUGONG V0.3
--- ID:			x 0-3-2-002
+--
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-2-002
+--
+-- Last Modified:	08-NOV-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 --	ADDR	| NAME		| Type		--
 --	0	| BASE_ADDR	| WB_LATCH	--

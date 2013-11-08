@@ -21,11 +21,14 @@
 -- Engineer: 		MATTHEW BRIDGES
 --
 -- Name:		SYS_CON 
--- Type:			
+-- Type:		PRIMITIVE (2)
 -- Description: 	
 --
--- Compliance:		DUGONG V1.1
--- ID:			x 1-1-
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-2-
+--
+-- Last Modified:	08-NOV-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -39,8 +42,6 @@ entity sys_con is
 		--System Clock Differential Inputs 100MHz
 		SYS_CLK_P      : in  STD_LOGIC;
 		SYS_CLK_N      : in  STD_LOGIC;
-		--System Clock Differential Outputs 100MHz
-		SYS_CLK_o      : out STD_LOGIC;
 		--System Reset Input
 		SYS_RST        : in  STD_LOGIC;
 		--System Status
@@ -51,8 +52,8 @@ entity sys_con is
 		CLK_100MHz_N   : out STD_LOGIC;
 		RST_O          : out STD_LOGIC;
 		--SPI Clock Outputs
-		CLK_10MHz_P     : out STD_LOGIC;
-		CLK_10MHz_N     : out STD_LOGIC
+		CLK_10MHz_P    : out STD_LOGIC;
+		CLK_10MHz_N    : out STD_LOGIC
 	);
 end entity sys_con;
 
@@ -70,12 +71,12 @@ architecture RTL of sys_con is
 	signal clkout3    : std_logic;
 
 	--Internal Clock Buffering
-	signal clkfbout_b   : std_logic;
-	signal clkout0_b    : std_logic;
-	signal clkout1_b    : std_logic;
-	signal clkout2_b    : std_logic;
-	signal clkout3_b    : std_logic;
-	signal sys_clk_o_pb : std_logic;
+	signal clkfbout_b : std_logic;
+	signal clkout0_b  : std_logic;
+	signal clkout1_b  : std_logic;
+	signal clkout2_b  : std_logic;
+	signal clkout3_b  : std_logic;
+--signal sys_clk_o_pb : std_logic;
 
 begin
 	-- Initial Test Signal
@@ -180,29 +181,30 @@ begin
 	RST_O          <= not (pll_locked);
 	SYS_PLL_Locked <= pll_locked;
 
-	--ODDR for Clock Forwarding
-	SYS_CLK_o_ODDR2 : ODDR2
-		generic map(
-			DDR_ALIGNMENT => "NONE",    -- Sets output alignment to "NONE", "C0", "C1"
-			INIT          => '0',       -- Sets initial state of the Q output to '0' or '1'
-			SRTYPE        => "SYNC"
-		)                               -- Specifies "SYNC" or "ASYNC" set/reset
-		port map(
-			Q  => sys_clk_o_pb,         -- 1-bit output data
-			C0 => clkout0_b,            -- 1-bit clock input
-			C1 => clkout1_b,            -- 1-bit clock input
-			CE => pll_locked,           -- 1-bit clock enable input
-			D0 => '1',                  -- 1-bit data input (associated with C0)
-			D1 => '0',                  -- 1-bit data input (associated with C1)
-			R  => '0',                  -- 1-bit reset input
-			S  => '0'                   -- 1-bit set input
-		);
-
-	-- Output buffering
-	SYS_CLK_o_OBUFDS : OBUF
-		port map(
-			O => SYS_CLK_o,
-			I => sys_clk_o_pb
-		);
+--	--ODDR for Clock Forwarding
+--	SYS_CLK_O_ODDR2 : ODDR2
+--		generic map(
+--			DDR_ALIGNMENT => "NONE",    -- Sets output alignment to "NONE", "C0", "C1"
+--			INIT          => '0',       -- Sets initial state of the Q output to '0' or '1'
+--			SRTYPE        => "SYNC"
+--		)                               -- Specifies "SYNC" or "ASYNC" set/reset
+--		port map(
+--			Q  => sys_clk_o_pb,         -- 1-bit output data
+--			C0 => clkout0_b,            -- 1-bit clock input
+--			C1 => clkout1_b,            -- 1-bit clock input
+--			CE => pll_locked,           -- 1-bit clock enable input
+--			D0 => '1',                  -- 1-bit data input (associated with C0)
+--			D1 => '0',                  -- 1-bit data input (associated with C1)
+--			R  => '0',                  -- 1-bit reset input
+--			S  => '0'                   -- 1-bit set input
+--		);
+--
+--	-- Output buffering
+--	SYS_CLK_O_OBUFDS : OBUFDS
+--		port map(
+--			O  => SYS_CLK_OUT_P,
+--			OB => SYS_CLK_OUT_N,
+--			I  => sys_clk_o_pb
+--		);
 
 end architecture RTL;

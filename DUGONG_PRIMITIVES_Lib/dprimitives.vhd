@@ -24,8 +24,11 @@
 -- Type:		PACKAGE (1)
 -- Description:		A package containing primitives that are used by the DUGONG IP Cores	
 --
--- Compliance:		DUGONG V0.3
--- ID:			x 0-3-1-002
+-- Compliance:		DUGONG V0.5
+-- ID:			x 0-5-1-002
+--
+-- Last Modified:	08-NOV-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -61,8 +64,6 @@ package dprimitives is
 			--System Clock Differential Inputs 100MHz
 			SYS_CLK_P      : in  STD_LOGIC;
 			SYS_CLK_N      : in  STD_LOGIC;
-			--System Clock Differential Outputs 100MHz
-			SYS_CLK_o      : out STD_LOGIC;
 			--System Reset Input
 			SYS_RST        : in  STD_LOGIC;
 			--System Status
