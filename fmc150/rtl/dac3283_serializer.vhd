@@ -6,13 +6,8 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity dac3283_serializer is
-	generic(
-		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 5
-	);
 	port(
 		--System Control Inputs
-		CLK_I      : in  STD_LOGIC;
 		RST_I      : in  STD_LOGIC;
 		--Signal Channel Inputs
 		DSP_CLK_I  : in  STD_LOGIC;
@@ -26,56 +21,75 @@ entity dac3283_serializer is
 		FRAME_P    : out STD_LOGIC;
 		FRAME_N    : out STD_LOGIC;
 		TXENABLE   : out STD_LOGIC;
-		-- Debug
-		DEBUG      : out STD_LOGIC_VECTOR(15 downto 0)
+		-- Testing
+		IO_TEST_EN : in  STD_LOGIC
 	);
 end entity dac3283_serializer;
 
 architecture RTL of dac3283_serializer is
+	--Phase Locked Loop
+	signal dac_clk_X4         : std_logic;
+	signal dac_clk_X4_lagging : std_logic;
+	signal clk_fb             : std_logic;
+	signal pll_locked         : std_logic;
+	--PLL Buffers
+	signal dclk_io_clk        : std_logic;
+	signal dclk_serdesstrobe  : std_logic;
+	signal dclk_bufpll_locked : std_logic;
+	signal data_io_clk        : std_logic;
+	signal data_serdesstrobe  : std_logic;
+	signal data_bufpll_locked : std_logic;
 
-	signal dac_clk_X4 : std_logic;
-	signal clk_fb     : std_logic;
-	signal pll_locked : std_logic;
-
-	signal io_clk        : std_logic;
-	signal serdesstrobe  : std_logic;
-	signal bufpll_locked : std_logic;
-
+	signal reset        : std_logic;
 	signal tx_en        : std_logic;
 	signal sample_count : unsigned(2 downto 0);
-	signal frame        : std_logic;
 	signal frame_count  : unsigned(7 downto 0);
 
-	signal i : std_logic_vector(15 downto 0);
-	signal q : std_logic_vector(15 downto 0);
+	signal i     : std_logic_vector(15 downto 0);
+	signal q     : std_logic_vector(15 downto 0);
+	signal frame : std_logic;
 
-	signal dac_dclk_predelay : std_logic;
-	signal dac_dclk_o        : std_logic;
-	signal dac_dat_o         : std_logic_vector(7 downto 0);
-	signal frame_o           : std_logic;
+	signal dac_dclk_o : std_logic;
+	signal dac_dat_o  : std_logic_vector(7 downto 0);
+	signal frame_o    : std_logic;
+
+	type test_signal_type is array (0 to 7) of std_logic_vector(15 downto 0);
+	--constant test_pat_i : test_signal_type := (x"7AB6", X"1A16", x"7AB6", X"1A16", x"7AB6", X"1A16", x"7AB6", X"1A16");
+	--constant test_pat_q : test_signal_type := (x"EA45", X"AAC6", x"EA45", X"AAC6", x"EA45", X"AAC6", x"EA45", X"AAC6");
+
+	constant test_pat_i : test_signal_type := (x"0000", x"5A82", x"7FFF", x"5A82", x"0000", x"A57D", x"8000", x"A57D");
+	constant test_pat_q : test_signal_type := (x"7FFF", x"5A82", x"0000", x"A57D", x"8000", X"A57D", x"0000", x"5A82");
 
 begin
 
 	----------------------------SET UP CLOCKING AND PLLs----------------------------
 
+	reset <= RST_I or not (pll_locked);
+
 	process(DSP_CLK_I)
 	begin
 		--Perform Clock Rising Edge operations
 		if (rising_edge(DSP_CLK_I)) then
-			--Check for reset
-			if (RST_I = '1') then
-				sample_count <= (others => '0');
-				frame_count  <= (others => '0');
+			if (reset = '1') then
+				i            <= (others => '0');
+				q            <= (others => '0');
 				frame        <= '0';
+				sample_count <= (others => '0');
+				frame_count  <= (others => '1');
 				tx_en        <= '0';
-			elsif (bufpll_locked = '1') then
-				i    <= CH_A_I;
-				q    <= CH_B_I;
+			else
+				if (IO_TEST_EN = '1') then
+					i <= test_pat_i(to_integer(sample_count)); --CH_A_I;
+					q <= test_pat_q(to_integer(sample_count)); --CH_B_I;
+				else
+					i <= CH_B_I;
+					q <= CH_A_I;
+				end if;
 
-				if (sample_count = 7) then
-					frame       <= '1';
+				if (sample_count = 0) then
 					tx_en       <= '1';
 					frame_count <= frame_count + 1;
+					frame       <= '1';
 				else
 					frame <= '0';
 				end if;
@@ -108,7 +122,7 @@ begin
 			CLKOUT5_DUTY_CYCLE    => 0.5,
 			-- CLKOUT0_PHASE - CLKOUT5_PHASE: Output phase relationship for CLKOUT# clock output (-360.0-360.0).
 			CLKOUT0_PHASE         => 0.0,
-			CLKOUT1_PHASE         => 0.0,
+			CLKOUT1_PHASE         => 90.0,
 			CLKOUT2_PHASE         => 0.0,
 			CLKOUT3_PHASE         => 0.0,
 			CLKOUT4_PHASE         => 0.0,
@@ -122,8 +136,8 @@ begin
 		port map(
 			CLKFBOUT => clk_fb,         -- 1-bit output: PLL_BASE feedback output
 			-- CLKOUT0 - CLKOUT5: 1-bit (each) output: Clock outputs
-			CLKOUT0  => DAC_CLK_X4,
-			CLKOUT1  => open,
+			CLKOUT0  => dac_clk_X4,
+			CLKOUT1  => dac_clk_X4_lagging,
 			CLKOUT2  => open,
 			CLKOUT3  => open,
 			CLKOUT4  => open,
@@ -134,21 +148,35 @@ begin
 			RST      => RST_I           -- 1-bit input: Reset input
 		);
 
-	io_BUFPLL : BUFPLL
+	dclk_io_BUFPLL : BUFPLL
 		generic map(
 			DIVIDE      => 4,           -- DIVCLK divider (1-8)
 			ENABLE_SYNC => TRUE         -- Enable synchrnonization between PLL and GCLK (TRUE/FALSE)
 		)
 		port map(
-			IOCLK        => io_clk,     -- 1-bit output: Output I/O clock
-			LOCK         => bufpll_locked, -- 1-bit output: Synchronized LOCK output
-			SERDESSTROBE => serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
+			IOCLK        => dclk_io_clk, -- 1-bit output: Output I/O clock
+			LOCK         => dclk_bufpll_locked, -- 1-bit output: Synchronized LOCK output
+			SERDESSTROBE => dclk_serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
+			GCLK         => DSP_CLK_I,  -- 1-bit input: BUFG clock input
+			LOCKED       => pll_locked, -- 1-bit input: LOCKED input from PLL
+			PLLIN        => DAC_CLK_X4_lagging -- 1-bit input: Clock input from PLL
+		);
+
+	data_io_BUFPLL : BUFPLL
+		generic map(
+			DIVIDE      => 4,           -- DIVCLK divider (1-8)
+			ENABLE_SYNC => TRUE         -- Enable synchrnonization between PLL and GCLK (TRUE/FALSE)
+		)
+		port map(
+			IOCLK        => data_io_clk, -- 1-bit output: Output I/O clock
+			LOCK         => data_bufpll_locked, -- 1-bit output: Synchronized LOCK output
+			SERDESSTROBE => data_serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
 			GCLK         => DSP_CLK_I,  -- 1-bit input: BUFG clock input
 			LOCKED       => pll_locked, -- 1-bit input: LOCKED input from PLL
 			PLLIN        => DAC_CLK_X4  -- 1-bit input: Clock input from PLL
 		);
 
-	----------------------------DATA CLOCK IO, DELAY AND BUFFERING----------------------------
+	----------------------------DATA_CLOCK IO AND BUFFERING----------------------------
 
 	DAC_DCLK_OSERDES2 : OSERDES2
 		generic map(
@@ -161,13 +189,13 @@ begin
 			TRAIN_PATTERN  => 0         -- Training Pattern (0-15)
 		)
 		port map(
-			OQ        => dac_dclk_predelay, -- 1-bit output: Data output to pad or IODELAY2
+			OQ        => dac_dclk_o,    -- 1-bit output: Data output to pad or IODELAY2
 			SHIFTOUT1 => open,          -- 1-bit output: Cascade data output
 			SHIFTOUT2 => open,          -- 1-bit output: Cascade 3-state output
 			SHIFTOUT3 => open,          -- 1-bit output: Cascade differential data output
 			SHIFTOUT4 => open,          -- 1-bit output: Cascade differential 3-state output
 			TQ        => open,          -- 1-bit output: 3-state output to pad or IODELAY2
-			CLK0      => io_clk,        -- 1-bit input: I/O clock input
+			CLK0      => dclk_io_clk,   -- 1-bit input: I/O clock input
 			CLK1      => '0',           -- 1-bit input: Secondary I/O clock input
 			CLKDIV    => DSP_CLK_I,     -- 1-bit input: Logic domain clock input
 			-- D1 - D4: 1-bit (each) input: Parallel data inputs
@@ -175,13 +203,13 @@ begin
 			D2        => '0',
 			D3        => '1',
 			D4        => '0',
-			IOCE      => serdesstrobe,  -- 1-bit input: Data strobe input
+			IOCE      => dclk_serdesstrobe, -- 1-bit input: Data strobe input
 			OCE       => tx_en,         -- 1-bit input: Clock enable input
 			RST       => '0',           -- 1-bit input: Asynchrnous reset input
-			SHIFTIN1  => '0',           -- 1-bit input: Cascade data input
-			SHIFTIN2  => '0',           -- 1-bit input: Cascade 3-state input
-			SHIFTIN3  => '0',           -- 1-bit input: Cascade differential data input
-			SHIFTIN4  => '0',           -- 1-bit input: Cascade differential 3-state input
+			SHIFTIN1  => '1',           -- 1-bit input: Cascade data input
+			SHIFTIN2  => '1',           -- 1-bit input: Cascade 3-state input
+			SHIFTIN3  => '1',           -- 1-bit input: Cascade differential data input
+			SHIFTIN4  => '1',           -- 1-bit input: Cascade differential 3-state input
 			-- T1 - T4: 1-bit (each) input: 3-state control inputs
 			T1        => '0',
 			T2        => '0',
@@ -190,40 +218,6 @@ begin
 			TCE       => '0',           -- 1-bit input: 3-state clock enable input
 			TRAIN     => '0'            -- 1-bit input: Training pattern enable input
 		);
-
-	--	DAC_DCLK_IODELAY2 : IODELAY2
-	--		generic map(
-	--			COUNTER_WRAPAROUND => "WRAPAROUND", -- "STAY_AT_LIMIT" or "WRAPAROUND"
-	--			DATA_RATE          => "SDR", -- "SDR" or "DDR"
-	--			DELAY_SRC          => "ODATAIN", -- "IO", "ODATAIN" or "IDATAIN"
-	--			IDELAY2_VALUE      => 0,    -- Delay value when IDELAY_MODE="PCI" (0-255)
-	--			IDELAY_MODE        => "NORMAL", -- "NORMAL" or "PCI"
-	--			IDELAY_TYPE        => "FIXED", -- "FIXED", "DEFAULT", "VARIABLE_FROM_ZERO", "VARIABLE_FROM_HALF_MAX"
-	--			-- or "DIFF_PHASE_DETECTOR"
-	--			IDELAY_VALUE       => 0,    -- Amount of taps for fixed input delay (0-255)
-	--			ODELAY_VALUE       => 0,   -- Amount of taps fixed output delay (0-255)
-	--			SERDES_MODE        => "NONE", -- "NONE", "MASTER" or "SLAVE"
-	--			SIM_TAPDELAY_VALUE => 50    -- Per tap delay used for simulation in ps
-	--		)
-	--		port map(
-	--			BUSY     => open,           -- 1-bit output: Busy output after CAL
-	--			DATAOUT  => open,           -- 1-bit output: Delayed data output to ISERDES/input register
-	--			DATAOUT2 => open,           -- 1-bit output: Delayed data output to general FPGA fabric
-	--			DOUT     => dac_dclk_o,     -- 1-bit output: Delayed data output
-	--			TOUT     => open,           -- 1-bit output: Delayed 3-state output
-	--			CAL      => '0',            -- 1-bit input: Initiate calibration input
-	--			CE       => '0',            -- 1-bit input: Enable INC input
-	--			CLK      => '0',            -- 1-bit input: Clock input
-	--			IDATAIN  => '0',            -- 1-bit input: Data input (connect to top-level port or I/O buffer)
-	--			INC      => '0',            -- 1-bit input: Increment / decrement input
-	--			IOCLK0   => '0',            -- 1-bit input: Input from the I/O clock network
-	--			IOCLK1   => '0',            -- 1-bit input: Input from the I/O clock network
-	--			ODATAIN  => dac_dclk_predelay, -- 1-bit input: Output data input from output register or OSERDES2.
-	--			RST      => '0',            -- 1-bit input: Reset to zero or 1/2 of total delay period
-	--			T        => '0'             -- 1-bit input: 3-state input signal
-	--		);
-
-	dac_dclk_o <= dac_dclk_predelay;
 
 	DAC_DCLK_OBUFDS : OBUFDS
 		generic map(
@@ -234,12 +228,6 @@ begin
 			OB => DAC_DCLK_N,
 			I  => dac_dclk_o
 		);
-
-	--		DEBUG9_OBUF : OBUF
-	--			port map(
-	--				O => DEBUG(9),
-	--				I => dac_dclk_o
-	--			);
 
 	----------------------------DATA(7:0) IO AND BUFFERING----------------------------
 
@@ -262,21 +250,21 @@ begin
 				SHIFTOUT3 => open,      -- 1-bit output: Cascade differential data output
 				SHIFTOUT4 => open,      -- 1-bit output: Cascade differential 3-state output
 				TQ        => open,      -- 1-bit output: 3-state output to pad or IODELAY2
-				CLK0      => io_clk,    -- 1-bit input: I/O clock input
+				CLK0      => data_io_clk, -- 1-bit input: I/O clock input
 				CLK1      => '0',       -- 1-bit input: Secondary I/O clock input
 				CLKDIV    => DSP_CLK_I, -- 1-bit input: Logic domain clock input
 				-- D1 - D4: 1-bit (each) input: Parallel data inputs
-				D1        => q(pin_count + 8),
-				D2        => q(pin_count),
-				D3        => i(pin_count + 8),
-				D4        => i(pin_count),
-				IOCE      => serdesstrobe, -- 1-bit input: Data strobe input
+				D1        => i(pin_count + 8),
+				D2        => i(pin_count),
+				D3        => q(pin_count + 8),
+				D4        => q(pin_count),
+				IOCE      => data_serdesstrobe, -- 1-bit input: Data strobe input
 				OCE       => tx_en,     -- 1-bit input: Clock enable input
 				RST       => '0',       -- 1-bit input: Asynchrnous reset input
-				SHIFTIN1  => '0',       -- 1-bit input: Cascade data input
-				SHIFTIN2  => '0',       -- 1-bit input: Cascade 3-state input
-				SHIFTIN3  => '0',       -- 1-bit input: Cascade differential data input
-				SHIFTIN4  => '0',       -- 1-bit input: Cascade differential 3-state input
+				SHIFTIN1  => '1',       -- 1-bit input: Cascade data input
+				SHIFTIN2  => '1',       -- 1-bit input: Cascade 3-state input
+				SHIFTIN3  => '1',       -- 1-bit input: Cascade differential data input
+				SHIFTIN4  => '1',       -- 1-bit input: Cascade differential 3-state input
 				-- T1 - T4: 1-bit (each) input: 3-state control inputs
 				T1        => '0',
 				T2        => '0',
@@ -295,12 +283,6 @@ begin
 				OB => DAC_DATA_N(pin_count),
 				I  => dac_dat_o(pin_count)
 			);
-
-	--		DEBUG_OBUF : OBUF
-	--			port map(
-	--				O => DEBUG(pin_count),
-	--				I => dac_dat_o(pin_count)
-	--			);
 
 	end generate DAC_DATA_pins;
 
@@ -323,21 +305,21 @@ begin
 			SHIFTOUT3 => open,          -- 1-bit output: Cascade differential data output
 			SHIFTOUT4 => open,          -- 1-bit output: Cascade differential 3-state output
 			TQ        => open,          -- 1-bit output: 3-state output to pad or IODELAY2
-			CLK0      => io_clk,        -- 1-bit input: I/O clock input
+			CLK0      => data_io_clk,   -- 1-bit input: I/O clock input
 			CLK1      => '0',           -- 1-bit input: Secondary I/O clock input
 			CLKDIV    => DSP_CLK_I,     -- 1-bit input: Logic domain clock input
 			-- D1 - D4: 1-bit (each) input: Parallel data inputs
 			D1        => frame,
 			D2        => frame,
-			D3        => '0',
-			D4        => '0',
-			IOCE      => serdesstrobe,  -- 1-bit input: Data strobe input
+			D3        => frame,
+			D4        => frame,
+			IOCE      => data_serdesstrobe, -- 1-bit input: Data strobe input
 			OCE       => tx_en,         -- 1-bit input: Clock enable input
 			RST       => '0',           -- 1-bit input: Asynchrnous reset input
-			SHIFTIN1  => '0',           -- 1-bit input: Cascade data input
-			SHIFTIN2  => '0',           -- 1-bit input: Cascade 3-state input
-			SHIFTIN3  => '0',           -- 1-bit input: Cascade differential data input
-			SHIFTIN4  => '0',           -- 1-bit input: Cascade differential 3-state input
+			SHIFTIN1  => '1',           -- 1-bit input: Cascade data input
+			SHIFTIN2  => '1',           -- 1-bit input: Cascade 3-state input
+			SHIFTIN3  => '1',           -- 1-bit input: Cascade differential data input
+			SHIFTIN4  => '1',           -- 1-bit input: Cascade differential 3-state input
 			-- T1 - T4: 1-bit (each) input: 3-state control inputs
 			T1        => '0',
 			T2        => '0',
@@ -357,22 +339,8 @@ begin
 			I  => frame_o
 		);
 
-	--	DEBUG8_OBUF : OBUF
-	--		port map(
-	--			O => DEBUG(8),
-	--			I => frame_o
-	--		);
-
 	----------------------------OTHER SIGNAL ASSIGNMENT AND DEBUGING----------------------------
 
 	TXENABLE <= tx_en;
-
-	--	DEBUG <= std_logic_vector(test_signal);
-
-	DEBUG(7 downto 0)   <= std_logic_vector(frame_count);
-	DEBUG(10)           <= frame;
-	DEBUG(11)           <= tx_en;
-	DEBUG(14 downto 12) <= std_logic_vector(sample_count);
-	DEBUG(15)           <= pll_locked;
 
 end architecture RTL;

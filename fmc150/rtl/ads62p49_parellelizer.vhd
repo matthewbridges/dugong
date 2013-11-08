@@ -6,35 +6,29 @@ use IEEE.NUMERIC_STD.ALL;
 library unisim;
 use unisim.vcomponents.all;
 
-entity ads62p49_parellelizer is
-	generic(
-		DATA_WIDTH : natural := 16;
-		ADDR_WIDTH : natural := 5
-	);
+entity ads62p49_parallelizer is
 	port(
 		--System Control Inputs
-		CLK_I        : in  STD_LOGIC;
 		RST_I        : in  STD_LOGIC;
 		--Signal Channel Inputs
-		DSP_CLK_I    : in  STD_LOGIC;
-		CH_A_O       : out STD_LOGIC_VECTOR(15 downto 0);
-		CH_B_O       : out STD_LOGIC_VECTOR(15 downto 0);
+		ADC_CLK_O    : out STD_LOGIC;
+		CH_A_O       : out STD_LOGIC_VECTOR(13 downto 0);
+		CH_B_O       : out STD_LOGIC_VECTOR(13 downto 0);
 		-- FMC150 ADC interface
 		ADC_DCLK_P   : in  STD_LOGIC;
 		ADC_DCLK_N   : in  STD_LOGIC;
 		ADC_DATA_A_P : in  STD_LOGIC_VECTOR(6 downto 0);
 		ADC_DATA_A_N : in  STD_LOGIC_VECTOR(6 downto 0);
 		ADC_DATA_B_P : in  STD_LOGIC_VECTOR(6 downto 0);
-		ADC_DATA_B_N : in  STD_LOGIC_VECTOR(6 downto 0);
-		-- Debug
-		DEBUG        : out STD_LOGIC_VECTOR(15 downto 0)
+		ADC_DATA_B_N : in  STD_LOGIC_VECTOR(6 downto 0)
 	);
-end entity ads62p49_parellelizer;
+end entity ads62p49_parallelizer;
 
-architecture RTL of ads62p49_parellelizer is
+architecture RTL of ads62p49_parallelizer is
 	signal adc_dclk_b : std_logic;
 	signal ioclk0     : std_logic;
 	signal ioclk1     : std_logic;
+	signal adc_clk    : std_logic;
 
 	signal adc_data_a_b : STD_LOGIC_VECTOR(6 downto 0);
 	signal adc_data_b_b : STD_LOGIC_VECTOR(6 downto 0);
@@ -63,7 +57,7 @@ begin
 			USE_DOUBLER => FALSE
 		)
 		port map(
-			DIVCLK       => open,
+			DIVCLK       => adc_clk,
 			IOCLK        => ioclk0,
 			SERDESSTROBE => open,
 			I            => adc_dclk_b
@@ -142,57 +136,13 @@ begin
 			);
 	end generate ADC_DATA_pins;
 
-	process(DSP_CLK_I)
-	begin
-		--Perform Clock Rising Edge operations
-		if (rising_edge(DSP_CLK_I)) then
-			--Check for reset
-			if (RST_I = '1') then
-				CH_A_O <= (others => '0');
-				CH_B_O <= (others => '0');
-			else
-				CH_A_O <= i & "10";
-				CH_B_O <= q & "10";
-			end if;
-		end if;
-	end process;
-
-	--	process(adc_dclk_b)
-	--		variable temp : unsigned(7 downto 0);
-	--	begin
-	--		--Perform Clock Rising Edge operations
-	--		if (rising_edge(adc_dclk_b)) then
-	--			--Check for reset
-	--			if (RST_I = '1') then
-	--				temp := (others => '0');
-	--			else
-	--				temp := temp + 1;
-	--			end if;
-	--			DEBUG(7 downto 0) <= std_logic_vector(temp);
-	--		end if;
-	--	end process;
-
-	--Debug
-
-	--ODDR for Clock Forwarding
-	SYS_CLK_o_ODDR2 : ODDR2
-		generic map(
-			DDR_ALIGNMENT => "NONE",    -- Sets output alignment to "NONE", "C0", "C1"
-			INIT          => '0',       -- Sets initial state of the Q output to '0' or '1'
-			SRTYPE        => "SYNC"
-		)                               -- Specifies "SYNC" or "ASYNC" set/reset
+	ADC_CLK_BUFG : BUFG
 		port map(
-			Q  => Debug(13),            -- 1-bit output data
-			C0 => adc_dclk_b,             -- 1-bit clock input
-			C1 => not adc_dclk_b,             -- 1-bit clock input
-			CE => '1',                  -- 1-bit clock enable input
-			D0 => '1',                  -- 1-bit data input (associated with C0)
-			D1 => '0',                  -- 1-bit data input (associated with C1)
-			R  => '0',                  -- 1-bit reset input
-			S  => '0'                   -- 1-bit set input
+			O => ADC_CLK_O,
+			I => adc_clk
 		);
 
-	DEBUG(12 downto 0)  <= q(12 downto 0);
-	DEBUG(15 downto 14) <= adc_data_b_b(1 downto 0);
+	CH_A_O <= i;
+	CH_B_O <= q;
 
 end architecture RTL;
