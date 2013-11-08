@@ -158,6 +158,7 @@ begin
 
 	--WB Input Ports
 	DAT_I <= dat_ms(CORE_DATA_WIDTH - 1 downto 0);
+	WE_I  <= we_ms;
 
 	--Synchronise Address sent to User_core
 	process(CLK_I, RST_I)
@@ -167,18 +168,18 @@ begin
 			ADR_I <= (others => '0');
 		else
 			--Perform Falling Edge operations
-			if (falling_edge(CLK_I)) then
+			if (rising_edge(CLK_I)) then
 				if (user_sel = '0') then
 					ADR_I <= (others => '0');
+					STB_I <= '0';
+					cyc_I <= '0';
 				else
 					ADR_I <= std_logic_vector(core_addr - 4);
+					STB_I <= stb_ms and user_sel;
+					cyc_I <= cyc_ms and user_sel;
 				end if;
 			end if;
 		end if;
 	end process;
-
-	WE_I  <= we_ms;
-	STB_I <= stb_ms and user_sel;
-	cyc_I <= cyc_ms and user_sel;
 
 end Behavioral;
