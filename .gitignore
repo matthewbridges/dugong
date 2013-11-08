@@ -78,6 +78,18 @@ _xmsgs/
 *.ini
 */isim
 
+####################
+## Project Specific
+####################
+DUGONG_IP_CORE_Lib/DUGONG_IP_CORE_Lib.xise
+DUGONG_MASTER_Lib/DUGONG_MASTER_Lib.xise
+DUGONG_PRIMITIVES_Lib/DUGONG_PRIMITIVES_Lib.xise
+fmc150/fmc150.xise
+
+DUGONG_MASTER_Lib/dugong_controller/rtl/inst_mem/inst_mem.vhd
+DUGONG_MASTER_Lib/dugong_controller/rtl/inst_mem/inst_mem.xise
+DUGONG_MASTER_Lib/dugong_controller/rtl/inst_mem/inst_mem/*
+
 #################
 ## Eclipse
 #################
