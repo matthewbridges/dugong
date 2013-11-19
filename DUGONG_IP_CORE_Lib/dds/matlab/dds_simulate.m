@@ -1,4 +1,4 @@
-Fs = 100e6%245.76e3;
+Fs = 245.76e3;
 AMPL_WIDTH = 16;
 PHASE_WIDTH = 16;
 
@@ -10,13 +10,13 @@ figure(1); plot(SINE_LUT);
 xlabel('Sample_Number'); ylabel('Amplitude');
 
 %Create Simulation timescale
-N = 2^16;
+N = 128;
 Ts = 1/Fs;
 t = 0:Ts:(N-1)*Ts;
 
 fundamental_frequency = Fs/(2^PHASE_WIDTH);
 
-frequency = Fs/64;
+frequency = Fs/4;
 
 PHASE_INCREMENT = (frequency/fundamental_frequency)
 
@@ -27,9 +27,9 @@ x_gold = sin(2*pi*frequency*t);
 figure(2); plot(t, cha_o/FULL_SCALE, t, x_gold);
 xlabel('Time [seconds]'); ylabel('Amplitude [FS]');
 
-x_error = (x_gold - cha_o/FULL_SCALE);
+x_error = (x_gold*FULL_SCALE - cha_o);
 figure(3); plot(t, x_error);
-xlabel('Time [seconds]'); ylabel('Voltage [Volts]');
+xlabel('Time [seconds]'); ylabel('Error [LSB]');
 
 
 X = fft(cha_o/((2^AMPL_WIDTH-1)-1));
