@@ -10,10 +10,11 @@ entity dac3283_serializer is
 		--System Control Inputs
 		RST_I      : in  STD_LOGIC;
 		--Signal Channel Inputs
-		DSP_CLK_I  : in  STD_LOGIC;
-		CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
-		CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+		DAC_CLK_O  : out STD_LOGIC;
+		CH_C_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+		CH_D_I     : in  STD_LOGIC_VECTOR(15 downto 0);
 		-- DAC interface
+		FMC150_CLK : in  STD_LOGIC;
 		DAC_DCLK_P : out STD_LOGIC;
 		DAC_DCLK_N : out STD_LOGIC;
 		DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
@@ -27,11 +28,17 @@ entity dac3283_serializer is
 end entity dac3283_serializer;
 
 architecture RTL of dac3283_serializer is
+	signal fmc150_clk_b       : std_logic;
+	signal fmc150_clk_b2      : std_ulogic;
 	--Phase Locked Loop
 	signal dac_clk_X4         : std_logic;
 	signal dac_clk_X4_lagging : std_logic;
-	signal clk_fb             : std_logic;
+	signal dac_clk_X1         : std_logic;
+	signal clk_fb_out         : std_logic;
+	signal clk_fb_in          : std_logic;
 	signal pll_locked         : std_logic;
+	--
+	signal dac_clk_b          : std_logic;
 	--PLL Buffers
 	signal dclk_io_clk        : std_logic;
 	signal dclk_serdesstrobe  : std_logic;
@@ -62,14 +69,14 @@ architecture RTL of dac3283_serializer is
 
 begin
 
-	----------------------------SET UP CLOCKING AND PLLs----------------------------
+	----------------------------Input Interface----------------------------
 
 	reset <= RST_I or not (pll_locked);
 
-	process(DSP_CLK_I)
+	process(dac_clk_b)
 	begin
 		--Perform Clock Rising Edge operations
-		if (rising_edge(DSP_CLK_I)) then
+		if (rising_edge(dac_clk_b)) then
 			if (reset = '1') then
 				i            <= (others => '0');
 				q            <= (others => '0');
@@ -82,8 +89,8 @@ begin
 					i <= test_pat_i(to_integer(sample_count)); --CH_A_I;
 					q <= test_pat_q(to_integer(sample_count)); --CH_B_I;
 				else
-					i <= CH_B_I;
-					q <= CH_A_I;
+					i <= CH_D_I;
+					q <= CH_C_I;
 				end if;
 
 				if (sample_count = 0) then
@@ -100,7 +107,27 @@ begin
 
 	----------------------------SET UP CLOCKING AND PLLs----------------------------
 
-	PLL_BASE_inst : PLL_BASE
+	FMC150_CLK_IBUF : IBUF
+		generic map(
+			IOSTANDARD => "LVCMOS33"
+		)
+		port map(
+			O => fmc150_clk_b,
+			I => FMC150_CLK
+		);
+
+	fmc150_clk_BUFIO2 : BUFIO2
+		generic map(
+			DIVIDE_BYPASS => TRUE
+		)
+		port map(
+			DIVCLK       => fmc150_clk_b2,
+			IOCLK        => open,
+			SERDESSTROBE => open,
+			I            => fmc150_clk_b
+		);
+
+	dac_clk_PLL_BASE : PLL_BASE
 		generic map(
 			BANDWIDTH             => "OPTIMIZED", -- "HIGH", "LOW" or "OPTIMIZED"
 			CLKFBOUT_MULT         => 4, -- Multiply value for all CLKOUT clock outputs (1-64)
@@ -109,7 +136,7 @@ begin
 			-- CLKOUT0_DIVIDE - CLKOUT5_DIVIDE: Divide amount for CLKOUT# clock output (1-128)
 			CLKOUT0_DIVIDE        => 1,
 			CLKOUT1_DIVIDE        => 1,
-			CLKOUT2_DIVIDE        => 1,
+			CLKOUT2_DIVIDE        => 4,
 			CLKOUT3_DIVIDE        => 1,
 			CLKOUT4_DIVIDE        => 1,
 			CLKOUT5_DIVIDE        => 1,
@@ -134,18 +161,33 @@ begin
 			RESET_ON_LOSS_OF_LOCK => FALSE -- Must be set to FALSE
 		)
 		port map(
-			CLKFBOUT => clk_fb,         -- 1-bit output: PLL_BASE feedback output
+			CLKFBOUT => clk_fb_out,     -- 1-bit output: PLL_BASE feedback output
 			-- CLKOUT0 - CLKOUT5: 1-bit (each) output: Clock outputs
 			CLKOUT0  => dac_clk_X4,
 			CLKOUT1  => dac_clk_X4_lagging,
-			CLKOUT2  => open,
+			CLKOUT2  => dac_clk_X1,
 			CLKOUT3  => open,
 			CLKOUT4  => open,
 			CLKOUT5  => open,
 			LOCKED   => pll_locked,     -- 1-bit output: PLL_BASE lock status output
-			CLKFBIN  => clk_fb,         -- 1-bit input: Feedback clock input
-			CLKIN    => DSP_CLK_I,      -- 1-bit input: Clock input
+			CLKFBIN  => clk_fb_in,      -- 1-bit input: Feedback clock input
+			CLKIN    => fmc150_clk_b2,  -- 1-bit input: Clock input
 			RST      => RST_I           -- 1-bit input: Reset input
+		);
+
+	fmc150_clk_BUFIO2FB : BUFIO2FB
+		generic map(
+			DIVIDE_BYPASS => TRUE
+		)
+		port map(
+			O => clk_fb_in,
+			I => clk_fb_out
+		);
+
+	dac_clk_BUFG : BUFG
+		port map(
+			O => dac_clk_b,
+			I => dac_clk_X1
 		);
 
 	dclk_io_BUFPLL : BUFPLL
@@ -157,7 +199,7 @@ begin
 			IOCLK        => dclk_io_clk, -- 1-bit output: Output I/O clock
 			LOCK         => dclk_bufpll_locked, -- 1-bit output: Synchronized LOCK output
 			SERDESSTROBE => dclk_serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
-			GCLK         => DSP_CLK_I,  -- 1-bit input: BUFG clock input
+			GCLK         => dac_clk_b,  -- 1-bit input: BUFG clock input
 			LOCKED       => pll_locked, -- 1-bit input: LOCKED input from PLL
 			PLLIN        => DAC_CLK_X4_lagging -- 1-bit input: Clock input from PLL
 		);
@@ -171,7 +213,7 @@ begin
 			IOCLK        => data_io_clk, -- 1-bit output: Output I/O clock
 			LOCK         => data_bufpll_locked, -- 1-bit output: Synchronized LOCK output
 			SERDESSTROBE => data_serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
-			GCLK         => DSP_CLK_I,  -- 1-bit input: BUFG clock input
+			GCLK         => dac_clk_b,  -- 1-bit input: BUFG clock input
 			LOCKED       => pll_locked, -- 1-bit input: LOCKED input from PLL
 			PLLIN        => DAC_CLK_X4  -- 1-bit input: Clock input from PLL
 		);
@@ -197,7 +239,7 @@ begin
 			TQ        => open,          -- 1-bit output: 3-state output to pad or IODELAY2
 			CLK0      => dclk_io_clk,   -- 1-bit input: I/O clock input
 			CLK1      => '0',           -- 1-bit input: Secondary I/O clock input
-			CLKDIV    => DSP_CLK_I,     -- 1-bit input: Logic domain clock input
+			CLKDIV    => dac_clk_b,     -- 1-bit input: Logic domain clock input
 			-- D1 - D4: 1-bit (each) input: Parallel data inputs
 			D1        => '1',
 			D2        => '0',
@@ -252,7 +294,7 @@ begin
 				TQ        => open,      -- 1-bit output: 3-state output to pad or IODELAY2
 				CLK0      => data_io_clk, -- 1-bit input: I/O clock input
 				CLK1      => '0',       -- 1-bit input: Secondary I/O clock input
-				CLKDIV    => DSP_CLK_I, -- 1-bit input: Logic domain clock input
+				CLKDIV    => dac_clk_b, -- 1-bit input: Logic domain clock input
 				-- D1 - D4: 1-bit (each) input: Parallel data inputs
 				D1        => i(pin_count + 8),
 				D2        => i(pin_count),
@@ -307,7 +349,7 @@ begin
 			TQ        => open,          -- 1-bit output: 3-state output to pad or IODELAY2
 			CLK0      => data_io_clk,   -- 1-bit input: I/O clock input
 			CLK1      => '0',           -- 1-bit input: Secondary I/O clock input
-			CLKDIV    => DSP_CLK_I,     -- 1-bit input: Logic domain clock input
+			CLKDIV    => dac_clk_b,     -- 1-bit input: Logic domain clock input
 			-- D1 - D4: 1-bit (each) input: Parallel data inputs
 			D1        => frame,
 			D2        => frame,
@@ -341,6 +383,7 @@ begin
 
 	----------------------------OTHER SIGNAL ASSIGNMENT AND DEBUGING----------------------------
 
-	TXENABLE <= tx_en;
+	TXENABLE  <= tx_en;
+	DAC_CLK_O <= dac_clk_b;
 
 end architecture RTL;
