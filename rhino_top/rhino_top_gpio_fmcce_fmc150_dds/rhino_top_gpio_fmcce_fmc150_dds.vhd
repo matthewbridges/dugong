@@ -131,7 +131,7 @@ architecture RTL of rhino_top_gpio_fmcce_fmc150_dds is
 	signal test_clocks1  : STD_LOGIC_VECTOR(2 downto 0);
 	signal test_clocks2  : STD_LOGIC_VECTOR(2 downto 0);
 	signal adc_clk       : std_logic;
-	signal fmc150_clk_b  : std_logic;
+	signal dac_clk       : std_logic;
 	signal debug_arm     : DWORD_vector(3 downto 0);
 
 	signal dds_ch_a : STD_LOGIC_VECTOR(15 downto 0);
@@ -146,8 +146,8 @@ architecture RTL of rhino_top_gpio_fmcce_fmc150_dds is
 			RST_I        : in  STD_LOGIC;
 			--Signal Channel Inputs
 			ADC_CLK_O    : out STD_LOGIC;
-			CH_A_O       : out STD_LOGIC_VECTOR(13 downto 0);
-			CH_B_O       : out STD_LOGIC_VECTOR(13 downto 0);
+			CH_A_O       : out STD_LOGIC_VECTOR(15 downto 0);
+			CH_B_O       : out STD_LOGIC_VECTOR(15 downto 0);
 			-- FMC150 ADC interface
 			ADC_DCLK_P   : in  STD_LOGIC;
 			ADC_DCLK_N   : in  STD_LOGIC;
@@ -163,10 +163,11 @@ architecture RTL of rhino_top_gpio_fmcce_fmc150_dds is
 			--System Control Inputs
 			RST_I      : in  STD_LOGIC;
 			--Signal Channel Inputs
-			DSP_CLK_I  : in  STD_LOGIC;
+			DAC_CLK_O  : out STD_LOGIC;
 			CH_A_I     : in  STD_LOGIC_VECTOR(15 downto 0);
 			CH_B_I     : in  STD_LOGIC_VECTOR(15 downto 0);
 			-- DAC interface
+			FMC150_CLK : in  STD_LOGIC;
 			DAC_DCLK_P : out STD_LOGIC;
 			DAC_DCLK_N : out STD_LOGIC;
 			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
@@ -188,8 +189,6 @@ begin
 		port map(
 			SYS_CLK_P      => SYS_CLK_P,
 			SYS_CLK_N      => SYS_CLK_N,
-			--SYS_CLK_OUT_P  => SYS_CLK_OUT_P,
-			--SYS_CLK_OUT_N  => SYS_CLK_OUT_N,
 			SYS_RST        => SYS_RST,
 			SYS_PWR_ON     => SYS_PWR_ON,
 			SYS_PLL_Locked => SYS_PLL_Locked,
@@ -379,7 +378,7 @@ begin
 			RST_I     => sys_con_rst,
 			WB_MS     => wb_ms_bus,
 			WB_SM     => wb_sm(7),
-			DSP_CLK_I => fmc150_clk_b,
+			DSP_CLK_I => dac_clk,
 			CH_A_O    => dds_ch_a,
 			CH_B_O    => dds_ch_b
 		);
@@ -388,8 +387,8 @@ begin
 		port map(
 			RST_I        => sys_con_rst,
 			ADC_CLK_O    => adc_clk,
-			CH_A_O       => adc_ch_a(15 downto 2),
-			CH_B_O       => adc_ch_b(15 downto 2),
+			CH_A_O       => adc_ch_a,
+			CH_B_O       => adc_ch_b,
 			ADC_DCLK_P   => ADC_DCLK_P,
 			ADC_DCLK_N   => ADC_DCLK_N,
 			ADC_DATA_A_P => ADC_DATA_A_P,
@@ -398,15 +397,13 @@ begin
 			ADC_DATA_B_N => ADC_DATA_B_N
 		);
 
-	adc_ch_a(1 downto 0) <= "00";
-	adc_ch_b(1 downto 0) <= "00";
-
 	dac : dac3283_serializer
 		port map(
 			RST_I      => sys_con_rst,
-			DSP_CLK_I  => fmc150_clk_b,
+			DAC_CLK_O  => dac_clk,
 			CH_A_I     => dds_ch_a,
 			CH_B_I     => adc_ch_b,
+			FMC150_clk => FMC150_CLK,
 			DAC_DCLK_P => DAC_DCLK_P,
 			DAC_DCLK_N => DAC_DCLK_N,
 			DAC_DATA_P => DAC_DATA_P,
@@ -435,16 +432,7 @@ begin
 			TEST_CLOCKS => test_clocks1
 		);
 
-	FMC150_CLK_IBUFG : IBUFG
-		generic map(
-			IOSTANDARD => "LVCMOS33"
-		)
-		port map(
-			O => fmc150_clk_b,
-			I => FMC150_CLK
-		);
-
-	test_clocks2 <= adc_clk & fmc150_clk_b & sys_con_clk_n;
+	test_clocks2 <= adc_clk & dac_clk & sys_con_clk_n;
 
 	clk_counter_2 : clk_counter_ip
 		generic map(
