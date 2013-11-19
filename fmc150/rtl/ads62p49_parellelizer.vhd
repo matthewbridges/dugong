@@ -12,8 +12,8 @@ entity ads62p49_parallelizer is
 		RST_I        : in  STD_LOGIC;
 		--Signal Channel Inputs
 		ADC_CLK_O    : out STD_LOGIC;
-		CH_A_O       : out STD_LOGIC_VECTOR(13 downto 0);
-		CH_B_O       : out STD_LOGIC_VECTOR(13 downto 0);
+		CH_A_O       : out STD_LOGIC_VECTOR(15 downto 0);
+		CH_B_O       : out STD_LOGIC_VECTOR(15 downto 0);
 		-- FMC150 ADC interface
 		ADC_DCLK_P   : in  STD_LOGIC;
 		ADC_DCLK_N   : in  STD_LOGIC;
@@ -29,12 +29,16 @@ architecture RTL of ads62p49_parallelizer is
 	signal ioclk0     : std_logic;
 	signal ioclk1     : std_logic;
 	signal adc_clk    : std_logic;
+	signal adc_clk_b  : std_logic;
 
 	signal adc_data_a_b : STD_LOGIC_VECTOR(6 downto 0);
 	signal adc_data_b_b : STD_LOGIC_VECTOR(6 downto 0);
 
 	signal i : std_logic_vector(13 downto 0);
 	signal q : std_logic_vector(13 downto 0);
+
+	signal i_signed16 : std_logic_vector(15 downto 0);
+	signal q_signed16 : std_logic_vector(15 downto 0);
 
 begin
 
@@ -57,7 +61,7 @@ begin
 			USE_DOUBLER => FALSE
 		)
 		port map(
-			DIVCLK       => adc_clk,
+			DIVCLK       => open,
 			IOCLK        => ioclk0,
 			SERDESSTROBE => open,
 			I            => adc_dclk_b
@@ -69,13 +73,20 @@ begin
 			USE_DOUBLER => FALSE
 		)
 		port map(
-			DIVCLK       => open,
+			DIVCLK       => adc_clk,
 			IOCLK        => ioclk1,
 			SERDESSTROBE => open,
 			I            => adc_dclk_b
 		);
 
+	ADC_CLK_BUFG : BUFG
+		port map(
+			O => adc_clk_b,
+			I => adc_clk
+		);
+
 	----------------------------DATA(6:0) IO AND BUFFERING----------------------------
+
 	ADC_DATA_pins : for pin_count in 6 downto 0 generate
 		ADC_DATA_A_IBUFDS : IBUFDS
 			generic map(
@@ -136,13 +147,25 @@ begin
 			);
 	end generate ADC_DATA_pins;
 
-	ADC_CLK_BUFG : BUFG
-		port map(
-			O => ADC_CLK_O,
-			I => adc_clk
-		);
+	----------------------------O----------------------------
 
-	CH_A_O <= i;
-	CH_B_O <= q;
+	process(adc_clk_b)
+	begin
+		--Perform Clock Rising Edge operations
+		if (rising_edge(adc_clk_b)) then
+			--Check for reset
+			if (RST_I = '1') then
+				i_signed16 <= (others => '0');
+				q_signed16 <= (others => '0');
+			else
+				i_signed16 <= i & i(13) & i(13);
+				q_signed16 <= q & q(13) & q(13);
+			end if;
+		end if;
+	end process;
+
+	CH_A_O    <= i_signed16;
+	CH_B_O    <= q_signed16;
+	ADC_CLK_O <= adc_clk_b;
 
 end architecture RTL;
