@@ -73,7 +73,7 @@ ARCHITECTURE behavior OF dds_tb IS
 	signal recording : std_logic                          := '0';
 
 	-- Clock period definitions
-	constant CLK_I_period : time := 10 ns;
+	constant CLK_I_period : time := 4069 ps;
 
 BEGIN
 
@@ -114,6 +114,7 @@ BEGIN
 		wait until rising_edge(CLK_I);
 		wait until rising_edge(CLK_I);
 		wait until rising_edge(CLK_I);
+		wait until rising_edge(CLK_I);
 		recording <= '1';
 
 		wait;
@@ -127,7 +128,7 @@ BEGIN
 		end if;
 	end process;
 
-	PHASE_INCREMENT <= x"0100";         --std_logic_vector(n);
+	PHASE_INCREMENT <= x"3000";         --std_logic_vector(n);
 
 	signal_to_text : process
 		file outfile : text is out "dds/matlab/dds_simulation_out.csv"; --declare output file
@@ -143,7 +144,7 @@ BEGIN
 			write(outline, time, left);
 			-- write line to external file.
 			writeline(outfile, outline);
-			time := time + 10;
+			time := time + 4069;
 		end if;
 	end process signal_to_text;
 
