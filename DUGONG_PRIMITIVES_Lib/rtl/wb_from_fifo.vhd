@@ -39,7 +39,7 @@ use IEEE.NUMERIC_STD.ALL;
 library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
-entity wb_fifo is
+entity wb_from_fifo is
 	generic(
 		DATA_WIDTH : NATURAL := 32;
 		FIFO_DEPTH : NATURAL := 4
@@ -64,9 +64,9 @@ entity wb_fifo is
 		FULL     : out STD_LOGIC;
 		EMPTY    : out STD_LOGIC
 	);
-end wb_fifo;
+end wb_from_fifo;
 
-architecture Behavioral of wb_fifo is
+architecture Behavioral of wb_from_fifo is
 	constant FIFO_ADDR_WIDTH : natural := min_num_of_bits(FIFO_DEPTH) - 1;
 	subtype fifo_ptr_type is unsigned(FIFO_ADDR_WIDTH downto 0);
 	signal wr_ptr : fifo_ptr_type := (others => '0');

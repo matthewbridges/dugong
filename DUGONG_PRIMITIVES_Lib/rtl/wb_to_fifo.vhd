@@ -39,7 +39,7 @@ use IEEE.NUMERIC_STD.ALL;
 library DUGONG_PRIMITIVES_Lib;
 use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
-entity wb_fifo is
+entity wb_to_fifo is
 	generic(
 		DATA_WIDTH : NATURAL := 32;
 		FIFO_DEPTH : NATURAL := 4
@@ -51,22 +51,23 @@ entity wb_fifo is
 		--WISHBONE SLAVE interface (WRITE-ONLY)
 		WR_CLK_I : in  STD_LOGIC;
 		WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		WR_WE_I  : in  STD_LOGIC;
+		WR_EN_I  : in  STD_LOGIC;
 		WR_STB_I : in  STD_LOGIC;
 		WR_ACK_O : out STD_LOGIC;
 		--READ PORT
 		--WISHBONE SLAVE interface (READ-ONLY)
 		RD_CLK_I : in  STD_LOGIC;
 		RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+		RD_EN_I  : in  STD_LOGIC;
 		RD_STB_I : in  STD_LOGIC;
 		RD_ACK_O : out STD_LOGIC;
 		--STATUS SIGNALS
 		FULL     : out STD_LOGIC;
 		EMPTY    : out STD_LOGIC
 	);
-end wb_fifo;
+end wb_to_fifo;
 
-architecture Behavioral of wb_fifo is
+architecture Behavioral of wb_to_fifo is
 	constant FIFO_ADDR_WIDTH : natural := min_num_of_bits(FIFO_DEPTH) - 1;
 	subtype fifo_ptr_type is unsigned(FIFO_ADDR_WIDTH downto 0);
 	signal wr_ptr : fifo_ptr_type := (others => '0');
@@ -148,24 +149,19 @@ begin
 	empty_flag     <= collision_flag and not (rd_addr(FIFO_ADDR_WIDTH) xor wr_addr(FIFO_ADDR_WIDTH));
 	full_flag      <= collision_flag and (rd_addr(FIFO_ADDR_WIDTH) xor wr_addr(FIFO_ADDR_WIDTH));
 
-	mem : wb_bram_sync_dp_simple
+	mem : bram_sync_dp_simple
 		generic map(
 			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => FIFO_ADDR_WIDTH
+			ADDR_WIDTH => ADDR_WIDTH
 		)
 		port map(
-			RST_I   => RST_I,
 			A_CLK_I => WR_CLK_I,
 			A_DAT_I => WR_DAT_I,
 			A_ADR_I => wr_addr(FIFO_ADDR_WIDTH - 1 downto 0),
 			A_WE_I  => WR_WE_I,
-			A_STB_I => wr_stb,
-			A_ACK_O => wr_ack,
 			B_CLK_I => RD_CLK_I,
 			B_DAT_O => RD_DAT_O,
-			B_ADR_I => rd_addr(FIFO_ADDR_WIDTH - 1 downto 0),
-			B_STB_I => rd_stb,
-			B_ACK_O => rd_ack
+			B_ADR_I => rd_addr(FIFO_ADDR_WIDTH - 1 downto 0)
 		);
 
 	FULL  <= full_flag;
