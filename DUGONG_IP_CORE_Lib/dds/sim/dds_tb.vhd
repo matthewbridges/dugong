@@ -128,7 +128,7 @@ BEGIN
 		end if;
 	end process;
 
-	PHASE_INCREMENT <= x"3000";         --std_logic_vector(n);
+	PHASE_INCREMENT <= x"0FA0";         --std_logic_vector(n);
 
 	signal_to_text : process
 		file outfile : text is out "dds/matlab/dds_simulation_out.csv"; --declare output file
