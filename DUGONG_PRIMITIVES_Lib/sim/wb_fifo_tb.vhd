@@ -18,13 +18,13 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer:		MATTHEW BRIDGES
+-- Engineer:	MATTHEW BRIDGES
 --
 -- Name:		WB_REGISTER_TB (001)
 -- Type:		TB (F)
 -- Description: 		
 --
--- Compliance:		DUGONG V1.1
+-- Compliance:	DUGONG V1.1
 -- ID:			x 1-1-F-001
 ---------------------------------------------------------------------------------------------------------------
 
@@ -39,27 +39,6 @@ entity wb_fifo_tb is
 end entity wb_fifo_tb;
 
 architecture Behavioral of wb_fifo_tb is
-	component wb_fifo
-		generic(
-			DATA_WIDTH : NATURAL := 32;
-			ADDR_WIDTH : NATURAL := 4
-		);
-		port(
-			RST_I    : in  STD_LOGIC;
-			WR_CLK_I : in  STD_LOGIC;
-			WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			WR_WE_I  : in  STD_LOGIC;
-			WR_STB_I : in  STD_LOGIC;
-			WR_ACK_O : out STD_LOGIC;
-			RD_CLK_I : in  STD_LOGIC;
-			RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-			RD_STB_I : in  STD_LOGIC;
-			RD_ACK_O : out STD_LOGIC;
-			FULL     : out STD_LOGIC;
-			EMPTY    : out STD_LOGIC
-		);
-	end component wb_fifo;
-
 	signal RST_I    : STD_LOGIC                                 := '1';
 	signal WR_CLK_I : STD_LOGIC                                 := '0';
 	signal WR_DAT_I : STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0) := (others => '0');
@@ -73,17 +52,17 @@ architecture Behavioral of wb_fifo_tb is
 	signal FULL     : STD_LOGIC;
 	signal EMPTY    : STD_LOGIC;
 
-	signal n : unsigned(DATA_WIDTH - 1 downto 0) := (others => '0');
+	signal n         : unsigned(DATA_WIDTH - 1 downto 0) := (0=>'1', others => '0');
 
 	-- Clock period definitions
 	constant WR_CLK_I_period : time := 10 ns;
-	constant RD_CLK_I_period : time := 12 ns;
+	constant RD_CLK_I_period : time := 24 ns;
 
 begin
 	uut : wb_fifo
 		generic map(
 			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => 4
+			FIFO_DEPTH => 16
 		)
 		port map(
 			RST_I    => RST_I,
@@ -125,23 +104,37 @@ begin
 
 		RST_I <= '0';
 
-		wait for WR_CLK_I_period * 10;
+		wait for 100 ns;
 
-		WR_STB_I <= '1';
-		WR_WE_I  <= '1';
-
-		wait for WR_CLK_I_period * 10;
-
-		RD_STB_I <= '1';
+		WR_WE_I <= '1';
 
 		wait;
 	end process;
 
 	wr_stim_proc : process
 	begin
-		wait until rising_edge(WR_CLK_I);
+		wait until rising_edge(WR_CLK_I) and (RST_I = '0');
+		WR_STB_I <= '1';
 		WR_DAT_I <= std_logic_vector(n);
-		n        <= n + 1;
+		wait until rising_edge(WR_ACK_O);
+		wait until rising_edge(WR_CLK_I);
+		WR_STB_I <= '0';
+		WR_DAT_I <= (others => '0');
+	end process;
+
+	rd_stim_proc : process
+	begin
+		wait until rising_edge(RD_CLK_I);
+		RD_STB_I <= '1';
+		wait until rising_edge(RD_ACK_O);
+		wait until rising_edge(RD_CLK_I);
+		RD_STB_I <= '0';
+	end process;
+
+	counter_proc : process
+	begin
+		wait until rising_edge(WR_CLK_I);
+		n <= n + 1;
 	end process;
 
 end architecture Behavioral;
