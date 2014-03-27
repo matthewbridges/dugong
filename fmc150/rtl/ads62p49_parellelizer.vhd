@@ -1,7 +1,9 @@
-library ieee;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.numeric_std.ALL;
 
-use ieee.std_logic_1164.all;
-use IEEE.NUMERIC_STD.ALL;
+library DUGONG_PRIMITIVES_Lib;
+use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -12,8 +14,8 @@ entity ads62p49_parallelizer is
 		RST_I        : in  STD_LOGIC;
 		--Signal Channel Inputs
 		ADC_CLK_O    : out STD_LOGIC;
-		CH_A_O       : out STD_LOGIC_VECTOR(15 downto 0);
-		CH_B_O       : out STD_LOGIC_VECTOR(15 downto 0);
+		CH_A_O       : out STD_LOGIC_VECTOR(13 downto 0);
+		CH_B_O       : out STD_LOGIC_VECTOR(13 downto 0);
 		-- FMC150 ADC interface
 		ADC_DCLK_P   : in  STD_LOGIC;
 		ADC_DCLK_N   : in  STD_LOGIC;
@@ -36,9 +38,6 @@ architecture RTL of ads62p49_parallelizer is
 
 	signal i : std_logic_vector(13 downto 0);
 	signal q : std_logic_vector(13 downto 0);
-
-	signal i_signed16 : std_logic_vector(15 downto 0);
-	signal q_signed16 : std_logic_vector(15 downto 0);
 
 begin
 
@@ -147,25 +146,17 @@ begin
 			);
 	end generate ADC_DATA_pins;
 
-	----------------------------O----------------------------
+	----------------------------Output Pipelining----------------------------
 
 	process(adc_clk_b)
 	begin
 		--Perform Clock Rising Edge operations
 		if (rising_edge(adc_clk_b)) then
-			--Check for reset
-			if (RST_I = '1') then
-				i_signed16 <= (others => '0');
-				q_signed16 <= (others => '0');
-			else
-				i_signed16 <= i & i(13) & i(13);
-				q_signed16 <= q & q(13) & q(13);
-			end if;
+			CH_A_O <= i;
+			CH_B_O <= q;
 		end if;
 	end process;
 
-	CH_A_O    <= i_signed16;
-	CH_B_O    <= q_signed16;
 	ADC_CLK_O <= adc_clk_b;
 
 end architecture RTL;
