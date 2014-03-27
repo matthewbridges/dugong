@@ -18,16 +18,19 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 		MATTHEW BRIDGES
+-- Engineer: 	MATTHEW BRIDGES
 --
 -- Name:		GPMC_S (011) -- Should technically be GPMC_S, since it is a slave on the GPMC bus
 -- Type:		PRIMITIVE (2)
--- Description:		This primitive performs all the task required to convert the signals from the ARM's GPMC
---			into Wishbone Master signals. Performance is not optimal, however, the system is able to
---			perform succesful read and writes to wb_register primitives.
+-- Description:	This primitive performs all the task required to convert the signals from the ARM's GPMC
+--				into Wishbone Master signals. Performance is not optimal, however, the system is able to
+--				perform succesful read and writes to wb_register primitives.
 -- 
--- Compliance:		DUGONG V0.3
+-- Compliance:	DUGONG V0.3
 -- ID:			x 0-3-2-00B
+--
+-- Last Modified:	-2013
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
