@@ -8,22 +8,23 @@ use unisim.vcomponents.all;
 entity dac3283_serializer is
 	port(
 		--System Control Inputs
-		RST_I      : in  STD_LOGIC;
+		RST_I          : in  STD_LOGIC;
 		--Signal Channel Inputs
-		DAC_CLK_O  : out STD_LOGIC;
-		CH_C_I     : in  STD_LOGIC_VECTOR(15 downto 0);
-		CH_D_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+		DAC_CLK_O      : out STD_LOGIC;
+		DAC_CLK_DIV4_O : out STD_LOGIC;
+		DAC_READY      : out STD_LOGIC;
+		CH_C_I         : in  STD_LOGIC_VECTOR(15 downto 0);
+		CH_D_I         : in  STD_LOGIC_VECTOR(15 downto 0);
 		-- DAC interface
-		FMC150_CLK : in  STD_LOGIC;
-		DAC_DCLK_P : out STD_LOGIC;
-		DAC_DCLK_N : out STD_LOGIC;
-		DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
-		DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
-		FRAME_P    : out STD_LOGIC;
-		FRAME_N    : out STD_LOGIC;
-		TXENABLE   : out STD_LOGIC;
+		FMC150_CLK     : in  STD_LOGIC;
+		DAC_DCLK_P     : out STD_LOGIC;
+		DAC_DCLK_N     : out STD_LOGIC;
+		DAC_DATA_P     : out STD_LOGIC_VECTOR(7 downto 0);
+		DAC_DATA_N     : out STD_LOGIC_VECTOR(7 downto 0);
+		FRAME_P        : out STD_LOGIC;
+		FRAME_N        : out STD_LOGIC;
 		-- Testing
-		IO_TEST_EN : in  STD_LOGIC
+		IO_TEST_EN     : in  STD_LOGIC
 	);
 end entity dac3283_serializer;
 
@@ -34,6 +35,7 @@ architecture RTL of dac3283_serializer is
 	signal dac_clk_X4         : std_logic;
 	signal dac_clk_X4_lagging : std_logic;
 	signal dac_clk_X1         : std_logic;
+	signal dac_clk_DIV4       : std_logic;
 	signal clk_fb_out         : std_logic;
 	signal clk_fb_in          : std_logic;
 	signal pll_locked         : std_logic;
@@ -52,8 +54,9 @@ architecture RTL of dac3283_serializer is
 	signal sample_count : unsigned(2 downto 0);
 	signal frame_count  : unsigned(7 downto 0);
 
-	signal i     : std_logic_vector(15 downto 0);
-	signal q     : std_logic_vector(15 downto 0);
+	signal i : std_logic_vector(15 downto 0);
+	signal q : std_logic_vector(15 downto 0);
+
 	signal frame : std_logic;
 
 	signal dac_dclk_o : std_logic;
@@ -78,6 +81,7 @@ begin
 		--Perform Clock Rising Edge operations
 		if (rising_edge(dac_clk_b)) then
 			if (reset = '1') then
+				DAC_READY    <= '0';
 				i            <= (others => '0');
 				q            <= (others => '0');
 				frame        <= '0';
@@ -85,6 +89,7 @@ begin
 				frame_count  <= (others => '1');
 				tx_en        <= '0';
 			else
+				DAC_READY <= '1';
 				if (IO_TEST_EN = '1') then
 					i <= test_pat_i(to_integer(sample_count)); --CH_A_I;
 					q <= test_pat_q(to_integer(sample_count)); --CH_B_I;
@@ -137,7 +142,7 @@ begin
 			CLKOUT0_DIVIDE        => 1,
 			CLKOUT1_DIVIDE        => 1,
 			CLKOUT2_DIVIDE        => 4,
-			CLKOUT3_DIVIDE        => 1,
+			CLKOUT3_DIVIDE        => 16,
 			CLKOUT4_DIVIDE        => 1,
 			CLKOUT5_DIVIDE        => 1,
 			-- CLKOUT0_DUTY_CYCLE - CLKOUT5_DUTY_CYCLE: Duty cycle for CLKOUT# clock output (0.01-0.99).
@@ -166,7 +171,7 @@ begin
 			CLKOUT0  => dac_clk_X4,
 			CLKOUT1  => dac_clk_X4_lagging,
 			CLKOUT2  => dac_clk_X1,
-			CLKOUT3  => open,
+			CLKOUT3  => dac_clk_DIV4,
 			CLKOUT4  => open,
 			CLKOUT5  => open,
 			LOCKED   => pll_locked,     -- 1-bit output: PLL_BASE lock status output
@@ -188,6 +193,12 @@ begin
 		port map(
 			O => dac_clk_b,
 			I => dac_clk_X1
+		);
+
+	dac_clk_DIV4_BUFG : BUFG
+		port map(
+			O => DAC_CLK_DIV4_O,
+			I => dac_clk_DIV4
 		);
 
 	dclk_io_BUFPLL : BUFPLL
@@ -383,7 +394,7 @@ begin
 
 	----------------------------OTHER SIGNAL ASSIGNMENT AND DEBUGING----------------------------
 
-	TXENABLE  <= tx_en;
+
 	DAC_CLK_O <= dac_clk_b;
 
 end architecture RTL;
