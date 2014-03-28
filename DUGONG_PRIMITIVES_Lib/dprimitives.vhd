@@ -18,13 +18,13 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 		MATTHEW BRIDGES
+-- Engineer: 	MATTHEW BRIDGES
 --
 -- Name:		DPRIMITIVES (002)
 -- Type:		PACKAGE (1)
--- Description:		A package containing primitives that are used by the DUGONG IP Cores	
+-- Description:	A package containing primitives that are used by the DUGONG IP Cores
 --
--- Compliance:		DUGONG V0.5
+-- Compliance:	DUGONG V0.5
 -- ID:			x 0-5-1-002
 --
 -- Last Modified:	08-NOV-2013
@@ -317,6 +317,24 @@ package dprimitives is
 		);
 	end component wb_bram_sync_dp_simple;
 
+	component bram_sync_dp_simple is
+		generic(
+			DATA_WIDTH : natural := 32;
+			ADDR_WIDTH : natural := 10
+		);
+		port(
+			--PORT A
+			A_CLK_I : in  STD_LOGIC;
+			A_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			A_ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0);
+			A_WE_I  : in  STD_LOGIC;
+			--PORT B
+			B_CLK_I : in  STD_LOGIC;
+			B_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			B_ADR_I : in  STD_LOGIC_VECTOR(ADDR_WIDTH - 1 downto 0)
+		);
+	end component;
+
 	component bram_sync_dp_true is
 		generic(
 			DATA_WIDTH : natural := 32;
@@ -338,6 +356,68 @@ package dprimitives is
 		);
 	end component bram_sync_dp_true;
 
+	-----------------------
+	---- FIFO Elements ----
+	-----------------------
+
+	component fifo_sync is
+		generic(
+			DATA_WIDTH : NATURAL := 32;
+			FIFO_DEPTH : NATURAL := 4
+		);
+		port(
+			--System Control Inputs:
+			RST_I    : in  STD_LOGIC;
+			--WRITE PORT
+			WR_CLK_I : in  STD_LOGIC;
+			WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WR_EN_I  : in  STD_LOGIC;
+			--READ PORT
+			RD_CLK_I : in  STD_LOGIC;
+			RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			RD_EN_I  : in  STD_LOGIC;
+			--STATUS SIGNALS
+			FULL     : out STD_LOGIC;
+			EMPTY    : out STD_LOGIC
+		);
+	end component;
+
+	-----------------------------
+	---- PACKETIZER Elements ----
+	-----------------------------
+
+	component dsp_tx is
+		generic(
+			DATA_WIDTH        : natural := 16;
+			NUMBER_OF_SAMPLES : natural := 4
+		);
+		port(
+			--System Control Inputs
+			RST_I         : in  STD_LOGIC;
+			--DSP Packetizer Signals
+			DSP_CLK_I     : in  STD_LOGIC;
+			DSP_CLK_DIV_I : in  STD_LOGIC;
+			DSP_SAMPLE_I  : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DSP_PACKET_O  : out STD_LOGIC_VECTOR((DATA_WIDTH * NUMBER_OF_SAMPLES) - 1 downto 0)
+		);
+	end component;
+
+	component dsp_rx is
+		generic(
+			DATA_WIDTH        : natural := 16;
+			NUMBER_OF_SAMPLES : natural := 4
+		);
+		port(
+			--System Control Inputs
+			RST_I         : in  STD_LOGIC;
+			--DSP Packetizer Signals
+			DSP_CLK_I     : in  STD_LOGIC;
+			DSP_CLK_DIV_I : in  STD_LOGIC;
+			DSP_SAMPLE_O  : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			DSP_PACKET_I  : in  STD_LOGIC_VECTOR((DATA_WIDTH * NUMBER_OF_SAMPLES) - 1 downto 0)
+		);
+	end component;
+
 end package dprimitives;
 
 package body dprimitives is
@@ -349,7 +429,7 @@ package body dprimitives is
 			remainder := remainder / 2;
 			num       := num + 1;
 		end loop;
-
 		return num;
 	end function;
+
 end package body dprimitives;
