@@ -27,7 +27,7 @@
 -- Compliance:	DUGONG V0.5
 -- ID:			x 0-5-1-002
 --
--- Last Modified:	08-NOV-2013
+-- Last Modified:	28-MAR-2013
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
@@ -257,6 +257,30 @@ package dprimitives is
 			RD_CLK_I : in  STD_LOGIC;
 			RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 			RD_EN_I  : in  STD_LOGIC;
+			--STATUS SIGNALS
+			FULL     : out STD_LOGIC;
+			EMPTY    : out STD_LOGIC
+		);
+	end component;
+
+	component wb_from_fifo is
+		generic(
+			DATA_WIDTH : NATURAL := 32;
+			FIFO_DEPTH : NATURAL := 4
+		);
+		port(
+			--System Control Inputs:
+			RST_I    : in  STD_LOGIC;
+			--WRITE PORT
+			WR_CLK_I : in  STD_LOGIC;
+			WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WR_EN_I  : in  STD_LOGIC;
+			--READ PORT
+			--WISHBONE SLAVE interface (READ-ONLY)
+			RD_CLK_I : in  STD_LOGIC;
+			RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			RD_STB_I : in  STD_LOGIC;
+			RD_ACK_O : out STD_LOGIC;
 			--STATUS SIGNALS
 			FULL     : out STD_LOGIC;
 			EMPTY    : out STD_LOGIC
