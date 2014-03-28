@@ -238,6 +238,31 @@ package dprimitives is
 		);
 	end component;
 
+	component wb_to_fifo is
+		generic(
+			DATA_WIDTH : NATURAL := 32;
+			FIFO_DEPTH : NATURAL := 4
+		);
+		port(
+			--System Control Inputs:
+			RST_I    : in  STD_LOGIC;
+			--WRITE PORT
+			--WISHBONE SLAVE interface (WRITE-ONLY)
+			WR_CLK_I : in  STD_LOGIC;
+			WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			WR_WE_I  : in  STD_LOGIC;
+			WR_STB_I : in  STD_LOGIC;
+			WR_ACK_O : out STD_LOGIC;
+			--READ PORT
+			RD_CLK_I : in  STD_LOGIC;
+			RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			RD_EN_I  : in  STD_LOGIC;
+			--STATUS SIGNALS
+			FULL     : out STD_LOGIC;
+			EMPTY    : out STD_LOGIC
+		);
+	end component;
+
 	component wb_latch is
 		generic(
 			DATA_WIDTH : NATURAL := 32
