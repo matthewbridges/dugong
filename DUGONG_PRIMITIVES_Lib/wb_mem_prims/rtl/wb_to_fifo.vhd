@@ -70,11 +70,13 @@ architecture Behavioral of wb_to_fifo is
 	signal wr_ptr : fifo_ptr_type := (others => '0');
 	signal rd_ptr : fifo_ptr_type := (others => '0');
 
-	signal wr_addr : std_logic_vector(FIFO_ADDR_WIDTH downto 0);
-	signal rd_addr : std_logic_vector(FIFO_ADDR_WIDTH downto 0);
+	signal wr_addr : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
+	signal rd_addr : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
 
-	signal wr_stb  : std_logic;
-	signal wr_ack  : std_logic;
+	signal wr_en : std_logic;
+	signal rd_en : std_logic;
+
+	signal wr_ack : std_logic;
 
 	signal collision_flag : std_logic;
 	signal full_flag      : std_logic;
@@ -87,27 +89,26 @@ begin
 	begin
 		--RESET STATE
 		if (RST_I = '1') then
-			wr_ptr  <= (others => '0');
-			wr_addr <= (others => '0');
-			wr_ack  <= '0';
+			wr_ptr <= (others => '0');
+			wr_ack <= '0';
 		else
 			--Perform Clock Rising Edge operations
 			if (rising_edge(WR_CLK_I)) then
-				if (wr_stb = '1') then
-					--WRITING STATE
+				--WRITING STATE
+				if (wr_en = '1') then
 					if (wr_ack = '0') then
 						wr_ptr <= WR_ptr + 1;
 						wr_ack <= '1';
 					end if;
 				else
-					wr_addr <= std_logic_vector(wr_ptr);
-					wr_ack  <= '0';
+					wr_ack <= '0';
 				end if;
 			end if;
 		end if;
 	end process;
 
-	wr_stb   <= (WR_STB_I and WR_WE_I) when (full_flag = '0') else '0';
+	wr_en    <= (WR_STB_I and WR_WE_I) when (full_flag = '0') else '0';
+	wr_addr  <= std_logic_vector(wr_ptr(FIFO_ADDR_WIDTH - 1 downto 0));
 	WR_ACK_O <= wr_ack;
 
 	--READ Port
@@ -115,25 +116,24 @@ begin
 	begin
 		--RESET STATE
 		if (RST_I = '1') then
-			rd_ptr  <= (others => '0');
+			rd_ptr <= (others => '0');
 		else
 			--Perform Clock Rising Edge operations
 			if (rising_edge(RD_CLK_I)) then
 				--READING STATE
-				if (RD_EN_I = '1') then
-					if (empty_flag = '0') then
-						rd_ptr <= rd_ptr + 1;
-					end if;
+				if (rd_en = '1') then
+					rd_ptr <= rd_ptr + 1;
 				end if;
 			end if;
 		end if;
 	end process;
-	
-	rd_addr <= std_logic_vector(rd_ptr);
 
-	collision_flag <= '1' when (rd_addr(FIFO_ADDR_WIDTH - 1 downto 0) = wr_addr(FIFO_ADDR_WIDTH - 1 downto 0)) else '0';
-	empty_flag     <= collision_flag and not (rd_addr(FIFO_ADDR_WIDTH) xor wr_addr(FIFO_ADDR_WIDTH));
-	full_flag      <= collision_flag and (rd_addr(FIFO_ADDR_WIDTH) xor wr_addr(FIFO_ADDR_WIDTH));
+	rd_en   <= (RD_EN_I) when (empty_flag = '0') else '0';
+	rd_addr <= std_logic_vector(rd_ptr(FIFO_ADDR_WIDTH - 1 downto 0));
+
+	collision_flag <= '1' when (rd_ptr(FIFO_ADDR_WIDTH - 1 downto 0) = wr_ptr(FIFO_ADDR_WIDTH - 1 downto 0)) else '0';
+	empty_flag     <= collision_flag and not (rd_ptr(FIFO_ADDR_WIDTH) xor wr_ptr(FIFO_ADDR_WIDTH));
+	full_flag      <= collision_flag and (rd_ptr(FIFO_ADDR_WIDTH) xor wr_ptr(FIFO_ADDR_WIDTH));
 
 	mem : bram_sync_dp_simple
 		generic map(
@@ -144,7 +144,7 @@ begin
 			A_CLK_I => WR_CLK_I,
 			A_DAT_I => WR_DAT_I,
 			A_ADR_I => wr_addr(FIFO_ADDR_WIDTH - 1 downto 0),
-			A_WE_I  => WR_WE_I,
+			A_WE_I  => wr_en,
 			B_CLK_I => RD_CLK_I,
 			B_DAT_O => RD_DAT_O,
 			B_ADR_I => rd_addr(FIFO_ADDR_WIDTH - 1 downto 0)
