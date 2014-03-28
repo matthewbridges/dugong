@@ -1,9 +1,9 @@
---                    
--- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\_________     
+--
+-- _______/\\\\\\\\\_______/\\\________/\\\____/\\\\\\\\\\\____/\\\\\_____/\\\_________/\\\\\________
 -- \ ____/\\\///////\\\____\/\\\_______\/\\\___\/////\\\///____\/\\\\\\___\/\\\_______/\\\///\\\_____\
---  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\    
---   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\   
---    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\  
+--  \ ___\/\\\_____\/\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\/\\\__\/\\\_____/\\\/__\///\\\___\
+--   \ ___\/\\\\\\\\\\\/_____\/\\\\\\\\\\\\\\\_______\/\\\_______\/\\\//\\\_\/\\\____/\\\______\//\\\__\
+--    \ ___\/\\\//////\\\_____\/\\\/////////\\\_______\/\\\_______\/\\\\//\\\\/\\\___\/\\\_______\/\\\__\
 --     \ ___\/\\\____\//\\\____\/\\\_______\/\\\_______\/\\\_______\/\\\_\//\\\/\\\___\//\\\______/\\\___\
 --      \ ___\/\\\_____\//\\\___\/\\\_______\/\\\_______\/\\\_______\/\\\__\//\\\\\\____\///\\\__/\\\_____\
 --       \ ___\/\\\______\//\\\__\/\\\_______\/\\\____/\\\\\\\\\\\___\/\\\___\//\\\\\______\///\\\\\/______\
@@ -18,14 +18,17 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer:	MATTHEW BRIDGES
+-- Engineer: 	MATTHEW BRIDGES
 --
--- Name:		WB_REGISTER_TB (001)
+-- Name:
 -- Type:		TB (F)
--- Description: 		
+-- Description:
 --
--- Compliance:	DUGONG V1.1
--- ID:			x 1-1-F-001
+-- Compliance:	DUGONG V0.5
+-- ID:			x 0-5-F-00A
+--
+-- Last Modified:	28-MAR-2014
+-- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -106,39 +109,34 @@ begin
 		RST_I <= '0';
 
 		wait for 100 ns;
+		wait until falling_edge(WR_CLK_I);
 
 		WR_WE_I <= '1';
+
+		wait for 100 ns;
+		wait until falling_edge(RD_CLK_I);
+
+		RD_EN_I <= '1';
 
 		wait;
 	end process;
 
 	wr_stim_proc : process
 	begin
-		wait until rising_edge(WR_CLK_I) and (RST_I = '0');
-		WR_STB_I <= '1';
-		WR_DAT_I <= std_logic_vector(n);
-		wait until rising_edge(WR_ACK_O);
 		wait until rising_edge(WR_CLK_I);
-		WR_STB_I <= '0';
-		WR_DAT_I <= (others => '0');
-	end process;
-
-	rd_stim_proc : process
-	begin
-		wait until falling_edge(EMPTY);
-		wait until rising_edge(RD_CLK_I);
-		RD_EN_I <= '0';
-		wait until rising_edge(RD_CLK_I);
-		wait until rising_edge(RD_CLK_I);
-		wait until rising_edge(RD_CLK_I);
-		wait until rising_edge(RD_CLK_I);
-		wait until rising_edge(RD_CLK_I);
-		RD_EN_I <= '0';
+		if (RST_I = '0') and (WR_WE_I = '1') then
+			WR_STB_I <= '1';
+			WR_DAT_I <= std_logic_vector(n);
+			wait until rising_edge(WR_ACK_O);
+			wait until rising_edge(WR_CLK_I);
+			WR_STB_I <= '0';
+			WR_DAT_I <= (others => '0');
+		end if;
 	end process;
 
 	counter_proc : process
 	begin
-		wait until rising_edge(WR_CLK_I);
+		wait until falling_edge(WR_CLK_I);
 		n <= n + 1;
 	end process;
 
