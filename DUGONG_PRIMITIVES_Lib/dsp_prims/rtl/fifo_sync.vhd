@@ -18,17 +18,17 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 		MATTHEW BRIDGES
+-- Engineer: 	MATTHEW BRIDGES
 --
 -- Name:		FIFO_SYNC (010)
 -- Type:		PRIMITIVE (2)
--- Description:		A FIFO primitive with one read port and one write port which
---			can take on generic data widths.
+-- Description:	A FIFO primitive with one read port and one write port which can take on
+--				generic data widths.
 --
--- Compliance:		DUGONG V0.5
--- ID:			x 0-5-4-003
+-- Compliance:	DUGONG V0.5
+-- ID:			x 0-5-2-010
 --
--- Last Modified:	19-NOV-2013
+-- Last Modified:	28-MAR-2013
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
@@ -117,7 +117,6 @@ begin
 	end process;
 
 	rd_addr <= std_logic_vector(rd_ptr(FIFO_ADDR_WIDTH - 1 downto 0));
-	--RD_DAT_O <= x"0000000" & rd_addr;
 	rd_en   <= RD_EN_I when (empty_flag = '0') else '0';
 
 	collision_flag <= '1' when (rd_ptr(FIFO_ADDR_WIDTH - 1 downto 0) = wr_ptr(FIFO_ADDR_WIDTH - 1 downto 0)) else '0';
