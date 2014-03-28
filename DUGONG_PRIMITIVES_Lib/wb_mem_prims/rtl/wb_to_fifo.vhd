@@ -22,13 +22,13 @@
 --
 -- Name:		WB_FIFO (010)
 -- Type:		PRIMITIVE (2)
--- Description:	A FIFO primitive with one read port and one write port which
---				can take on generic data widths.
+-- Description:	A FIFO primitive with one read port and one WISHBONE write port which
+--				can take on generic data widths and FIFO Depths.
 --
 -- Compliance:	DUGONG V0.3
 -- ID:			x 0-3-2-00A
 --
--- Last Modified:	26-MAR-2014
+-- Last Modified:	28-MAR-2014
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
@@ -51,16 +51,13 @@ entity wb_to_fifo is
 		--WISHBONE SLAVE interface (WRITE-ONLY)
 		WR_CLK_I : in  STD_LOGIC;
 		WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
-		WR_EN_I  : in  STD_LOGIC;
+		WR_WE_I  : in  STD_LOGIC;
 		WR_STB_I : in  STD_LOGIC;
 		WR_ACK_O : out STD_LOGIC;
 		--READ PORT
-		--WISHBONE SLAVE interface (READ-ONLY)
 		RD_CLK_I : in  STD_LOGIC;
 		RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
 		RD_EN_I  : in  STD_LOGIC;
-		RD_STB_I : in  STD_LOGIC;
-		RD_ACK_O : out STD_LOGIC;
 		--STATUS SIGNALS
 		FULL     : out STD_LOGIC;
 		EMPTY    : out STD_LOGIC
@@ -78,10 +75,6 @@ architecture Behavioral of wb_to_fifo is
 
 	signal wr_stb  : std_logic;
 	signal wr_ack  : std_logic;
-	signal wr_done : std_logic;
-	signal rd_stb  : std_logic;
-	signal rd_ack  : std_logic;
-	signal rd_done : std_logic;
 
 	signal collision_flag : std_logic;
 	signal full_flag      : std_logic;
@@ -90,25 +83,25 @@ architecture Behavioral of wb_to_fifo is
 begin
 
 	--WRITE Port
-	process(WR_CLK_I, RST_I, WR_STB_I)
+	process(WR_CLK_I, RST_I)
 	begin
 		--RESET STATE
 		if (RST_I = '1') then
 			wr_ptr  <= (others => '0');
 			wr_addr <= (others => '0');
-			wr_done <= '0';
+			wr_ack  <= '0';
 		else
 			--Perform Clock Rising Edge operations
 			if (rising_edge(WR_CLK_I)) then
 				if (wr_stb = '1') then
 					--WRITING STATE
-					if (wr_done = '0') then
-						wr_ptr  <= WR_ptr + 1;
-						wr_done <= '1';
+					if (wr_ack = '0') then
+						wr_ptr <= WR_ptr + 1;
+						wr_ack <= '1';
 					end if;
 				else
 					wr_addr <= std_logic_vector(wr_ptr);
-					wr_done <= '0';
+					wr_ack  <= '0';
 				end if;
 			end if;
 		end if;
@@ -118,32 +111,25 @@ begin
 	WR_ACK_O <= wr_ack;
 
 	--READ Port
-	process(RD_CLK_I, RST_I, RD_STB_I)
+	process(RD_CLK_I, RST_I)
 	begin
 		--RESET STATE
 		if (RST_I = '1') then
 			rd_ptr  <= (others => '0');
-			rd_addr <= (others => '0');
-			rd_done <= '0';
 		else
 			--Perform Clock Rising Edge operations
 			if (rising_edge(RD_CLK_I)) then
 				--READING STATE
-				if (rd_stb = '1') then
-					if (rd_done = '0') then
-						rd_ptr  <= rd_ptr + 1;
-						rd_done <= '1';
+				if (RD_EN_I = '1') then
+					if (empty_flag = '0') then
+						rd_ptr <= rd_ptr + 1;
 					end if;
-				else
-					rd_addr <= std_logic_vector(rd_ptr);
-					rd_done <= '0';
 				end if;
 			end if;
 		end if;
 	end process;
-
-	rd_stb   <= (RD_STB_I) when (empty_flag = '0') else '0';
-	RD_ACK_O <= rd_ack;
+	
+	rd_addr <= std_logic_vector(rd_ptr);
 
 	collision_flag <= '1' when (rd_addr(FIFO_ADDR_WIDTH - 1 downto 0) = wr_addr(FIFO_ADDR_WIDTH - 1 downto 0)) else '0';
 	empty_flag     <= collision_flag and not (rd_addr(FIFO_ADDR_WIDTH) xor wr_addr(FIFO_ADDR_WIDTH));
@@ -152,7 +138,7 @@ begin
 	mem : bram_sync_dp_simple
 		generic map(
 			DATA_WIDTH => DATA_WIDTH,
-			ADDR_WIDTH => ADDR_WIDTH
+			ADDR_WIDTH => FIFO_ADDR_WIDTH
 		)
 		port map(
 			A_CLK_I => WR_CLK_I,
