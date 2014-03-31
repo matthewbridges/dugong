@@ -55,8 +55,6 @@ entity rhino_top_gpio_fmcce_fmc150 is
 		SYS_CLK_N       : in    STD_LOGIC;
 		SYS_RST         : in    STD_LOGIC;
 		--System Control Outputs
-		--SYS_CLK_OUT_P   : out   STD_LOGIC;
-		--SYS_CLK_OUT_N   : out   STD_LOGIC;
 		SYS_PWR_ON      : out   STD_LOGIC;
 		SYS_PLL_Locked  : out   STD_LOGIC;
 		--GPMC Interface
@@ -103,8 +101,7 @@ entity rhino_top_gpio_fmcce_fmc150 is
 		DAC_DATA_P      : out   STD_LOGIC_VECTOR(7 downto 0);
 		DAC_DATA_N      : out   STD_LOGIC_VECTOR(7 downto 0);
 		FRAME_P         : out   STD_LOGIC;
-		FRAME_N         : out   STD_LOGIC;
-		TXENABLE        : out   STD_LOGIC
+		FRAME_N         : out   STD_LOGIC
 	);
 end entity rhino_top_gpio_fmcce_fmc150;
 
@@ -130,52 +127,74 @@ architecture RTL of rhino_top_gpio_fmcce_fmc150 is
 	-----------------------
 	signal test_clocks1  : STD_LOGIC_VECTOR(2 downto 0);
 	signal test_clocks2  : STD_LOGIC_VECTOR(2 downto 0);
-	signal adc_clk       : std_logic;
-	signal dac_clk       : std_logic;
 	signal debug_arm     : DWORD_vector(3 downto 0);
+	-----------------------
+	-- DSP Signals --
+	-----------------------
+	signal dsp_clk       : std_logic;
+	signal dsp_clk_DIV4  : std_logic;
 
-	signal adc_ch_a : STD_LOGIC_VECTOR(15 downto 0);
-	signal adc_ch_b : STD_LOGIC_VECTOR(15 downto 0);
+	signal dac_ready  : STD_LOGIC;
+	signal fifo_rd_en : std_logic;
 
-	component ads62p49_parallelizer is
+	signal dsp_packet_ch_a : STD_LOGIC_VECTOR(55 downto 0);
+	signal dsp_packet_ch_b : STD_LOGIC_VECTOR(55 downto 0);
+
+	component ads62p49_phy is
+		generic(
+			NUMBER_OF_SAMPLES : natural := 4
+		);
 		port(
 			--System Control Inputs
-			RST_I        : in  STD_LOGIC;
-			--Signal Channel Inputs
-			ADC_CLK_O    : out STD_LOGIC;
-			CH_A_O       : out STD_LOGIC_VECTOR(15 downto 0);
-			CH_B_O       : out STD_LOGIC_VECTOR(15 downto 0);
+			RST_I         : in  STD_LOGIC;
+			--DSP Packet Signals
+			DSP_CLK_I     : in  STD_LOGIC;
+			DSP_CLK_DIV_I : in  STD_LOGIC;
+			CH_A_PACKET_O : out STD_LOGIC_VECTOR((14 * NUMBER_OF_SAMPLES) - 1 downto 0);
+			CH_A_EN_I     : in  STD_LOGIC;
+			CH_A_VALID_O  : out STD_LOGIC;
+			CH_B_PACKET_O : out STD_LOGIC_VECTOR((14 * NUMBER_OF_SAMPLES) - 1 downto 0);
+			CH_B_EN_I     : in  STD_LOGIC;
+			CH_B_VALID_O  : out STD_LOGIC;
 			-- FMC150 ADC interface
-			ADC_DCLK_P   : in  STD_LOGIC;
-			ADC_DCLK_N   : in  STD_LOGIC;
-			ADC_DATA_A_P : in  STD_LOGIC_VECTOR(6 downto 0);
-			ADC_DATA_A_N : in  STD_LOGIC_VECTOR(6 downto 0);
-			ADC_DATA_B_P : in  STD_LOGIC_VECTOR(6 downto 0);
-			ADC_DATA_B_N : in  STD_LOGIC_VECTOR(6 downto 0)
+			ADC_DCLK_P    : in  STD_LOGIC;
+			ADC_DCLK_N    : in  STD_LOGIC;
+			ADC_DATA_A_P  : in  STD_LOGIC_VECTOR(6 downto 0);
+			ADC_DATA_A_N  : in  STD_LOGIC_VECTOR(6 downto 0);
+			ADC_DATA_B_P  : in  STD_LOGIC_VECTOR(6 downto 0);
+			ADC_DATA_B_N  : in  STD_LOGIC_VECTOR(6 downto 0)
 		);
-	end component ads62p49_parallelizer;
+	end component;
 
-	component dac3283_serializer is
+	component dac3283_phy is
+		generic(
+			NUMBER_OF_SAMPLES : natural := 4
+		);
 		port(
 			--System Control Inputs
-			RST_I      : in  STD_LOGIC;
-			--Signal Channel Inputs
-			DAC_CLK_O  : out STD_LOGIC;
-			CH_C_I     : in  STD_LOGIC_VECTOR(15 downto 0);
-			CH_D_I     : in  STD_LOGIC_VECTOR(15 downto 0);
+			RST_I         : in  STD_LOGIC;
+			--DSP Packet Signals
+			DSP_CLK_O     : out STD_LOGIC;
+			DSP_CLK_DIV_O : out STD_LOGIC;
+			DAC_READY     : out STD_LOGIC;
+			CH_A_PACKET_I : in  STD_LOGIC_VECTOR((14 * NUMBER_OF_SAMPLES) - 1 downto 0);
+			CH_A_EN_I     : in  STD_LOGIC;
+			CH_A_VALID_I  : in  STD_LOGIC;
+			CH_B_PACKET_I : in  STD_LOGIC_VECTOR((14 * NUMBER_OF_SAMPLES) - 1 downto 0);
+			CH_B_EN_I     : in  STD_LOGIC;
+			CH_B_VALID_I  : in  STD_LOGIC;
 			-- DAC interface
-			FMC150_CLK : in  STD_LOGIC;
-			DAC_DCLK_P : out STD_LOGIC;
-			DAC_DCLK_N : out STD_LOGIC;
-			DAC_DATA_P : out STD_LOGIC_VECTOR(7 downto 0);
-			DAC_DATA_N : out STD_LOGIC_VECTOR(7 downto 0);
-			FRAME_P    : out STD_LOGIC;
-			FRAME_N    : out STD_LOGIC;
-			TXENABLE   : out STD_LOGIC;
+			FMC150_CLK    : in  STD_LOGIC;
+			DAC_DCLK_P    : out STD_LOGIC;
+			DAC_DCLK_N    : out STD_LOGIC;
+			DAC_DATA_P    : out STD_LOGIC_VECTOR(7 downto 0);
+			DAC_DATA_N    : out STD_LOGIC_VECTOR(7 downto 0);
+			FRAME_P       : out STD_LOGIC;
+			FRAME_N       : out STD_LOGIC;
 			-- Testing
-			IO_TEST_EN : in  STD_LOGIC
+			IO_TEST_EN    : in  STD_LOGIC
 		);
-	end component dac3283_serializer;
+	end component;
 
 begin
 	--------------------------------
@@ -366,35 +385,63 @@ begin
 	---- DSP WISHBONE IP CORES ----
 	------------------------------------
 
-	adc : ads62p49_parallelizer
+	process(dsp_clk_DIV4)
+	begin
+		--Perform Clock Rising Edge operations
+		if (rising_edge(dsp_clk_DIV4)) then
+			if (sys_con_rst = '1') then
+				fifo_rd_en <= '0';
+			else
+				fifo_rd_en <= dac_ready;
+			end if;
+		end if;
+	end process;
+
+	adc : ads62p49_phy
+		generic map(
+			NUMBER_OF_SAMPLES => 4
+		)
 		port map(
-			RST_I        => sys_con_rst,
-			ADC_CLK_O    => adc_clk,
-			CH_A_O       => adc_ch_a,
-			CH_B_O       => adc_ch_b,
-			ADC_DCLK_P   => ADC_DCLK_P,
-			ADC_DCLK_N   => ADC_DCLK_N,
-			ADC_DATA_A_P => ADC_DATA_A_P,
-			ADC_DATA_A_N => ADC_DATA_A_N,
-			ADC_DATA_B_P => ADC_DATA_B_P,
-			ADC_DATA_B_N => ADC_DATA_B_N
+			RST_I         => sys_con_rst,
+			DSP_CLK_I     => dsp_clk,
+			DSP_CLK_DIV_I => dsp_clk_DIV4,
+			CH_A_PACKET_O => dsp_packet_ch_a,
+			CH_A_EN_I     => fifo_rd_en,
+			CH_A_VALID_O  => open,
+			CH_B_PACKET_O => dsp_packet_ch_b,
+			CH_B_EN_I     => fifo_rd_en,
+			CH_B_VALID_O  => open,
+			ADC_DCLK_P    => ADC_DCLK_P,
+			ADC_DCLK_N    => ADC_DCLK_N,
+			ADC_DATA_A_P  => ADC_DATA_A_P,
+			ADC_DATA_A_N  => ADC_DATA_A_N,
+			ADC_DATA_B_P  => ADC_DATA_B_P,
+			ADC_DATA_B_N  => ADC_DATA_B_N
 		);
 
-	dac : dac3283_serializer
+	dac : dac3283_phy
+		generic map(
+			NUMBER_OF_SAMPLES => 4
+		)
 		port map(
-			RST_I      => sys_con_rst,
-			DAC_CLK_O  => dac_clk,
-			CH_C_I     => adc_ch_b,
-			CH_D_I     => adc_ch_a,
-			FMC150_clk => FMC150_CLK,
-			DAC_DCLK_P => DAC_DCLK_P,
-			DAC_DCLK_N => DAC_DCLK_N,
-			DAC_DATA_P => DAC_DATA_P,
-			DAC_DATA_N => DAC_DATA_N,
-			FRAME_P    => FRAME_P,
-			FRAME_N    => FRAME_N,
-			TXENABLE   => TXENABLE,
-			IO_TEST_EN => '0'
+			RST_I         => sys_con_rst,
+			DSP_CLK_O     => dsp_clk,
+			DSP_CLK_DIV_O => dsp_clk_DIV4,
+			DAC_READY     => DAC_READY,
+			CH_A_PACKET_I => dsp_packet_ch_a,
+			CH_A_EN_I     => '1',
+			CH_A_VALID_I  => '1',
+			CH_B_PACKET_I => dsp_packet_ch_b,
+			CH_B_EN_I     => '1',
+			CH_B_VALID_I  => '1',
+			FMC150_CLK    => FMC150_CLK,
+			DAC_DCLK_P    => DAC_DCLK_P,
+			DAC_DCLK_N    => DAC_DCLK_N,
+			DAC_DATA_P    => DAC_DATA_P,
+			DAC_DATA_N    => DAC_DATA_N,
+			FRAME_P       => FRAME_P,
+			FRAME_N       => FRAME_N,
+			IO_TEST_EN    => '0'
 		);
 
 	-------------------------
@@ -415,7 +462,7 @@ begin
 			TEST_CLOCKS => test_clocks1
 		);
 
-	test_clocks2 <= adc_clk & dac_clk & sys_con_clk_n;
+	test_clocks2 <= dsp_clk & dsp_clk_DIV4 & sys_con_clk_n;
 
 	clk_counter_2 : clk_counter_ip
 		generic map(
@@ -441,7 +488,7 @@ begin
 			LATCH_D => debug_arm
 		);
 
-	debug_arm(2) <= adc_ch_a & adc_ch_b;
-	debug_arm(3) <= adc_ch_a & adc_ch_b;
+	debug_arm(2) <= debug_arm(0);
+	debug_arm(3) <= debug_arm(1);
 
 end architecture RTL;
