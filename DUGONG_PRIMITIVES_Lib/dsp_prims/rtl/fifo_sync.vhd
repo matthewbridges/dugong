@@ -28,7 +28,7 @@
 -- Compliance:	DUGONG V0.5
 -- ID:			x 0-5-2-010
 --
--- Last Modified:	28-MAR-2013
+-- Last Modified:	31-MAR-2013
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
@@ -80,14 +80,14 @@ architecture Behavioral of fifo_sync is
 begin
 
 	--WRITE Port
-	process(WR_CLK_I, RST_I)
+	process(WR_CLK_I)
 	begin
-		--RESET STATE
-		if (RST_I = '1') then
-			wr_ptr <= (others => '0');
-		else
-			--Perform Clock Rising Edge operations
-			if (rising_edge(WR_CLK_I)) then
+		--Perform Clock Rising Edge operations
+		if (rising_edge(WR_CLK_I)) then
+			--RESET STATE (SYNCHRONOUS)
+			if (RST_I = '1') then
+				wr_ptr <= (others => '0');
+			else
 				--WRITING STATE
 				if (wr_en = '1') then
 					wr_ptr <= WR_ptr + 1;
@@ -100,14 +100,14 @@ begin
 	wr_en   <= WR_EN_I when (full_flag = '0') else '0';
 
 	--READ Port
-	process(RD_CLK_I, RST_I)
+	process(RD_CLK_I)
 	begin
-		--RESET STATE
-		if (RST_I = '1') then
-			rd_ptr <= (others => '0');
-		else
-			--Perform Clock Rising Edge operations
-			if (rising_edge(RD_CLK_I)) then
+		--Perform Clock Rising Edge operations
+		if (rising_edge(RD_CLK_I)) then
+			--RESET STATE (SYNCHRONOUS)
+			if (RST_I = '1') then
+				rd_ptr <= (others => '0');
+			else
 				--READING STATE
 				if (rd_en = '1') then
 					rd_ptr <= rd_ptr + 1;

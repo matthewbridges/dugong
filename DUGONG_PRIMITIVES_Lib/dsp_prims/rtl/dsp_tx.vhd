@@ -18,16 +18,16 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 		MATTHEW BRIDGES
+-- Engineer: 	MATTHEW BRIDGES
 --
 -- Name:		
 -- Type:		
 -- Description:		
 --
--- Compliance:		DUGONG V0.5
+-- Compliance:	DUGONG V0.5
 -- ID:			x 0-5-
 --
--- Last Modified:	21-NOV-2013
+-- Last Modified:	31-MAR-2014
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
@@ -63,6 +63,7 @@ begin
 	begin
 		--Perform Clock Rising Edge operations
 		if (rising_edge(DSP_CLK_I)) then
+			--RESET STATE (SYNCHRONOUS)
 			if (RST_I = '1') then
 				temp         <= (others => (others => '0'));
 				sample_count <= (others => '0');
@@ -83,6 +84,7 @@ begin
 		begin
 			--Perform Clock Rising Edge operations
 			if (rising_edge(DSP_CLK_DIV_I)) then
+				--RESET STATE (SYNCHRONOUS)
 				if (RST_I = '1') then
 					DSP_PACKET_O((n + 1) * DATA_WIDTH - 1 downto n * DATA_WIDTH) <= (others => '0');
 				else
