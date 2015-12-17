@@ -221,6 +221,32 @@ package dcores is
 		);
 	end component fmc150_controller_ip;
 
+	component fmc103_controller_ip is
+		generic(
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 32;
+			CORE_ADDR_WIDTH : NATURAL                           := 4
+		);
+		port(
+			--System Control Inputs
+			CLK_I         : in    STD_LOGIC;
+			RST_I         : in    STD_LOGIC;
+			--Slave to WB
+			WB_MS         : in    WB_MS_type;
+			WB_SM         : out   WB_SM_type;
+			--Serial Peripheral Interface
+			SPI_CLK_P_I   : in    STD_LOGIC;
+			SPI_CLK_N_I   : in    STD_LOGIC;
+			AD9510_SCLK_O : out   STD_LOGIC;
+			AD9510_MOSI_O : out   STD_LOGIC;
+			AD9510_MISO_I : in    STD_LOGIC;
+			AD9510_N_SS_O : out   STD_LOGIC;
+			FMC103_GPIO   : inout STD_LOGIC_VECTOR(0 downto 0);
+			-- Debug
+			DEBUG         : out   STD_LOGIC_VECTOR(31 downto 0)
+		);
+	end component fmc103_controller_ip;
+
 end package dcores;
 
 package body dcores is
