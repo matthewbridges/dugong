@@ -448,33 +448,33 @@ begin
 	---- DEBUGGING CORES ----
 	-------------------------
 
---	test_clocks1 <= clk_10MHz_P & clk_10MHz_N & sys_con_clk_n;
---
---	clk_counter_1 : clk_counter_ip
---		generic map(
---			BASE_ADDR => x"07000000"
---		)
---		port map(
---			CLK_I       => sys_con_clk,
---			RST_I       => sys_con_rst,
---			WB_MS       => wb_ms_bus,
---			WB_SM       => wb_sm(7),
---			TEST_CLOCKS => test_clocks1
---		);
---
---	test_clocks2 <= dsp_clk & dsp_clk_DIV4 & sys_con_clk_n;
---
---	clk_counter_2 : clk_counter_ip
---		generic map(
---			BASE_ADDR => x"07000020"
---		)
---		port map(
---			CLK_I       => sys_con_clk,
---			RST_I       => sys_con_rst,
---			WB_MS       => wb_ms_bus,
---			WB_SM       => wb_sm(8),
---			TEST_CLOCKS => test_clocks2
---		);
+	test_clocks1 <= clk_10MHz_P & clk_10MHz_N & sys_con_clk_n;
+
+	clk_counter_1 : clk_counter_ip
+		generic map(
+			BASE_ADDR => x"07000000"
+		)
+		port map(
+			CLK_I       => sys_con_clk,
+			RST_I       => sys_con_rst,
+			WB_MS       => wb_ms_bus,
+			WB_SM       => wb_sm(7),
+			TEST_CLOCKS => test_clocks1
+		);
+
+	test_clocks2 <= dsp_clk & dsp_clk_DIV4 & sys_con_clk_n;
+
+	clk_counter_2 : clk_counter_ip
+		generic map(
+			BASE_ADDR => x"07000020"
+		)
+		port map(
+			CLK_I       => sys_con_clk,
+			RST_I       => sys_con_rst,
+			WB_MS       => wb_ms_bus,
+			WB_SM       => wb_sm(8),
+			TEST_CLOCKS => test_clocks2
+		);
 
 	debug_latches : wb_multi_latch_ip
 		generic map(
