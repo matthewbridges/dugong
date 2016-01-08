@@ -18,17 +18,17 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 	MATTHEW BRIDGES
+-- Engineer: 		MATTHEW BRIDGES
 --
 -- Name:		FIFO_SYNC (010)
 -- Type:		PRIMITIVE (2)
--- Description:	A FIFO primitive with one read port and one write port which can take on
---				generic data widths.
+-- Description:		A FIFO primitive with one read port and one write port which can take on
+--			generic data widths.
 --
--- Compliance:	DUGONG V0.5
+-- Compliance:		DUGONG V0.5
 -- ID:			x 0-5-2-010
 --
--- Last Modified:	31-MAR-2013
+-- Last Modified:	31-MAR-2014
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 

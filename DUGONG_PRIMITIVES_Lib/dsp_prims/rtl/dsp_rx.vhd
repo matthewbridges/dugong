@@ -18,16 +18,16 @@
 --
 ---------------------------------------------------------------------------------------------------------------
 -- Company:		UNIVERSITY OF CAPE TOWN
--- Engineer: 	MATTHEW BRIDGES
+-- Engineer: 		MATTHEW BRIDGES
 --
 -- Name:		
 -- Type:		
 -- Description:		
 --
--- Compliance:	DUGONG V0.5
+-- Compliance:		DUGONG V0.5
 -- ID:			x 0-5-
 --
--- Last Modified:	31-MAR-2013
+-- Last Modified:	31-MAR-2014
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
