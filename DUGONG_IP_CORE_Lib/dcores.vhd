@@ -169,6 +169,27 @@ package dcores is
 		);
 	end component wb_multi_latch_ip;
 
+	component wb_multi_register_ip is
+		generic(
+			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
+			CORE_DATA_WIDTH : NATURAL                           := 32;
+			CORE_ADDR_WIDTH : NATURAL                           := 3
+		);
+		port(
+			--System Control Inputs
+			CLK_I : in  STD_LOGIC;
+			RST_I : in  STD_LOGIC;
+			--Slave to WB
+			WB_MS : in  WB_MS_type;
+			WB_SM : out WB_SM_type;
+			--REGISTER Outputs
+			Q0    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			Q1    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			Q2    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0);
+			Q3    : out STD_LOGIC_VECTOR(CORE_DATA_WIDTH - 1 downto 0)
+		);
+	end component wb_multi_register_ip;
+
 	component wb_test_slave_ip is
 		generic(
 			BASE_ADDR       : UNSIGNED(ADDR_WIDTH + 3 downto 0) := x"00000000";
