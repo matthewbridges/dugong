@@ -47,7 +47,7 @@ use DUGONG_IP_CORE_Lib.dcores.ALL;
 entity rhino_top_gpio_fmcce_fmc150 is
 	generic(
 		NUMBER_OF_MASTERS : NATURAL := 1;
-		NUMBER_OF_SLAVES  : NATURAL := 10
+		NUMBER_OF_SLAVES  : NATURAL := 11
 	);
 	port(
 		--System Control Inputs
@@ -136,6 +136,8 @@ architecture RTL of rhino_top_gpio_fmcce_fmc150 is
 
 	signal dac_ready  : STD_LOGIC;
 	signal fifo_rd_en : std_logic;
+
+	signal dac_io_test_en : std_logic;
 
 	signal dsp_packet_ch_a : STD_LOGIC_VECTOR(55 downto 0);
 	signal dsp_packet_ch_b : STD_LOGIC_VECTOR(55 downto 0);
@@ -441,7 +443,7 @@ begin
 			DAC_DATA_N    => DAC_DATA_N,
 			FRAME_P       => FRAME_P,
 			FRAME_N       => FRAME_N,
-			IO_TEST_EN    => '0'
+			IO_TEST_EN    => dac_io_test_en
 		);
 
 	-------------------------
@@ -490,5 +492,21 @@ begin
 
 	debug_arm(2) <= debug_arm(0);
 	debug_arm(3) <= debug_arm(1);
+
+	control_registers : wb_multi_register_ip
+		generic map(
+			BASE_ADDR       => x"08F00020",
+			CORE_DATA_WIDTH => 1
+		)
+		port map(
+			CLK_I => sys_con_clk,
+			RST_I => sys_con_rst,
+			WB_MS => wb_ms_bus,
+			WB_SM => wb_sm(10),
+			Q0(0) => dac_io_test_en,
+			Q1    => open,
+			Q2    => open,
+			Q3    => open
+		);
 
 end architecture RTL;
