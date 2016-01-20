@@ -29,25 +29,20 @@ entity dac3283_serializer is
 end entity dac3283_serializer;
 
 architecture RTL of dac3283_serializer is
-	signal fmc150_clk_b       : std_logic;
-	signal fmc150_clk_b2      : std_ulogic;
+	signal fmc150_clk_b      : std_logic;
+	signal fmc150_clk_b2     : std_ulogic;
 	--Phase Locked Loop
-	signal dac_clk_X4         : std_logic;
-	signal dac_clk_X4_lagging : std_logic;
-	signal dac_clk_X1         : std_logic;
-	signal dac_clk_DIV4       : std_logic;
-	signal clk_fb_out         : std_logic;
-	signal clk_fb_in          : std_logic;
-	signal pll_locked         : std_logic;
+	signal dac_clk_X4        : std_logic;
+	signal dac_clk_X1        : std_logic;
+	signal dac_clk_DIV4      : std_logic;
+	signal clk_fb_out        : std_logic;
+	signal pll_locked        : std_logic;
 	--
-	signal dac_clk_b          : std_logic;
+	signal dac_clk_b         : std_logic;
 	--PLL Buffers
-	signal dclk_io_clk        : std_logic;
-	signal dclk_serdesstrobe  : std_logic;
-	signal dclk_bufpll_locked : std_logic;
-	signal data_io_clk        : std_logic;
-	signal data_serdesstrobe  : std_logic;
-	signal data_bufpll_locked : std_logic;
+	signal dac_io_clk        : std_logic;
+	signal dac_serdesstrobe  : std_logic;
+	signal dac_bufpll_locked : std_logic;
 
 	signal reset        : std_logic;
 	signal tx_en        : std_logic;
@@ -64,11 +59,13 @@ architecture RTL of dac3283_serializer is
 	signal frame_o    : std_logic;
 
 	type test_signal_type is array (0 to 7) of std_logic_vector(15 downto 0);
-	--constant test_pat_i : test_signal_type := (x"7AB6", X"1A16", x"7AB6", X"1A16", x"7AB6", X"1A16", x"7AB6", X"1A16");
-	--constant test_pat_q : test_signal_type := (x"EA45", X"AAC6", x"EA45", X"AAC6", x"EA45", X"AAC6", x"EA45", X"AAC6");
+	constant test_pat_i : test_signal_type := (x"7AB6", X"1A16", x"7AB6", X"1A16", x"7AB6", X"1A16", x"7AB6", X"1A16");
+	constant test_pat_q : test_signal_type := (x"EA45", X"AAC6", x"EA45", X"AAC6", x"EA45", X"AAC6", x"EA45", X"AAC6");
+--constant test_pat_i : test_signal_type := (x"AEAF", x"AEAF", x"AEAF", x"AEAF", x"AEAF", x"AEAF", x"AEAF", x"AEAF");
+--constant test_pat_q : test_signal_type := (x"AEAF", x"AEBF", x"AEAF", x"AEBF", x"AEAF", x"AEBF", x"AEAF", x"AEBF");
 
-	constant test_pat_i : test_signal_type := (x"0000", x"5A82", x"7FFF", x"5A82", x"0000", x"A57D", x"8000", x"A57D");
-	constant test_pat_q : test_signal_type := (x"7FFF", x"5A82", x"0000", x"A57D", x"8000", X"A57D", x"0000", x"5A82");
+--constant test_pat_i : test_signal_type := (x"0000", x"5A82", x"7FFF", x"5A82", x"0000", x"A57D", x"8000", x"A57D");
+--constant test_pat_q : test_signal_type := (x"7FFF", x"5A82", x"0000", x"A57D", x"8000", X"A57D", x"0000", x"5A82");
 
 begin
 
@@ -140,9 +137,9 @@ begin
 			CLKIN_PERIOD          => 4.069, -- Input clock period in ns to ps resolution (i.e. 33.333 is 30 MHz).
 			-- CLKOUT0_DIVIDE - CLKOUT5_DIVIDE: Divide amount for CLKOUT# clock output (1-128)
 			CLKOUT0_DIVIDE        => 1,
-			CLKOUT1_DIVIDE        => 1,
-			CLKOUT2_DIVIDE        => 4,
-			CLKOUT3_DIVIDE        => 16,
+			CLKOUT1_DIVIDE        => 4,
+			CLKOUT2_DIVIDE        => 16,
+			CLKOUT3_DIVIDE        => 1,
 			CLKOUT4_DIVIDE        => 1,
 			CLKOUT5_DIVIDE        => 1,
 			-- CLKOUT0_DUTY_CYCLE - CLKOUT5_DUTY_CYCLE: Duty cycle for CLKOUT# clock output (0.01-0.99).
@@ -154,7 +151,7 @@ begin
 			CLKOUT5_DUTY_CYCLE    => 0.5,
 			-- CLKOUT0_PHASE - CLKOUT5_PHASE: Output phase relationship for CLKOUT# clock output (-360.0-360.0).
 			CLKOUT0_PHASE         => 0.0,
-			CLKOUT1_PHASE         => 90.0,
+			CLKOUT1_PHASE         => 0.0,
 			CLKOUT2_PHASE         => 0.0,
 			CLKOUT3_PHASE         => 0.0,
 			CLKOUT4_PHASE         => 0.0,
@@ -169,24 +166,15 @@ begin
 			CLKFBOUT => clk_fb_out,     -- 1-bit output: PLL_BASE feedback output
 			-- CLKOUT0 - CLKOUT5: 1-bit (each) output: Clock outputs
 			CLKOUT0  => dac_clk_X4,
-			CLKOUT1  => dac_clk_X4_lagging,
-			CLKOUT2  => dac_clk_X1,
-			CLKOUT3  => dac_clk_DIV4,
+			CLKOUT1  => dac_clk_X1,
+			CLKOUT2  => dac_clk_DIV4,
+			CLKOUT3  => open,
 			CLKOUT4  => open,
 			CLKOUT5  => open,
 			LOCKED   => pll_locked,     -- 1-bit output: PLL_BASE lock status output
-			CLKFBIN  => clk_fb_in,      -- 1-bit input: Feedback clock input
+			CLKFBIN  => clk_fb_out,     -- 1-bit input: Feedback clock input
 			CLKIN    => fmc150_clk_b2,  -- 1-bit input: Clock input
 			RST      => RST_I           -- 1-bit input: Reset input
-		);
-
-	fmc150_clk_BUFIO2FB : BUFIO2FB
-		generic map(
-			DIVIDE_BYPASS => TRUE
-		)
-		port map(
-			O => clk_fb_in,
-			I => clk_fb_out
 		);
 
 	dac_clk_BUFG : BUFG
@@ -201,29 +189,15 @@ begin
 			I => dac_clk_DIV4
 		);
 
-	dclk_io_BUFPLL : BUFPLL
+	dac_io_BUFPLL : BUFPLL
 		generic map(
 			DIVIDE      => 4,           -- DIVCLK divider (1-8)
 			ENABLE_SYNC => TRUE         -- Enable synchrnonization between PLL and GCLK (TRUE/FALSE)
 		)
 		port map(
-			IOCLK        => dclk_io_clk, -- 1-bit output: Output I/O clock
-			LOCK         => dclk_bufpll_locked, -- 1-bit output: Synchronized LOCK output
-			SERDESSTROBE => dclk_serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
-			GCLK         => dac_clk_b,  -- 1-bit input: BUFG clock input
-			LOCKED       => pll_locked, -- 1-bit input: LOCKED input from PLL
-			PLLIN        => DAC_CLK_X4_lagging -- 1-bit input: Clock input from PLL
-		);
-
-	data_io_BUFPLL : BUFPLL
-		generic map(
-			DIVIDE      => 4,           -- DIVCLK divider (1-8)
-			ENABLE_SYNC => TRUE         -- Enable synchrnonization between PLL and GCLK (TRUE/FALSE)
-		)
-		port map(
-			IOCLK        => data_io_clk, -- 1-bit output: Output I/O clock
-			LOCK         => data_bufpll_locked, -- 1-bit output: Synchronized LOCK output
-			SERDESSTROBE => data_serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
+			IOCLK        => dac_io_clk, -- 1-bit output: Output I/O clock
+			LOCK         => dac_bufpll_locked, -- 1-bit output: Synchronized LOCK output
+			SERDESSTROBE => dac_serdesstrobe, -- 1-bit output: Output SERDES strobe (connect to ISERDES2/OSERDES2)
 			GCLK         => dac_clk_b,  -- 1-bit input: BUFG clock input
 			LOCKED       => pll_locked, -- 1-bit input: LOCKED input from PLL
 			PLLIN        => DAC_CLK_X4  -- 1-bit input: Clock input from PLL
@@ -248,7 +222,7 @@ begin
 			SHIFTOUT3 => open,          -- 1-bit output: Cascade differential data output
 			SHIFTOUT4 => open,          -- 1-bit output: Cascade differential 3-state output
 			TQ        => open,          -- 1-bit output: 3-state output to pad or IODELAY2
-			CLK0      => dclk_io_clk,   -- 1-bit input: I/O clock input
+			CLK0      => dac_io_clk,    -- 1-bit input: I/O clock input
 			CLK1      => '0',           -- 1-bit input: Secondary I/O clock input
 			CLKDIV    => dac_clk_b,     -- 1-bit input: Logic domain clock input
 			-- D1 - D4: 1-bit (each) input: Parallel data inputs
@@ -256,7 +230,7 @@ begin
 			D2        => '0',
 			D3        => '1',
 			D4        => '0',
-			IOCE      => dclk_serdesstrobe, -- 1-bit input: Data strobe input
+			IOCE      => dac_serdesstrobe, -- 1-bit input: Data strobe input
 			OCE       => tx_en,         -- 1-bit input: Clock enable input
 			RST       => '0',           -- 1-bit input: Asynchrnous reset input
 			SHIFTIN1  => '1',           -- 1-bit input: Cascade data input
@@ -303,7 +277,7 @@ begin
 				SHIFTOUT3 => open,      -- 1-bit output: Cascade differential data output
 				SHIFTOUT4 => open,      -- 1-bit output: Cascade differential 3-state output
 				TQ        => open,      -- 1-bit output: 3-state output to pad or IODELAY2
-				CLK0      => data_io_clk, -- 1-bit input: I/O clock input
+				CLK0      => dac_io_clk, -- 1-bit input: I/O clock input
 				CLK1      => '0',       -- 1-bit input: Secondary I/O clock input
 				CLKDIV    => dac_clk_b, -- 1-bit input: Logic domain clock input
 				-- D1 - D4: 1-bit (each) input: Parallel data inputs
@@ -311,7 +285,7 @@ begin
 				D2        => i(pin_count),
 				D3        => q(pin_count + 8),
 				D4        => q(pin_count),
-				IOCE      => data_serdesstrobe, -- 1-bit input: Data strobe input
+				IOCE      => dac_serdesstrobe, -- 1-bit input: Data strobe input
 				OCE       => tx_en,     -- 1-bit input: Clock enable input
 				RST       => '0',       -- 1-bit input: Asynchrnous reset input
 				SHIFTIN1  => '1',       -- 1-bit input: Cascade data input
@@ -358,7 +332,7 @@ begin
 			SHIFTOUT3 => open,          -- 1-bit output: Cascade differential data output
 			SHIFTOUT4 => open,          -- 1-bit output: Cascade differential 3-state output
 			TQ        => open,          -- 1-bit output: 3-state output to pad or IODELAY2
-			CLK0      => data_io_clk,   -- 1-bit input: I/O clock input
+			CLK0      => dac_io_clk,    -- 1-bit input: I/O clock input
 			CLK1      => '0',           -- 1-bit input: Secondary I/O clock input
 			CLKDIV    => dac_clk_b,     -- 1-bit input: Logic domain clock input
 			-- D1 - D4: 1-bit (each) input: Parallel data inputs
@@ -366,7 +340,7 @@ begin
 			D2        => frame,
 			D3        => frame,
 			D4        => frame,
-			IOCE      => data_serdesstrobe, -- 1-bit input: Data strobe input
+			IOCE      => dac_serdesstrobe, -- 1-bit input: Data strobe input
 			OCE       => tx_en,         -- 1-bit input: Clock enable input
 			RST       => '0',           -- 1-bit input: Asynchrnous reset input
 			SHIFTIN1  => '1',           -- 1-bit input: Cascade data input
