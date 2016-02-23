@@ -1,9 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.numeric_std.ALL;
-
-library DUGONG_PRIMITIVES_Lib;
-use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
+--use IEEE.numeric_std.ALL;
 
 library unisim;
 use unisim.vcomponents.all;
