@@ -82,6 +82,8 @@ architecture Behavioral of gpmc_s is
 	signal stb_ms : std_logic;
 	signal cyc_ms : std_logic;
 
+	signal adr_ms_d1 : std_logic_vector(GPMC_ADDR_WIDTH - 1 downto 0);
+
 	--Signal to hold data ready to send out to GPMC
 	signal gpmc_dout : std_logic_vector(15 downto 0);
 
@@ -115,7 +117,7 @@ begin
 						read_ack  <= not we_ms;
 						write_ack <= we_ms;
 					elsif (ERR_I = '1') then
-						dat_sm    <= "00" & adr_ms & "00";
+						dat_sm    <= "00" & adr_ms_d1 & "00";
 						we_ms     <= '0';
 						stb_ms    <= '0';
 						read_ack  <= not we_ms;
@@ -142,6 +144,13 @@ begin
 		end if;
 	end process;
 
+	ADR_MS_REGISTER_proc : process(CLK_I) is
+	begin
+		if rising_edge(CLK_I) then
+			adr_ms_d1 <= adr_ms;
+		end if;
+	end process ADR_MS_REGISTER_proc;
+
 	process(GPMC_CLK_I, RST_I, read_stb, read_ack, write_stb, write_ack)
 	begin
 		--RST STATE
@@ -149,9 +158,6 @@ begin
 			read_stb            <= '0';
 			write_stb           <= '0';
 			gpmc_data_not_valid <= '0';
-			word_sel            <= '0';
-			adr_ms              <= (others => '0');
-			dat_ms              <= (others => '0');
 		else
 			if ((read_stb = '1') and (read_ack = '1')) then
 				read_stb <= '0';
@@ -163,32 +169,45 @@ begin
 					if (GPMC_nCS_I /= "1111111") then
 						--First cycle of the bus transaction record the address
 						if (GPMC_nADV_ALE_I = '0') then
-							word_sel                             <= GPMC_D_B(0);
-							adr_ms(GPMC_ADDR_WIDTH - 4 downto 0) <= GPMC_A_I & GPMC_D_B(15 downto 1);
-							case (GPMC_nCS_I) is
-								when "1111110" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "000"; --0x00000000
-								when "1111101" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "001"; --0x08000000
-								when "1111011" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "010"; --0x10000000
-								when "1110111" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "011"; --0x18000000
-								when "1101111" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "100"; --0x20000000
-								when "1011111" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "101"; --0x28000000
-								when "0111111" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "111"; --0x38000000
-								when others    => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "110"; --0x30000000
-							end case;
 							read_stb            <= not GPMC_D_B(0); --Read on first cycle
 							gpmc_data_not_valid <= '1';
 						elsif (GPMC_nWE_I = '0') then
-							if (word_sel = '1') then
-								dat_ms(31 downto 16) <= GPMC_D_B;
-								write_stb            <= '1'; --Write on second cycle
-							else
-								dat_ms(15 downto 0) <= GPMC_D_B;
-							end if;
+							write_stb           <= word_sel; --Write on second cycle
 							gpmc_data_not_valid <= '0';
 						elsif (GPMC_nOE_I = '0') then
 							gpmc_data_not_valid <= read_stb;
 						end if;
 					end if;
+				end if;
+			end if;
+		end if;
+	end process;
+
+	process(GPMC_CLK_I)
+	begin
+		--Perform Clock Rising Edge operations
+		if (rising_edge(GPMC_CLK_I)) then
+			--First cycle of the bus transaction record the address
+			if (GPMC_nADV_ALE_I = '0') then
+				word_sel                             <= GPMC_D_B(0);
+				adr_ms(GPMC_ADDR_WIDTH - 4 downto 0) <= GPMC_A_I & GPMC_D_B(15 downto 1);
+				case (GPMC_nCS_I) is
+					when "1111110" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "000"; --0x00000000
+					when "1111101" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "001"; --0x08000000
+					when "1111011" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "010"; --0x10000000
+					when "1110111" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "011"; --0x18000000
+					when "1101111" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "100"; --0x20000000
+					when "1011111" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "101"; --0x28000000
+					when "0111111" => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "111"; --0x38000000
+					when others    => adr_ms(GPMC_ADDR_WIDTH - 1 downto GPMC_ADDR_WIDTH - 3) <= "110"; --0x30000000
+				end case;
+			end if;
+			if (GPMC_nWE_I = '0') then
+				--It takes 2 writes to get 32 bits of data
+				if (word_sel = '1') then
+					dat_ms(31 downto 16) <= GPMC_D_B;
+				else
+					dat_ms(15 downto 0) <= GPMC_D_B;
 				end if;
 			end if;
 		end if;
