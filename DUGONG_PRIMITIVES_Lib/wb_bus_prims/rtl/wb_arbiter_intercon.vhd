@@ -118,7 +118,17 @@ begin
 			end if;
 		end process;
 
-		WB_MS_BUS <= WB_MS(master_sel) when (bus_busy = '1') else (others => '0');
+		name : process(CLK_I) is
+		begin
+			if rising_edge(CLK_I) then
+				if (bus_busy = '0') then
+					WB_MS_BUS(2 + ADDR_WIDTH + DATA_WIDTH downto ADDR_WIDTH + DATA_WIDTH) <= (others => '0');
+				else
+					WB_MS_BUS(2 + ADDR_WIDTH + DATA_WIDTH downto ADDR_WIDTH + DATA_WIDTH) <= WB_MS(master_sel)(2 + ADDR_WIDTH + DATA_WIDTH downto ADDR_WIDTH + DATA_WIDTH);
+				end if;
+				WB_MS_BUS <= WB_MS(master_sel);
+			end if;
+		end process name;
 
 	end generate multi_master_system;
 
