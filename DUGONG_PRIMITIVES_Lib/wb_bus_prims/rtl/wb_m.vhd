@@ -68,57 +68,103 @@ architecture Behavioral of wb_m is
 	alias dat_sm : std_logic_vector(DATA_WIDTH - 1 downto 0) is WB_SM(DATA_WIDTH - 1 downto 0);
 	alias ack_sm : std_logic is WB_SM(DATA_WIDTH);
 
-	signal cycle_count : unsigned(3 downto 0);
-	signal error       : std_logic;
+	constant MAX_TRANSFER_CYCLES : natural := 8;
+
+	signal cycle_count      : unsigned(3 downto 0);
+	signal transfer_timeout : std_logic;
+
+	signal transfer_complete : std_logic;
+	signal transfer_failed   : std_logic;
+	signal lock              : std_logic;
 
 	signal transfer_count : unsigned(31 downto 0);
 	signal error_count    : unsigned(31 downto 0);
-	signal lock           : std_logic;
 
 begin
-	process(CLK_I, RST_I, STB_O, error)
+	CYCLE_COUNTER_proc : process(CLK_I) is
+	begin
+		if rising_edge(CLK_I) then
+			if STB_O = '0' then
+				cycle_count      <= (others => '0');
+				transfer_timeout <= '0';
+			else
+				cycle_count <= cycle_count + 1;
+
+				if (cycle_count > (MAX_TRANSFER_CYCLES - 1)) then
+					transfer_timeout <= '1';
+				else
+					transfer_timeout <= '0';
+				end if;
+			end if;
+		end if;
+	end process CYCLE_COUNTER_proc;
+
+	name : process(CLK_I) is
+	begin
+		if rising_edge(CLK_I) then
+			if RST_I = '1' then
+				transfer_complete <= '0';
+				transfer_failed   <= '0';
+				lock              <= '0';
+			else
+				if (STB_O = '1') then
+					if ((ack_sm and GNT_I) = '1') then
+						if (lock = '0') then
+							transfer_complete <= '1';
+							lock              <= '1';
+						else
+							transfer_complete <= '0';
+						end if;
+					elsif (transfer_timeout = '1') then
+						if (lock = '0') then
+							transfer_failed <= '1';
+							lock            <= '1';
+						else
+							transfer_failed <= '0';
+						end if;
+					end if;
+				else
+					transfer_complete <= '0';
+					transfer_failed   <= '0';
+					lock              <= '0';
+				end if;
+			end if;
+		end if;
+	end process name;
+
+	TRANSFER_COUNTERS_proc : process(CLK_I) is
+	begin
+		if rising_edge(CLK_I) then
+			if RST_I = '1' then
+				transfer_count <= (others => '0');
+				error_count    <= (others => '0');
+			else
+				if (transfer_complete = '1') then
+					transfer_count <= transfer_count + 1;
+				end if;
+
+				if (transfer_failed = '1') then
+					error_count <= error_count + 1;
+				end if;
+			end if;
+		end if;
+	end process TRANSFER_COUNTERS_proc;
+
+	process(CLK_I, RST_I)
 	begin
 		--RST STATE
 		if (RST_I = '1') then
-			cycle_count    <= (others => '0');
-			error          <= '0';
-			transfer_count <= (others => '0');
-			error_count    <= (others => '0');
-			lock           <= '0';
+			ERR_I <= '0';
 		else
-			if ((STB_O = '0') and (error = '1')) then
-				cycle_count <= (others => '0');
-				error       <= '0';
-				lock        <= '0';
-			else
-				if (rising_edge(CLK_I)) then
-					--CORRECT TERMINATION STATE
-					if ((ack_sm and GNT_I) = '1') then
-						cycle_count <= (others => '0');
-						error       <= '0';
-						if (lock = '0') then
-							transfer_count <= transfer_count + 1;
-							lock           <= '1';
-						end if;
-					--TIMEOUT STATE
-					elsif (cycle_count = 8) then
-						error <= '1';
-						if (lock = '0') then
-							error_count <= error_count + 1;
-							lock        <= '1';
-						end if;
-					-- COUNTING STATE
-					elsif (STB_O = '1') then
-						cycle_count <= cycle_count + 1;
-						error       <= '0';
-						lock        <= '0';
-					end if;
+			if (falling_edge(CLK_I)) then
+				if (STB_O = '0') then
+					ERR_I <= '0';
+				else
+					ERR_I <= transfer_timeout;
 				end if;
 			end if;
 		end if;
 	end process;
-
-	ERR_I <= error;
 
 	T_COUNT_O <= std_logic_vector(transfer_count);
 	E_COUNT_O <= std_logic_vector(error_count);
