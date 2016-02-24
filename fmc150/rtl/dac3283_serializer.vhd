@@ -30,7 +30,6 @@ end entity dac3283_serializer;
 
 architecture RTL of dac3283_serializer is
 	signal fmc150_clk_b      : std_logic;
-	signal fmc150_clk_b2     : std_ulogic;
 	--Phase Locked Loop
 	signal dac_clk_X4        : std_logic;
 	signal dac_clk_X1        : std_logic;
@@ -109,24 +108,15 @@ begin
 
 	----------------------------SET UP CLOCKING AND PLLs----------------------------
 
-	FMC150_CLK_IBUF : IBUF
-		generic map(
-			IOSTANDARD => "LVCMOS33"
-		)
-		port map(
-			O => fmc150_clk_b,
-			I => FMC150_CLK
-		);
-
 	fmc150_clk_BUFIO2 : BUFIO2
 		generic map(
 			DIVIDE_BYPASS => TRUE
 		)
 		port map(
-			DIVCLK       => fmc150_clk_b2,
+			DIVCLK       => fmc150_clk_b,
 			IOCLK        => open,
 			SERDESSTROBE => open,
-			I            => fmc150_clk_b
+			I            => FMC150_CLK
 		);
 
 	dac_clk_PLL_BASE : PLL_BASE
@@ -173,7 +163,7 @@ begin
 			CLKOUT5  => open,
 			LOCKED   => pll_locked,     -- 1-bit output: PLL_BASE lock status output
 			CLKFBIN  => clk_fb_out,     -- 1-bit input: Feedback clock input
-			CLKIN    => fmc150_clk_b2,  -- 1-bit input: Clock input
+			CLKIN    => fmc150_clk_b,   -- 1-bit input: Clock input
 			RST      => RST_I           -- 1-bit input: Reset input
 		);
 

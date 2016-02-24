@@ -134,7 +134,9 @@ architecture RTL of rhino_top_gpio_fmcce_fmc150 is
 	signal dsp_clk       : std_logic;
 	signal dsp_clk_DIV4  : std_logic;
 
-	signal dac_ready  : STD_LOGIC;
+	signal fmc_150_clk_b : std_logic;
+
+	signal dac_ready  : std_logic;
 	signal fifo_rd_en : std_logic;
 
 	signal dac_io_test_en : std_logic;
@@ -421,6 +423,15 @@ begin
 			ADC_DATA_B_N  => ADC_DATA_B_N
 		);
 
+	FMC150_CLK_IBUF : IBUF
+		generic map(
+			IOSTANDARD => "LVCMOS33"
+		)
+		port map(
+			O => fmc_150_clk_b,
+			I => FMC150_CLK
+		);
+
 	dac : dac3283_phy
 		generic map(
 			NUMBER_OF_SAMPLES => 4
@@ -436,7 +447,7 @@ begin
 			CH_B_PACKET_I => dsp_packet_ch_b,
 			CH_B_EN_I     => '1',
 			CH_B_VALID_I  => '1',
-			FMC150_CLK    => FMC150_CLK,
+			FMC150_CLK    => fmc_150_clk_b,
 			DAC_DCLK_P    => DAC_DCLK_P,
 			DAC_DCLK_N    => DAC_DCLK_N,
 			DAC_DATA_P    => DAC_DATA_P,
