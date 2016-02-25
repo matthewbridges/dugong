@@ -110,7 +110,7 @@ begin
 	fifo_ch_a : fifo_sync
 		generic map(
 			DATA_WIDTH => 14,
-			FIFO_DEPTH => 1024
+			FIFO_DEPTH => 32
 		)
 		port map(
 			RST_I    => RST_I,
@@ -127,7 +127,7 @@ begin
 	fifo_ch_b : fifo_sync
 		generic map(
 			DATA_WIDTH => 14,
-			FIFO_DEPTH => 1024
+			FIFO_DEPTH => 32
 		)
 		port map(
 			RST_I    => RST_I,
