@@ -66,7 +66,24 @@ architecture RTL of dac3283_serializer is
 --constant test_pat_i : test_signal_type := (x"0000", x"5A82", x"7FFF", x"5A82", x"0000", x"A57D", x"8000", x"A57D");
 --constant test_pat_q : test_signal_type := (x"7FFF", x"5A82", x"0000", x"A57D", x"8000", X"A57D", x"0000", x"5A82");
 
+	attribute ASYNC_REG : string;
+	attribute shreg_extract : string;
+	attribute TIG : string;
+
+	signal io_test_en_SR : std_logic_vector(2 downto 0) := (others => '0');
+
+	attribute ASYNC_REG of io_test_en_SR : signal is "true";
+	attribute shreg_extract of io_test_en_SR : signal is "no";
+	attribute TIG of io_test_en_SR : signal is "TRUE";
+
 begin
+	IO_TEST_EN_CROSS_CLK_proc : process(dac_clk_b) is
+	begin
+		if rising_edge(dac_clk_b) then
+			io_test_en_SR(0)          <= IO_TEST_EN;
+			io_test_en_SR(2 downto 1) <= io_test_en_SR(1 downto 0);
+		end if;
+	end process IO_TEST_EN_CROSS_CLK_proc;
 
 	----------------------------Input Interface----------------------------
 
@@ -86,7 +103,7 @@ begin
 				tx_en        <= '0';
 			else
 				DAC_READY <= '1';
-				if (IO_TEST_EN = '1') then
+				if (io_test_en_SR(2) = '1') then
 					i <= test_pat_i(to_integer(sample_count)); --CH_A_I;
 					q <= test_pat_q(to_integer(sample_count)); --CH_B_I;
 				else
