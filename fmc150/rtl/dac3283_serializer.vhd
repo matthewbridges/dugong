@@ -68,13 +68,11 @@ architecture RTL of dac3283_serializer is
 
 	attribute ASYNC_REG : string;
 	attribute shreg_extract : string;
-	attribute TIG : string;
 
 	signal io_test_en_SR : std_logic_vector(2 downto 0) := (others => '0');
 
 	attribute ASYNC_REG of io_test_en_SR : signal is "true";
 	attribute shreg_extract of io_test_en_SR : signal is "no";
-	attribute TIG of io_test_en_SR : signal is "TRUE";
 
 begin
 	IO_TEST_EN_CROSS_CLK_proc : process(dac_clk_b) is
