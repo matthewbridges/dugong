@@ -44,7 +44,6 @@ architecture RTL of dac3283_serializer is
 	signal dac_bufpll_locked : std_logic;
 
 	signal reset        : std_logic;
-	signal tx_en        : std_logic;
 	signal sample_count : unsigned(2 downto 0);
 	signal frame_count  : unsigned(7 downto 0);
 
@@ -98,7 +97,6 @@ begin
 				frame        <= '0';
 				sample_count <= (others => '0');
 				frame_count  <= (others => '1');
-				tx_en        <= '0';
 			else
 				DAC_READY <= '1';
 				if (io_test_en_SR(2) = '1') then
@@ -110,7 +108,6 @@ begin
 				end if;
 
 				if (sample_count = 0) then
-					tx_en       <= '1';
 					frame_count <= frame_count + 1;
 					frame       <= '1';
 				else
@@ -236,7 +233,7 @@ begin
 			D3        => '1',
 			D4        => '0',
 			IOCE      => dac_serdesstrobe, -- 1-bit input: Data strobe input
-			OCE       => tx_en,         -- 1-bit input: Clock enable input
+			OCE       => '1',           -- 1-bit input: Clock enable input
 			RST       => '0',           -- 1-bit input: Asynchrnous reset input
 			SHIFTIN1  => '1',           -- 1-bit input: Cascade data input
 			SHIFTIN2  => '1',           -- 1-bit input: Cascade 3-state input
@@ -291,7 +288,7 @@ begin
 				D3        => q(pin_count + 8),
 				D4        => q(pin_count),
 				IOCE      => dac_serdesstrobe, -- 1-bit input: Data strobe input
-				OCE       => tx_en,     -- 1-bit input: Clock enable input
+				OCE       => '1',       -- 1-bit input: Clock enable input
 				RST       => '0',       -- 1-bit input: Asynchrnous reset input
 				SHIFTIN1  => '1',       -- 1-bit input: Cascade data input
 				SHIFTIN2  => '1',       -- 1-bit input: Cascade 3-state input
@@ -346,7 +343,7 @@ begin
 			D3        => frame,
 			D4        => frame,
 			IOCE      => dac_serdesstrobe, -- 1-bit input: Data strobe input
-			OCE       => tx_en,         -- 1-bit input: Clock enable input
+			OCE       => '1',           -- 1-bit input: Clock enable input
 			RST       => '0',           -- 1-bit input: Asynchrnous reset input
 			SHIFTIN1  => '1',           -- 1-bit input: Cascade data input
 			SHIFTIN2  => '1',           -- 1-bit input: Cascade 3-state input
