@@ -67,15 +67,19 @@ architecture Behavioral of fifo_sync is
 	signal wr_ptr : fifo_ptr_type := (others => '0');
 	signal rd_ptr : fifo_ptr_type := (others => '0');
 
+	signal wr_ptr_rd : fifo_ptr_type := (others => '0');
+	signal rd_ptr_wr : fifo_ptr_type := (others => '0');
+
 	signal wr_addr : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
 	signal rd_addr : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
 
 	signal wr_en : std_logic;
 	signal rd_en : std_logic;
 
-	signal collision_flag : std_logic;
-	signal full_flag      : std_logic;
-	signal empty_flag     : std_logic;
+	signal collision_flag_wr : std_logic;
+	signal collision_flag_rd : std_logic;
+	signal full_flag         : std_logic;
+	signal empty_flag        : std_logic;
 
 begin
 
@@ -86,12 +90,14 @@ begin
 		if (rising_edge(WR_CLK_I)) then
 			--RESET STATE (SYNCHRONOUS)
 			if (RST_I = '1') then
-				wr_ptr <= (others => '0');
+				wr_ptr    <= (others => '0');
+				rd_ptr_wr <= (others => '0');
 			else
 				--WRITING STATE
 				if (wr_en = '1') then
 					wr_ptr <= WR_ptr + 1;
 				end if;
+				rd_ptr_wr <= rd_ptr;
 			end if;
 		end if;
 	end process;
@@ -106,12 +112,14 @@ begin
 		if (rising_edge(RD_CLK_I)) then
 			--RESET STATE (SYNCHRONOUS)
 			if (RST_I = '1') then
-				rd_ptr <= (others => '0');
+				rd_ptr    <= (others => '0');
+				wr_ptr_rd <= (others => '0');
 			else
 				--READING STATE
 				if (rd_en = '1') then
 					rd_ptr <= rd_ptr + 1;
 				end if;
+				wr_ptr_rd <= wr_ptr;
 			end if;
 		end if;
 	end process;
@@ -119,9 +127,10 @@ begin
 	rd_addr <= std_logic_vector(rd_ptr(FIFO_ADDR_WIDTH - 1 downto 0));
 	rd_en   <= RD_EN_I when (empty_flag = '0') else '0';
 
-	collision_flag <= '1' when (rd_ptr(FIFO_ADDR_WIDTH - 1 downto 0) = wr_ptr(FIFO_ADDR_WIDTH - 1 downto 0)) else '0';
-	empty_flag     <= collision_flag and not (rd_ptr(FIFO_ADDR_WIDTH) xor wr_ptr(FIFO_ADDR_WIDTH));
-	full_flag      <= collision_flag and (rd_ptr(FIFO_ADDR_WIDTH) xor wr_ptr(FIFO_ADDR_WIDTH));
+	collision_flag_wr <= '1' when (rd_ptr_wr(FIFO_ADDR_WIDTH - 1 downto 0) = wr_ptr(FIFO_ADDR_WIDTH - 1 downto 0)) else '0';
+	collision_flag_rd <= '1' when (rd_ptr(FIFO_ADDR_WIDTH - 1 downto 0) = wr_ptr_rd(FIFO_ADDR_WIDTH - 1 downto 0)) else '0';
+	empty_flag        <= collision_flag_rd and not (rd_ptr(FIFO_ADDR_WIDTH) xor wr_ptr_rd(FIFO_ADDR_WIDTH));
+	full_flag         <= collision_flag_wr and (rd_ptr_wr(FIFO_ADDR_WIDTH) xor wr_ptr(FIFO_ADDR_WIDTH));
 
 	mem : bram_sync_dp_simple
 		generic map(

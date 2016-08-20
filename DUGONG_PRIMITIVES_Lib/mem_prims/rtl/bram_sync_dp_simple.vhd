@@ -30,7 +30,7 @@
 -- Compliance:	DUGONG V0.5
 -- ID:			x 0-5-2-006
 --
--- Last Modified:	28-MAR-2014
+-- Last Modified:	20-AUG-2016
 -- Modified By:		MATTHEW BRIDGES
 ---------------------------------------------------------------------------------------------------------------
 
@@ -60,7 +60,14 @@ architecture Behavioral of bram_sync_dp_simple is
 	--Shared memory
 	type ram_type is array (0 to (2 ** ADDR_WIDTH) - 1) of std_logic_vector(DATA_WIDTH - 1 downto 0);
 	shared variable mem : ram_type;
+	signal A_mem_adr    : unsigned(ADDR_WIDTH - 1 downto 0);
 	signal B_mem_adr    : unsigned(ADDR_WIDTH - 1 downto 0);
+
+	signal B_dat : std_logic_vector(DATA_WIDTH - 1 downto 0);
+
+	attribute shreg_extract : string;
+	attribute shreg_extract of B_dat : signal is "no";
+
 begin
 
 	--Port A
@@ -70,10 +77,12 @@ begin
 		if (rising_edge(A_CLK_I)) then
 			--WRITING STATE
 			if (A_WE_I = '1') then
-				mem(to_integer(unsigned(A_ADR_I))) := A_DAT_I;
+				mem(to_integer(A_mem_adr)) := A_DAT_I;
 			end if;
 		end if;
 	end process;
+
+	A_mem_adr <= unsigned(A_ADR_I);
 
 	--Port B
 	process(B_CLK_I)
@@ -81,10 +90,12 @@ begin
 		--Perform Clock Rising Edge operations
 		if (rising_edge(B_CLK_I)) then
 			--READING STATE
-			B_DAT_O <= mem(to_integer(B_mem_adr));
+			B_dat <= mem(to_integer(B_mem_adr));
 		end if;
 	end process;
 
 	B_mem_adr <= unsigned(B_ADR_I);
+
+	B_DAT_O <= B_dat;
 
 end Behavioral;
