@@ -431,6 +431,20 @@ package dprimitives is
 		);
 	end component;
 
+	component cross_clock_sync is
+		generic(
+			DATA_WIDTH : NATURAL := 32
+		);
+		port(
+			--WRITE PORT
+			WR_CLK_I : in  STD_LOGIC;
+			WR_DAT_I : in  STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0);
+			--READ PORT
+			RD_CLK_I : in  STD_LOGIC;
+			RD_DAT_O : out STD_LOGIC_VECTOR(DATA_WIDTH - 1 downto 0)
+		);
+	end component cross_clock_sync;
+
 	-----------------------------
 	---- PACKETIZER Elements ----
 	-----------------------------
