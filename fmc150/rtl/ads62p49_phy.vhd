@@ -41,38 +41,44 @@ use DUGONG_PRIMITIVES_Lib.dprimitives.ALL;
 
 entity ads62p49_phy is
 	generic(
-		NUMBER_OF_SAMPLES : natural := 4
+		C_M_AXIS_TDATA_WIDTH : integer := 14
 	);
 	port(
 		--System Control Inputs
-		RST_I         : in  STD_LOGIC;
-		--DSP Packet Signals
-		DSP_CLK_I     : in  STD_LOGIC;
-		DSP_CLK_DIV_I : in  STD_LOGIC;
-		CH_A_PACKET_O : out STD_LOGIC_VECTOR((14 * NUMBER_OF_SAMPLES) - 1 downto 0);
-		CH_A_EN_I     : in  STD_LOGIC;
-		CH_A_VALID_O  : out STD_LOGIC;
-		CH_B_PACKET_O : out STD_LOGIC_VECTOR((14 * NUMBER_OF_SAMPLES) - 1 downto 0);
-		CH_B_EN_I     : in  STD_LOGIC;
-		CH_B_VALID_O  : out STD_LOGIC;
+		RST_I          : in  STD_LOGIC;
+		-- Global ports
+		AXIS_ACLK      : in  std_logic;
+		AXIS_ARESETN   : in  std_logic;
+		-- Master Stream Ports.
+		M0_AXIS_TVALID : out std_logic;
+		M0_AXIS_TDATA  : out std_logic_vector(C_M_AXIS_TDATA_WIDTH - 1 downto 0);
+		M1_AXIS_TVALID : out std_logic;
+		M1_AXIS_TDATA  : out std_logic_vector(C_M_AXIS_TDATA_WIDTH - 1 downto 0);
 		-- FMC150 ADC interface
-		ADC_DCLK_P    : in  STD_LOGIC;
-		ADC_DCLK_N    : in  STD_LOGIC;
-		ADC_DATA_A_P  : in  STD_LOGIC_VECTOR(6 downto 0);
-		ADC_DATA_A_N  : in  STD_LOGIC_VECTOR(6 downto 0);
-		ADC_DATA_B_P  : in  STD_LOGIC_VECTOR(6 downto 0);
-		ADC_DATA_B_N  : in  STD_LOGIC_VECTOR(6 downto 0)
+		ADC_DCLK_P     : in  STD_LOGIC;
+		ADC_DCLK_N     : in  STD_LOGIC;
+		ADC_DATA_A_P   : in  STD_LOGIC_VECTOR(6 downto 0);
+		ADC_DATA_A_N   : in  STD_LOGIC_VECTOR(6 downto 0);
+		ADC_DATA_B_P   : in  STD_LOGIC_VECTOR(6 downto 0);
+		ADC_DATA_B_N   : in  STD_LOGIC_VECTOR(6 downto 0)
 	);
 end entity ads62p49_phy;
 
 architecture RTL of ads62p49_phy is
 	signal adc_clk : std_logic;
 
-	signal adc_ch_a : STD_LOGIC_VECTOR(13 downto 0);
-	signal adc_ch_b : STD_LOGIC_VECTOR(13 downto 0);
+	signal adc_ch_a : std_logic_vector(13 downto 0);
+	signal adc_ch_b : std_logic_vector(13 downto 0);
 
-	signal fifo_out_ch_a : STD_LOGIC_VECTOR(13 downto 0);
-	signal fifo_out_ch_b : STD_LOGIC_VECTOR(13 downto 0);
+	signal fifo_wr_data : std_logic_vector(27 downto 0);
+	signal fifo_rd_data : std_logic_vector(27 downto 0);
+
+	signal fifo_wr_en_sr : std_logic_vector(3 downto 0) := (others => '0');
+
+	signal fifo_wr_en    : std_logic                    := '0';
+	signal fifo_rd_en    : std_logic                    := '0';
+	signal fifo_empty    : std_logic;
+	signal fifo_empty_sr : std_logic_vector(3 downto 0) := (others => '1');
 
 	component ads62p49_parallelizer is
 		port(
@@ -107,63 +113,66 @@ begin
 			ADC_DATA_B_N => ADC_DATA_B_N
 		);
 
-	fifo_ch_a : fifo_sync
+	WR_EN_SHIFT_proc : process(adc_clk) is
+	begin
+		if rising_edge(adc_clk) then
+			fifo_wr_en_sr(0)          <= not AXIS_ARESETN;
+			fifo_wr_en_sr(3 downto 1) <= fifo_wr_en_sr(2 downto 0);
+			fifo_wr_en                <= fifo_wr_en_sr(3);
+		end if;
+	end process WR_EN_SHIFT_proc;
+
+	fifo_wr_data <= adc_ch_b & adc_ch_a;
+
+	fifo : fifo_sync
 		generic map(
-			DATA_WIDTH => 14,
+			DATA_WIDTH => 28,
 			FIFO_DEPTH => 32
 		)
 		port map(
-			RST_I    => RST_I,
+			RST_I    => AXIS_ARESETN,
 			WR_CLK_I => adc_clk,
-			WR_DAT_I => adc_ch_a,
-			WR_EN_I  => '1',
-			RD_CLK_I => DSP_CLK_I,
-			RD_DAT_O => fifo_out_ch_a,
-			RD_EN_I  => CH_A_EN_I,
+			WR_DAT_I => fifo_wr_data,
+			WR_EN_I  => fifo_wr_en,
+			RD_CLK_I => AXIS_ACLK,
+			RD_DAT_O => fifo_rd_data,
+			RD_EN_I  => fifo_rd_en,
 			FULL     => open,
-			EMPTY    => open
+			EMPTY    => fifo_empty_sr(0)
 		);
 
-	fifo_ch_b : fifo_sync
-		generic map(
-			DATA_WIDTH => 14,
-			FIFO_DEPTH => 32
-		)
-		port map(
-			RST_I    => RST_I,
-			WR_CLK_I => adc_clk,
-			WR_DAT_I => adc_ch_b,
-			WR_EN_I  => '1',
-			RD_CLK_I => DSP_CLK_I,
-			RD_DAT_O => fifo_out_ch_b,
-			RD_EN_I  => CH_B_EN_I,
-			FULL     => open,
-			EMPTY    => open
-		);
+	FIFO_CTRL_proc : process(AXIS_ARESETN, AXIS_ACLK) is
+	begin
+		if AXIS_ARESETN = '1' then
+			fifo_rd_en                <= '0';
+			fifo_empty_sr(2 downto 1) <= (others => '1');
+		else
+			if rising_edge(AXIS_ACLK) then
+				if (fifo_empty_sr(3 downto 1) = "000") then
+					fifo_rd_en <= '1';
+				else
+					fifo_rd_en <= '0';
+				end if;
 
-	dsp_tx_ch_a : dsp_tx
-		generic map(
-			DATA_WIDTH        => 14,
-			NUMBER_OF_SAMPLES => 4
-		)
-		port map(
-			RST_I         => RST_I,
-			DSP_CLK_I     => DSP_CLK_I,
-			DSP_CLK_DIV_I => DSP_CLK_DIV_I,
-			DSP_SAMPLE_I  => fifo_out_ch_a,
-			DSP_PACKET_O  => CH_A_PACKET_O
-		);
+				fifo_empty_sr(3 downto 1) <= fifo_empty_sr(2 downto 0);
+			end if;
 
-	dsp_tx_ch_b : dsp_tx
-		generic map(
-			DATA_WIDTH        => 14,
-			NUMBER_OF_SAMPLES => 4
-		)
-		port map(
-			RST_I         => RST_I,
-			DSP_CLK_I     => DSP_CLK_I,
-			DSP_CLK_DIV_I => DSP_CLK_DIV_I,
-			DSP_SAMPLE_I  => fifo_out_ch_b,
-			DSP_PACKET_O  => CH_B_PACKET_O
-		);
+		end if;
+	end process FIFO_CTRL_proc;
+
+	name : process(AXIS_ACLK) is
+	begin
+		if rising_edge(AXIS_ACLK) then
+			if AXIS_ARESETN = '1' then
+				M0_AXIS_TVALID <= '0';
+				M1_AXIS_TVALID <= '0';
+			else
+				M0_AXIS_TVALID <= fifo_rd_en;
+				M1_AXIS_TVALID <= fifo_rd_en;
+			end if;
+			M0_AXIS_TDATA <= fifo_rd_data(C_M_AXIS_TDATA_WIDTH - 1 downto 0);
+			M1_AXIS_TDATA <= fifo_rd_data(2 * C_M_AXIS_TDATA_WIDTH - 1 downto C_M_AXIS_TDATA_WIDTH);
+		end if;
+	end process name;
+
 end architecture RTL;
