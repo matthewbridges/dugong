@@ -1,0 +1,2 @@
+- name: Setup GHDL
+  uses: ghdl/setup-ghdl-ci@nightly
