@@ -31,3 +31,8 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
+
+      - uses: ghdl/setup-ghdl-ci@nightly
+        with:
+          backend: llvm
+      - run: ghdl --version
